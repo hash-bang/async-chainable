@@ -501,4 +501,3 @@ The following items need to be added at some point:
 * Need to decide if `delay()` is worth implementing
 * Need to decide if `prereq()` is worth implementing
 * `context()` doens't yet work
-* Backwards compatibility with `Async.parallel()` and `Async.series()`
