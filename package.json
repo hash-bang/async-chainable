@@ -1,0 +1,25 @@
+{
+  "name": "async-chainable",
+  "version": "0.1.0",
+  "description": "An extension to Async adding better handling of mixed Series / Parallel tasks via object chaining",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hash-bang/async-chainable"
+  },
+  "keywords": [
+    "async",
+    "chain",
+    "chainable",
+    "parallel",
+    "series",
+    "tasks",
+    "seq"
+  ],
+  "author": "Matt Carter <m@ttcarter.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/hash-bang/async-chainable/issues"
+  },
+  "homepage": "https://github.com/hash-bang/async-chainable"
+}
