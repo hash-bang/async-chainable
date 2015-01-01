@@ -86,6 +86,11 @@ var getOverload = function(args) {
 	return out.toString();
 };
 
+/**
+* Queue up a function(s) to execute in series
+* @param array,object,function The function(s) to execute
+* @return object This chainable object
+*/
 module.exports.series = module.exports.then = function() {
 	var calledAs = getOverload(arguments);
 	switch(calledAs) {
@@ -116,6 +121,12 @@ module.exports.series = module.exports.then = function() {
 	return this;
 };
 
+
+/**
+* Queue up a function(s) to execute in parallel
+* @param array,object,function The function(s) to execute
+* @return object This chainable object
+*/
 module.exports.parallel = function() {
 	var calledAs = getOverload(arguments)
 	switch (calledAs) {
@@ -146,6 +157,12 @@ module.exports.parallel = function() {
 	return this;
 };
 
+
+/**
+* Queue up a function(s) to execute as defered - i.e. dont stop to wait for it
+* @param array,object,function The function(s) to execute as a defer
+* @return object This chainable object
+*/
 module.exports.defer = function() {
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
@@ -176,6 +193,13 @@ module.exports.defer = function() {
 	return this;
 };
 
+
+/**
+* Queue up an await point
+* This stops the execution queue until its satisfied that dependencies have been resolved
+* @param array,... The dependencies to check resolution of. If omitted all are checked
+* @return object This chainable object
+*/
 module.exports.await = function() {
 	var payload = [];
 
@@ -203,6 +227,12 @@ module.exports.await = function() {
 	return this;
 };
 
+
+/**
+* Internal function executed at the end of the chain
+* This can occur either in sequence (i.e. no errors) or a jump to this position (i.e. an error happened somewhere)
+* @access private
+*/
 var finalize = function(err) {
 	// Sanity checks {{{
 	if (_struct[_struct.length-1].type != 'end') {
@@ -213,6 +243,12 @@ var finalize = function(err) {
 	_struct[_struct.length-1].payload.call(context, err);
 };
 
+
+/**
+* Internal function to execute the next pending queue item
+* This is usually called after the completion of every async.series() / async.parallel() call
+* @access private
+*/
 var execute = function(err) {
 	if (_structPointer >= _struct.length) return finalize(err); // Nothing more to execute in struct
 	if (err) return finalize(err); // An error has been raised - stop exec and call finalize now
@@ -338,6 +374,11 @@ var execute = function(err) {
 	// }}}
 };
 
+
+/**
+* Reset all state variables and return the object into a pristine condition
+* @return object This chainable object
+*/
 module.exports.reset = function() {
 	_struct = [];
 	_structPointer = 0;
@@ -347,6 +388,11 @@ module.exports.reset = function() {
 	};
 };
 
+/**
+* Queue up an optional single function for execution on completion
+* This function also starts the queue executing
+* @return object This chainable object
+*/
 module.exports.end = function() { 
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
@@ -365,5 +411,11 @@ module.exports.end = function() {
 };
 
 // Setup initial context
+
+/**
+* The context used as `this` when calling all functions
+* @type object
+*/
 module.exports.context = context;
-module.exports.reset();
+
+module.exports.reset(); // Enter initial state
