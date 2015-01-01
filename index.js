@@ -213,12 +213,11 @@ var finalize = function(err) {
 var execute = function(err) {
 	if (_structPointer >= _struct.length) return finalize(err); // Nothing more to execute in struct
 	if (err) return finalize(err); // An error has been raised - stop exec and call finalize now
-	console.log('EXECUTE', err, 'POINTER AT', _structPointer);
 	var currentExec = _struct[_structPointer];
 	// Sanity checks {{{
 	if (!currentExec.type) {
 		console.error('No type is specified for async-chainable structure at position', _structPointer, currentExec);
-		return;
+		return this;
 	}
 	// }}}
 	_structPointer++;
@@ -239,8 +238,7 @@ var execute = function(err) {
 			Object.keys(currentExec.payload).forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
-						console.log('Finished parallel object item', key, '=', value);
-						context[key] = value;
+						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -265,8 +263,7 @@ var execute = function(err) {
 			Object.keys(currentExec.payload).forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
-						console.log('Finished series object item', key, '=', value);
-						context[key] = value;
+						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -293,8 +290,7 @@ var execute = function(err) {
 			Object.keys(currentExec.payload).forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
-						console.log('Finished defer object item', key, '=', value);
-						context[key] = value;
+						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -364,7 +360,6 @@ module.exports.end = function() {
 			console.error('Unknown call style for .end():', calledAs);
 	}
 
-	console.log('FINAL STRUCT IS', _struct);
 	execute();
 	return this;
 };
