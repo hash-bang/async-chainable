@@ -60,11 +60,7 @@ module.exports.noConflict = async.noConflict;
 
 var _struct = [];
 var _structPointer = 0;
-var context = {
-	_struct: _struct,
-	_structPointer: _structPointer,
-};
-module.exports.context = context;
+var context = {};
 
 /**
 * Examines an argument stack and returns all passed arguments as a CSV
@@ -208,14 +204,15 @@ module.exports.await = function() {
 };
 
 var finalize = function(err) {
+	if (err) { // An error has been raised
+	} else { // All is well
+	}
 	console.log('FINALIZE WITH CONTEXT', context);
 };
 
 var execute = function(err) {
-	if (_structPointer >= _struct.length) { // Finished executing
-		finalize(err);
-		return this;
-	}
+	if (_structPointer >= _struct.length) return finalize(err); // Nothing more to execute in struct
+	if (err) return finalize(err); // An error has been raised - stop exec and call finalize now
 	console.log('EXECUTE', err, 'POINTER AT', _structPointer);
 	var currentExec = _struct[_structPointer];
 	// Sanity checks {{{
@@ -339,6 +336,15 @@ var execute = function(err) {
 	// }}}
 };
 
+module.exports.reset = function() {
+	_struct = [];
+	_structPointer = 0;
+	context = {
+		_struct: _struct,
+		_structPointer: _structPointer
+	};
+};
+
 module.exports.end = function() { 
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
@@ -362,3 +368,7 @@ module.exports.end = function() {
 	execute();
 	return this;
 };
+
+// Setup initial context
+module.exports.context = context;
+module.exports.reset();
