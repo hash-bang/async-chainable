@@ -7,6 +7,7 @@
     "type": "git",
     "url": "https://github.com/hash-bang/async-chainable"
   },
+  "license": "MIT",
   "keywords": [
     "async",
     "chain",
@@ -17,9 +18,17 @@
     "seq"
   ],
   "author": "Matt Carter <m@ttcarter.com>",
-  "license": "MIT",
   "bugs": {
     "url": "https://github.com/hash-bang/async-chainable/issues"
   },
-  "homepage": "https://github.com/hash-bang/async-chainable"
+  "homepage": "https://github.com/hash-bang/async-chainable",
+  "scripts": {
+    "test": "npm test"
+  },
+  "devDependencies": {
+    "chai": "^1.10.0",
+    "istanbul": "^0.3.5",
+    "mocha": "^2.1.0",
+    "mocha-istanbul": "^0.2.0"
+  }
 }
