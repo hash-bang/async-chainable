@@ -204,10 +204,13 @@ module.exports.await = function() {
 };
 
 var finalize = function(err) {
-	if (err) { // An error has been raised
-	} else { // All is well
+	// Sanity checks {{{
+	if (_struct[_struct.length-1].type != 'end') {
+		console.error('While trying to find an end point in the async-chainable structure the last item in the _struct does not have type==end!');
+		return;
 	}
-	console.log('FINALIZE WITH CONTEXT', context);
+	// }}}
+	_struct[_struct.length-1].payload.call(context, err);
 };
 
 var execute = function(err) {
@@ -325,6 +328,9 @@ var execute = function(err) {
 				}
 			}
 			break;
+		case 'end': // This should ALWAYS be the last item in the structure and indicates the final function call
+			finalize();
+			break;
 		default:
 			console.error('Unknown async-chainable exec type:', currentExec);
 			return;
@@ -345,16 +351,10 @@ module.exports.end = function() {
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
 		case '': // No functions passed - do nothing
-			// Pass
+			_struct.push({ type: 'end', payload: function() { console.log('NOOP!')} });
 			break;
 		case 'function': // Form: end(func) -> redirect as if called with series(func)
-			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
-			break;
-		case 'array': // Form: end(Array <funcs>) -> redirect as if called with series(funcs)
-			_struct.push({ type: 'seriesArray', payload: arguments[0] });
-			break;
-		case 'object': // Form: end(Object <funcs>) -> redirect as if called with series(funcs)
-			_struct.push({ type: 'seriesObject', payload: arguments[0] });
+			_struct.push({ type: 'end', payload: arguments[0] });
 			break;
 		default:
 			console.error('Unknown call style for .end():', calledAs);
