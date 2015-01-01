@@ -34,10 +34,10 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 
 	// Or use contexts (i.e. `this`) - see Contexts section for more information
 	asyncChainable
-		.parallel(
+		.parallel({
 			foo: fooFunc,
 			bar: barFunc,
-			baz: bazFunc}
+			baz: bazFunc
 		})
 		.then(function(next) {
 			console.log(this); // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value', /* META INFO */}
