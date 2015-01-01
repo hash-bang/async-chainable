@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../asyncChainable');
+var asyncChainable = require('../index');
 
 //This is the BDD style of testing
 describe('Async-Chainable: ', function(){
@@ -33,8 +33,8 @@ describe('Async-Chainable: ', function(){
 	
 		it('should maintain ordinality when given a sequence of operations', function(){
 			expect(arr[0]).to.equal(1);
-			expect(arr[0]).to.equal(2);
-			expect(arr[0]).to.equal(3);
+			expect(arr[1]).to.equal(2);
+			expect(arr[2]).to.equal(3);
 		});
 	});
 });
