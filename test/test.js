@@ -6,13 +6,13 @@ describe('Async-Chainable: ', function(){
 
 	var arr = [];
 
-	beforeEach(function(){
+	beforeEach(function(done){
 
 		asyncChainable.parallel([
 			setTimeout(function(){ arr.push(1) }, 10),
 			setTimeout(function(){ arr.push(2) }, 0),
 			setTimeout(function(){ arr.push(3) }, 5),
-		]).end();
+		]).end(done);
 	});
 	
 	describe('.parallel ', function(){
