@@ -438,7 +438,7 @@ The context contains the results of any *named* functions as well as some meta d
 In addition to storing all named values the context object also provides the following meta object values.
 
 | Key                                  | Type           |  Description                                                             |
-|--------------------------------------|-------------------------------------------------------------------------------------------|
+|--------------------------------------|----------------|--------------------------------------------------------------------------|
 | `this._struct`                       | Collection     | The structure of the async chain constructed by the developer            |
 | `this._structPointer`                | Int            | Offset in the `this._struct` collection as to the current executing function. Change this if you wish to move up and down |
 
