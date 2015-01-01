@@ -8,11 +8,13 @@ describe('Async-Chainable: ', function(){
 
 	beforeEach(function(done){
 
-		asyncChainable.parallel([
-			setTimeout(function(){ arr.push(1) }, 10),
-			setTimeout(function(){ arr.push(2) }, 0),
-			setTimeout(function(){ arr.push(3) }, 5),
-		]).end(done);
+		asyncChainable
+			.parallel([
+				function(next) { setTimeout(function(){ arr.push(1); next() }, 10)},
+				function(next) { setTimeout(function(){ arr.push(2); next() }, 0)},
+				function(next) { setTimeout(function(){ arr.push(3); next() }, 5)},
+			])
+			.end(done);
 	});
 	
 	describe('.parallel ', function(){
