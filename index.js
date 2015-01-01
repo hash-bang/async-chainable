@@ -114,6 +114,17 @@ module.exports.series = module.exports.then = function() {
 			payload[arguments[1]] = arguments[2];
 			_struct.push({ type: 'seriesArray', prereq: [arguments[1]], payload: payload });
 			break;
+
+		// Async library compatibility {{{
+		case 'array,function':
+			_struct.push({ type: 'seriesArray', payload: arguments[0] });
+			module.exports.end(arguments[1]);
+			break;
+		case 'object,function':
+			_struct.push({ type: 'seriesObject', payload: arguments[0] });
+			module.exports.end(arguments[1]);
+			break;
+		// }}}
 		default:
 			console.error('Unknown call style for .series():', calledAs);
 	}
@@ -150,6 +161,17 @@ module.exports.parallel = function() {
 			payload[arguments[1]] = arguments[2];
 			_struct.push({ type: 'parallelArray', prereq: [arguments[0]], payload: payload });
 			break;
+
+		// Async library compatibility {{{
+		case 'array,function':
+			_struct.push({ type: 'parallelArray', payload: arguments[0] });
+			module.exports.end(arguments[1]);
+			break;
+		case 'object,function':
+			_struct.push({ type: 'parallelObject', payload: arguments[0] });
+			module.exports.end(arguments[1]);
+			break;
+		// }}}
 		default:
 			console.error('Unknown call style for .parallel():', calledAs);
 	}

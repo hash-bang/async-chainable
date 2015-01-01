@@ -75,6 +75,7 @@ This module extends the existing async object so you can use it as a drop in rep
 
 FAQ
 ===
+Some frequently asked questions:
 
 * **Why not just use Async?** - Async is an excellent library and suitable for 90% of tasks out there but it quickly becomes unmanagable when dealing with complex nests such as a mix of series and parallel tasks.
 
@@ -443,6 +444,16 @@ In addition to storing all named values the context object also provides the fol
 | `this._structPointer`                | Int            | Offset in the `this._struct` collection as to the current executing function. Change this if you wish to move up and down |
 
 
+Each item in the `this._struct` object is composed of the following keys:
+
+
+| Key                                  | Type           |  Description                                                             |
+|--------------------------------------|----------------|--------------------------------------------------------------------------|
+| `completed`                          | Boolean        | An indicator as to whether this item has been executed yet               |
+| `payload`                            | Mixed          | The options for the item, in parallel or series modes this is an array or object of the tasks to execute |
+| `type`                               | String         | A supported internal execution type                                      |
+
+
 Experimental functionality
 ==========================
 
@@ -479,3 +490,14 @@ Appart from the prepended argument indicating the delay period this method is id
 		.delay(100, 'baz', bazFunc) // Execute bazFunc() and store its value in 'bar' after 1/10th of a second
 		.await()
 		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value', quz: 'quz value'}
+
+
+
+TODO
+====
+The following items need to be added at some point:
+
+* Prerequisite parallel and series calls don't yet work (defer works fine though)
+* Need to decide if `delay()` is worth implementing
+* Need to decide if `prereq()` is worth implementing
+* `context()` doens't yet work
