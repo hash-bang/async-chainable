@@ -91,7 +91,8 @@ var getOverload = function(args) {
 };
 
 module.exports.series = module.exports.then = function() {
-	switch(getOverload(arguments)) {
+	var calledAs = getOverload(arguments);
+	switch(calledAs) {
 		case 'function': // Form: series(func)
 			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
 			break;
@@ -120,7 +121,8 @@ module.exports.series = module.exports.then = function() {
 };
 
 module.exports.parallel = function() {
-	switch (getOverload(arguments)) {
+	var calledAs = getOverload(arguments)
+	switch (calledAs) {
 		case 'function': // Form: parallel(func)
 			_struct.push({ type: 'parallelArray', payload: [arguments[0]] });
 			break;
@@ -144,6 +146,63 @@ module.exports.parallel = function() {
 		default:
 			console.error('Unknown call style for .parallel():', calledAs);
 	}
+
+	return this;
+};
+
+module.exports.defer = function() {
+	var calledAs = getOverload(arguments);
+	switch (calledAs) {
+		case 'function': // Form: defer(func)
+			_struct.push({ type: 'deferArray', payload: [arguments[0]] });
+			break;
+		case 'string,function': // Form: defer(String <id>, func)
+			var payload = {};
+			payload[arguments[0]] = arguments[1];
+			_struct.push({ type: 'deferObject', payload: payload });
+			break;
+		case 'array': // Form: defer(Array <funcs>)
+			_struct.push({ type: 'deferArray', payload: arguments[0] });
+			break;
+		case 'object': // Form: series(Object <funcs>)
+			_struct.push({ type: 'deferObject', payload: arguments[0] });
+			break;
+		case 'string,string,function': // Form: defer(String <prereq>, String <name>, func)
+		case 'array,string,function': //Form: defer(Array <prereqs>, String <name>, func)
+			var payload = {};
+			payload[arguments[1]] = arguments[2];
+			_struct.push({ type: 'deferArray', prereq: [arguments[0]], payload: payload });
+			break;
+		default:
+			console.error('Unknown call style for .defer():', calledAs);
+	}
+
+	return this;
+};
+
+module.exports.await = function() {
+	var payload = [];
+
+	// Slurp all args into payload {{{
+	var args = arguments;
+	getOverload(arguments).split(',').forEach(function(type, offset) {
+		switch (type) {
+			case '': // Blank arguments - do nothing
+				// Pass
+				break;
+			case 'string':
+				payload.push(args[offset]);
+				break;
+			case 'array':
+				payload.concat(args[offset]);
+				break;
+			default:
+				console.error('Unknown argument type passed to .await():', type);
+		}
+	});
+	// }}}
+
+	_struct.push({ type: 'await', payload: payload });
 
 	return this;
 };
@@ -173,7 +232,10 @@ var execute = function(err) {
 				return function(next) {
 					task.call(context, next);
 				};
-			}), execute);
+			}), function(err) {
+				currentExec.completed = true;
+				execute(err);
+			});
 			break;
 		case 'parallelObject':
 			var tasks = [];
@@ -186,14 +248,89 @@ var execute = function(err) {
 					})
 				});
 			});
-			async.parallel(tasks, execute);
+			async.parallel(tasks, function(err) {
+				currentExec.completed = true;
+				execute(err);
+			});
 			break;
 		case 'seriesArray':
 			async.series(currentExec.payload.map(function(task) {
 				return function(next) {
 					task.call(context, next);
 				};
-			}), execute);
+			}), function(err) {
+				currentExec.completed = true;
+				execute(err);
+			});
+			break;
+		case 'seriesObject':
+			var tasks = [];
+			Object.keys(currentExec.payload).forEach(function(key) {
+				tasks.push(function(next, err) {
+					currentExec.payload[key].call(context, function(err, value) {
+						console.log('Finished series object item', key, '=', value);
+						context[key] = value;
+						next(err);
+					})
+				});
+			});
+			async.series(tasks, function(err) {
+				currentExec.completed = true;
+				execute(err);
+			});
+			break;
+		case 'deferArray':
+			async.parallel(currentExec.payload.map(function(task) {
+				return function(next) {
+					task.call(context, next);
+				};
+			}), function(err) {
+				currentExec.completed = true;
+				if (_struct[_structPointer].type == 'await')
+					execute(err);
+			});
+			execute(); // Move on immediately
+			break;
+		case 'deferObject':
+			var tasks = [];
+			Object.keys(currentExec.payload).forEach(function(key) {
+				tasks.push(function(next, err) {
+					currentExec.payload[key].call(context, function(err, value) {
+						console.log('Finished defer object item', key, '=', value);
+						context[key] = value;
+						next(err);
+					})
+				});
+			});
+			async.parallel(tasks, function(err) {
+				currentExec.completed = true;
+				if (_struct[_structPointer].type == 'await')
+					execute(err);
+			});
+			execute(); // Move on immediately
+			break;
+		case 'await': // Await can operate in two modes, either payload=[] (examine all) else (examine specific keys)
+			if (!currentExec.payload.length) { // Check all tasks are complete
+				if (_struct.slice(0, _structPointer - 1).every(function(stage) { // Examine all items UP TO this one and check they are complete
+					return stage.completed;
+				})) { // All tasks up to this point are marked as completed
+					currentExec.completed = true;
+					execute(); // Go onto next stage
+				} else {
+					_structPointer--; // At least one task is outstanding - rewind to this stage so we repeat on next resolution
+				}
+
+			} else { // Check certain tasks are complete by key
+				var allOk = true;
+				if (currentExec.payload.every(function(dep) { // Examine all named dependencies
+					return !! context[dep];
+				})) { // All are present
+					currentExec.completed = true;
+					execute(); // Go onto next stage
+				} else {
+					_structPointer--; // At least one dependency is outstanding - rewind to this stage so we repeat on next resolution
+				}
+			}
 			break;
 		default:
 			console.error('Unknown async-chainable exec type:', currentExec);
@@ -203,7 +340,8 @@ var execute = function(err) {
 };
 
 module.exports.end = function() { 
-	switch (getOverload(arguments)) {
+	var calledAs = getOverload(arguments);
+	switch (calledAs) {
 		case '': // No functions passed - do nothing
 			// Pass
 			break;

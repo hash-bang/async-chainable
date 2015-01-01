@@ -45,6 +45,7 @@ asyncChainable
 // }}}
 
 // Regular usage - with named object {{{
+/*
 asyncChainable
 	.parallel({
 		foo: fooFunc,
@@ -56,17 +57,21 @@ asyncChainable
 		next();
 	})
 	.end();
+*/
 // }}}
 
 // Defer & Await {{{
-/*
 asyncChainable
 	.defer('foo', fooFunc)
 	.defer('bar', barFunc)
 	.defer('baz', bazFunc)
 	.await('foo', 'bar')
-	.then(console.log)
+	.then(function(next) {
+		console.log('Await stage one', 'foo=', this.foo, 'bar=', this.bar);
+		next();
+	})
 	.await()
-	.end(console.log)
-*/
+	.end(function() {
+		console.log('Completed everything', this);
+	});
 // }}}
