@@ -21,5 +21,8 @@
   "bugs": {
     "url": "https://github.com/hash-bang/async-chainable/issues"
   },
-  "homepage": "https://github.com/hash-bang/async-chainable"
+  "homepage": "https://github.com/hash-bang/async-chainable",
+  "dependencies": {
+    "async": "~0.9.0"
+  }
 }
