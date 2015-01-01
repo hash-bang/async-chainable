@@ -23,7 +23,8 @@
   },
   "homepage": "https://github.com/hash-bang/async-chainable",
   "scripts": {
-    "test": "mocha test --reporter istanbul"
+    "coverage": "istanbul cover node_modules/.bin/_mocha",
+    "test": "mocha test"
   },
   "devDependencies": {
     "chai": "^1.10.0",
