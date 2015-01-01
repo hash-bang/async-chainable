@@ -204,21 +204,23 @@ module.exports.await = function() {
 };
 
 var finalize = function(err) {
-	if (err) { // An error has been raised
-	} else { // All is well
+	// Sanity checks {{{
+	if (_struct[_struct.length-1].type != 'end') {
+		console.error('While trying to find an end point in the async-chainable structure the last item in the _struct does not have type==end!');
+		return;
 	}
-	console.log('FINALIZE WITH CONTEXT', context);
+	// }}}
+	_struct[_struct.length-1].payload.call(context, err);
 };
 
 var execute = function(err) {
 	if (_structPointer >= _struct.length) return finalize(err); // Nothing more to execute in struct
 	if (err) return finalize(err); // An error has been raised - stop exec and call finalize now
-	console.log('EXECUTE', err, 'POINTER AT', _structPointer);
 	var currentExec = _struct[_structPointer];
 	// Sanity checks {{{
 	if (!currentExec.type) {
 		console.error('No type is specified for async-chainable structure at position', _structPointer, currentExec);
-		return;
+		return this;
 	}
 	// }}}
 	_structPointer++;
@@ -239,8 +241,7 @@ var execute = function(err) {
 			Object.keys(currentExec.payload).forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
-						console.log('Finished parallel object item', key, '=', value);
-						context[key] = value;
+						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -265,8 +266,7 @@ var execute = function(err) {
 			Object.keys(currentExec.payload).forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
-						console.log('Finished series object item', key, '=', value);
-						context[key] = value;
+						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -293,8 +293,7 @@ var execute = function(err) {
 			Object.keys(currentExec.payload).forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
-						console.log('Finished defer object item', key, '=', value);
-						context[key] = value;
+						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -329,6 +328,9 @@ var execute = function(err) {
 				}
 			}
 			break;
+		case 'end': // This should ALWAYS be the last item in the structure and indicates the final function call
+			finalize();
+			break;
 		default:
 			console.error('Unknown async-chainable exec type:', currentExec);
 			return;
@@ -349,22 +351,15 @@ module.exports.end = function() {
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
 		case '': // No functions passed - do nothing
-			// Pass
+			_struct.push({ type: 'end', payload: function() { console.log('NOOP!')} });
 			break;
 		case 'function': // Form: end(func) -> redirect as if called with series(func)
-			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
-			break;
-		case 'array': // Form: end(Array <funcs>) -> redirect as if called with series(funcs)
-			_struct.push({ type: 'seriesArray', payload: arguments[0] });
-			break;
-		case 'object': // Form: end(Object <funcs>) -> redirect as if called with series(funcs)
-			_struct.push({ type: 'seriesObject', payload: arguments[0] });
+			_struct.push({ type: 'end', payload: arguments[0] });
 			break;
 		default:
 			console.error('Unknown call style for .end():', calledAs);
 	}
 
-	console.log('FINAL STRUCT IS', _struct);
 	execute();
 	return this;
 };
