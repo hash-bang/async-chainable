@@ -58,6 +58,10 @@ module.exports.dir = async.dir;
 module.exports.noConflict = async.noConflict;
 // }}}
 
+var options = {
+	autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
+};
+
 var _struct = [];
 var _structPointer = 0;
 var context = {};
@@ -278,6 +282,8 @@ var finalize = function(err) {
 	}
 	// }}}
 	_struct[_struct.length-1].payload.call(context, err);
+	if (options.autoReset)
+		reset();
 };
 
 
@@ -472,7 +478,7 @@ var execute = function(err) {
 * Reset all state variables and return the object into a pristine condition
 * @return object This chainable object
 */
-module.exports.reset = function() {
+var reset = function() {
 	_struct = [];
 	_structPointer = 0;
 	context = {
@@ -480,6 +486,7 @@ module.exports.reset = function() {
 		_structPointer: _structPointer
 	};
 };
+module.exports.reset = reset;
 
 /**
 * Queue up an optional single function for execution on completion
