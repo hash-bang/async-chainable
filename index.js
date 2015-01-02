@@ -1,5 +1,3 @@
-console.warn('WARN - async-chainable is still under heavy development');
-
 var async = require('async');
 
 // Import all Async functionality so this module becomes a drop-in replacement {{{
