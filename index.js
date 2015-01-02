@@ -119,12 +119,6 @@ module.exports.series = module.exports.then = function() {
 		case 'collection': // Form: series(Collection <funcs>)
 			_struct.push({ type: 'seriesCollection', payload: arguments[0] });
 			break;
-		case 'string,string,function': // Form: series(String <prereq>, String <name>, func)
-		case 'array,string,function': // Form: series(Array <prereq>, string <name>, func)
-			var payload = {};
-			payload[arguments[1]] = arguments[2];
-			_struct.push({ type: 'seriesArray', prereq: [arguments[1]], payload: payload });
-			break;
 
 		// Async library compatibility {{{
 		case 'array,function':
@@ -168,12 +162,6 @@ module.exports.parallel = function() {
 			break;
 		case 'collection': // Form: series(Collection <funcs>)
 			_struct.push({ type: 'parallelCollection', payload: arguments[0] });
-			break;
-		case 'string,string,function': // Form: parallel(String <prereq>, String <name>, func)
-		case 'array,string,function': //Form: parallel(Array <prereqs>, String <name>, func)
-			var payload = {};
-			payload[arguments[1]] = arguments[2];
-			_struct.push({ type: 'parallelArray', prereq: [arguments[0]], payload: payload });
 			break;
 
 		// Async library compatibility {{{
@@ -220,10 +208,15 @@ module.exports.defer = function() {
 			_struct.push({ type: 'deferCollection', payload: arguments[0] });
 			break;
 		case 'string,string,function': // Form: defer(String <prereq>, String <name>, func)
+			var payload = {};
+			payload[arguments[1]] = arguments[2];
+			_struct.push({ type: 'deferObject', prereq: [arguments[0]], payload: payload });
+			break;
+			break;
 		case 'array,string,function': //Form: defer(Array <prereqs>, String <name>, func)
 			var payload = {};
 			payload[arguments[1]] = arguments[2];
-			_struct.push({ type: 'deferArray', prereq: [arguments[0]], payload: payload });
+			_struct.push({ type: 'deferObject', prereq: arguments[0], payload: payload });
 			break;
 		default:
 			console.error('Unknown call style for .defer():', calledAs);
@@ -495,7 +488,7 @@ module.exports.end = function() {
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
 		case '': // No functions passed - do nothing
-			_struct.push({ type: 'end', payload: function() { console.log('NOOP!')} });
+			_struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
 			break;
 		case 'function': // Form: end(func) -> redirect as if called with series(func)
 			_struct.push({ type: 'end', payload: arguments[0] });
