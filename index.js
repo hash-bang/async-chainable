@@ -211,8 +211,11 @@ module.exports.defer = function() {
 		case 'array': // Form: defer(Array <funcs>)
 			_struct.push({ type: 'deferArray', payload: arguments[0] });
 			break;
-		case 'object': // Form: series(Object <funcs>)
+		case 'object': // Form: defer(Object <funcs>)
 			_struct.push({ type: 'deferObject', payload: arguments[0] });
+			break;
+		case 'collection': // Form defer(Collection <funcs>)
+			_struct.push({ type: 'deferCollection', payload: arguments[0] });
 			break;
 		case 'string,string,function': // Form: defer(String <prereq>, String <name>, func)
 		case 'array,string,function': //Form: defer(Array <prereqs>, String <name>, func)
@@ -369,7 +372,7 @@ var execute = function(err) {
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
 					tasks.push(function(next, err) {
-						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
+						if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
 						task[key].call(context, function(err, value) {
 							context[key] = value; // Allocate returned value to context
 							next(err);
@@ -402,6 +405,26 @@ var execute = function(err) {
 						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
+				});
+			});
+			async.parallel(tasks, function(err) {
+				currentExec.completed = true;
+				if (_struct[_structPointer].type == 'await')
+					execute(err);
+			});
+			execute(); // Move on immediately
+			break;
+		case 'deferCollection':
+			var tasks = [];
+			currentExec.payload.forEach(function(task) {
+				Object.keys(task).forEach(function(key) {
+					tasks.push(function(next, err) {
+						if (typeof task[key] != 'function') throw new Error('Collection item for defer exec is not a function', currentExec.payload);
+						task[key].call(context, function(err, value) {
+							context[key] = value; // Allocate returned value to context
+							next(err);
+						})
+					});
 				});
 			});
 			async.parallel(tasks, function(err) {
