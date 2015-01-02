@@ -68,6 +68,7 @@ var context = {};
 *	function test () { getOverload(arguments) };
 *	test('hello', 'world') // 'string,string'
 *	test(function() {}, 1) // 'function,number'
+*	test('hello', 123, {foo: 'bar'}, ['baz'], [{quz: 'quzValue'}, {quuz: 'quuzValue'}]) // 'string,number,object,array,collection'
 *
 * @param object args The special JavaScript 'arguments' object
 * @return string CSV of all passed arguments
@@ -78,8 +79,13 @@ var getOverload = function(args) {
 	while(1) {
 		var argType = typeof args[i];
 		if (argType == 'undefined') break;
-		if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Array]') // Special case for arrays being classed as objects
+		if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Array]') { // Special case for arrays being classed as objects
 			argType = 'array';
+			if (args[i].every(function(item) {
+				return (typeof item == 'object' && Object.prototype.toString.call(item) == '[object Object]');
+			}))
+				argType = 'collection';
+		}
 		out.push(argType);
 		i++;
 	}
@@ -107,6 +113,9 @@ module.exports.series = module.exports.then = function() {
 			break;
 		case 'object': // Form: series(Object <funcs>)
 			_struct.push({ type: 'seriesObject', payload: arguments[0] });
+			break;
+		case 'collection': // Form: series(Collection <funcs>)
+			_struct.push({ type: 'seriesCollection', payload: arguments[0] });
 			break;
 		case 'string,string,function': // Form: series(String <prereq>, String <name>, func)
 		case 'array,string,function': // Form: series(Array <prereq>, string <name>, func)
@@ -154,6 +163,9 @@ module.exports.parallel = function() {
 			break;
 		case 'object': // Form: series(Object <funcs>)
 			_struct.push({ type: 'parallelObject', payload: arguments[0] });
+			break;
+		case 'collection': // Form: series(Collection <funcs>)
+			_struct.push({ type: 'parallelCollection', payload: arguments[0] });
 			break;
 		case 'string,string,function': // Form: parallel(String <prereq>, String <name>, func)
 		case 'array,string,function': //Form: parallel(Array <prereqs>, String <name>, func)
@@ -309,6 +321,24 @@ var execute = function(err) {
 				execute(err);
 			});
 			break;
+		case 'parallelCollection':
+			var tasks = [];
+			currentExec.payload.forEach(function(task) {
+				Object.keys(task).forEach(function(key) {
+					tasks.push(function(next, err) {
+						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
+						task[key].call(context, function(err, value) {
+							context[key] = value; // Allocate returned value to context
+							next(err);
+						})
+					});
+				});
+			});
+			async.parallel(tasks, function(err) {
+				currentExec.completed = true;
+				execute(err);
+			});
+			break;
 		case 'seriesArray':
 			async.series(currentExec.payload.map(function(task) {
 				return function(next) {
@@ -327,6 +357,24 @@ var execute = function(err) {
 						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
+				});
+			});
+			async.series(tasks, function(err) {
+				currentExec.completed = true;
+				execute(err);
+			});
+			break;
+		case 'seriesCollection':
+			var tasks = [];
+			currentExec.payload.forEach(function(task) {
+				Object.keys(task).forEach(function(key) {
+					tasks.push(function(next, err) {
+						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
+						task[key].call(context, function(err, value) {
+							context[key] = value; // Allocate returned value to context
+							next(err);
+						})
+					});
 				});
 			});
 			async.series(tasks, function(err) {
