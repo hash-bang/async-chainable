@@ -175,7 +175,6 @@ describe('async-chainable.defer() - prerequisites', function(){
 			.defer('bazKey', 'quzKey', function(next) { setTimeout(function(){ output.push('quz'); next(null, 'quzValue') }, 20)})
 			.await()
 			.end(function(err) {
-				console.log('EXEC ORDER', output);
 				expect(err).to.be.undefined();
 				context = this;
 				done();

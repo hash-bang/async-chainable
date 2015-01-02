@@ -42,6 +42,7 @@ describe('async-chainable - mixed chain', function(){
 			])
 			.then(function(next) { outputSections.push('sec-06-end'); next() })
 			.then(function(next) { setTimeout(function(){ output.push('16-then'); outputSeries.push('13-then'); next()}, 5) })
+			.await() // Let defer items catch up
 			.end(function(err) {
 				output.push('17-end')
 				expect(err).to.be.undefined();
