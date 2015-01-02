@@ -63,10 +63,15 @@ This module extends the existing async object so you can use it as a drop in rep
 
 	async.waterfall([fooFunc, barFunc, bazFunc], console.log); // Async goodness
 
-	async // But with new async-chainable flexibility
+	// With new async-chainable flexibility
+	async
 		.parallel([fooFunc, barFunc, bazFunc]) // Do these operations in parallel THEN
 		.series([fooFunc, barFunc, bazFunc]) // Do these in series (note these only run when the above has resolved)
 		.end(console.log)
+
+	// Or just like async
+	// NOTE: This style cannot be chained in order to maintain compability with async
+	async.parallel([fooFunc, barFunc, bazFunc], console.log);
 
 
 FAQ
@@ -95,15 +100,9 @@ More complex examples
 	asyncChainable
 		// The following 3 functions execute in series
 		.series([
-			function(next) {
-				setTimeout(function() { console.log('Series 1'); next(); }, 100);
-			},
-			function(next) {
-				setTimeout(function() { console.log('Series 2'); next(); }, 100);
-			},
-			function(next) {
-				setTimeout(function() { console.log('Series 3'); next(); }, 100);
-			},
+			function(next) { setTimeout(function() { console.log('Series 1'); next(); }, 100); },
+			function(next) { setTimeout(function() { console.log('Series 2'); next(); }, 200); },
+			function(next) { setTimeout(function() { console.log('Series 3'); next(); }, 300); },
 		])
 
 		// ...then we run this...
@@ -113,15 +112,9 @@ More complex examples
 
 		// ...then the next three run in parallel
 		.parallel([
-			function(next) {
-				setTimeout(function() { console.log('Parallel 1'); next(); }, 100);
-			},
-			function(next) {
-				setTimeout(function() { console.log('Parallel 2'); next(); }, 100);
-			},
-			function(next) {
-				setTimeout(function() { console.log('Parallel 3'); next(); }, 100);
-			},
+			function(next) { setTimeout(function() { console.log('Parallel 1'); next(); }, 300); },
+			function(next) { setTimeout(function() { console.log('Parallel 2'); next(); }, 200); },
+			function(next) { setTimeout(function() { console.log('Parallel 3'); next(); }, 100); },
 		])
 		.end(function(next) {
 			console.log('Finished simple example');
@@ -296,7 +289,6 @@ There are a variety of ways of calling these functions:
 		.parallel(Collection) // i.e. an array of objects - this is to work around JS not maintaining hash key orders
 		.parallel(String, function) // Execute function now and await output, then store in object against key specified by String
 		.parallel(function) // Exactly the same functionality as `defer()`
-		.parallel(String, String, function) // Exactly the same functionality as `prereq()` FIXME: Not sure about this yet
 		.end()
 
 	asyncChainable
@@ -454,50 +446,10 @@ Each item in the `this._struct` object is composed of the following keys:
 | `type`                               | String         | A supported internal execution type                                      |
 
 
-Experimental functionality
-==========================
-
-**FIXME**: Needs more thought
-
-
-.context()
-----------
-Provide a context (i.e. set `this` to something for all called functions.
-By default async-chainable will use its own context object - see [Context](#context).
-
-
-.prereq()
----------
-Declare a prerequisite parallel function.
-This function will not be allowed to execute until its named peer(s) have resolved.
-
-	asyncChainable
-		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
-		.defer('bar', barFunc)
-		.defer('baz', bazFunc)
-		.prereq('foo', 'quz', quzFunc) // quz is only allowed to execute when 'foo' has completed
-		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value', quz: 'quz value'}
-
-
-.delay()
---------
-Execute a function after a given delay.
-Appart from the prepended argument indicating the delay period this method is identical to `.parallel()`
-
-	asyncChainable
-		.delay(1000, 'foo', fooFunc) // Execute fooFunc() and store its value in 'foo' after one second
-		.delay(500, 'bar', barFunc) // Execute barFunc() and store its value in 'bar' after half a second
-		.delay(100, 'baz', bazFunc) // Execute bazFunc() and store its value in 'bar' after 1/10th of a second
-		.await()
-		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value', quz: 'quz value'}
-
-
-
 TODO
 ====
 The following items need to be added at some point:
 
 * Prerequisite parallel and series calls don't yet work (defer works fine though)
-* Need to decide if `delay()` is worth implementing
-* Need to decide if `prereq()` is worth implementing
-* `context()` doens't yet work
+* Tests for defer() with prereqs
+* Docs: Nicer version of async.auto() in asycChainable.defer()
