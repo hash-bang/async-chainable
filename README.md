@@ -1,9 +1,5 @@
 async-chainable
 ===============
-
-**WARNING - This module is in the RFC stage and is not currently operational**
-
-
 An extension to the otherwise excellent [Async](https://www.npmjs.com/package/async) library adding better handling of mixed Series / Parallel tasks via object chaining.
 
 
