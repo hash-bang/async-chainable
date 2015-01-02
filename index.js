@@ -182,6 +182,58 @@ module.exports.parallel = function() {
 };
 
 
+// Defer functionality - Here be dragons! {{{
+/**
+* Collection of items that have been defered
+* @type collection {payload: function, id: null|String, prereq: [dep1, dep2...]}
+* @access private
+*/
+var _defered = []; // 
+
+var deferAdd = function(id, task, parentChain) {
+	parentChain.waitingOn = (parentChain.waitingOn || 0) + 1;
+
+	if (! parentChain.waitingOnIds)
+		parentChain.waitingOnIds = [];
+	parentChain.waitingOnIds.push(id);
+
+	_defered.push({
+		id: id || null,
+		prereq: parentChain.prereq || [],
+		payload: function(next) {
+			task.call(context, function(err, value) {
+				if (id && value)
+					context[id] = value;
+				if (--parentChain.waitingOn == 0) {
+					parentChain.completed = true;
+					if (_struct.length && _struct[_structPointer].type == 'await')
+						execute(err);
+				}
+				execute(err);
+			});
+		}
+	});
+};
+
+
+var deferCheck = function() {
+	_defered = _defered.filter(function(item) {
+		if (
+			item.prereq.length == 0 || // No pre-reqs - can execute now
+			item.prereq.every(function(dep) { // All pre-reqs are satisfied
+				return !! context[dep];
+			})
+		) { 
+			setTimeout(item.payload);
+			return false;
+		} else { // Can't do anything with this right now
+			return true;
+		}
+	});
+};
+// }}}
+
+
 /**
 * Queue up a function(s) to execute as defered - i.e. dont stop to wait for it
 * @param array,object,function The function(s) to execute as a defer
@@ -267,7 +319,8 @@ module.exports.await = function() {
 */
 var finalize = function(err) {
 	// Sanity checks {{{
-	if (_struct[_struct.length-1].type != 'end') {
+	if (_struct.length == 0) return; // Finalize called on dead object - probably a defer() fired without an await()
+	if (_struct[_struct.length - 1].type != 'end') {
 		console.error('While trying to find an end point in the async-chainable structure the last item in the _struct does not have type==end!');
 		return;
 	}
@@ -286,6 +339,7 @@ var finalize = function(err) {
 var execute = function(err) {
 	if (_structPointer >= _struct.length) return finalize(err); // Nothing more to execute in struct
 	if (err) return finalize(err); // An error has been raised - stop exec and call finalize now
+	deferCheck(); // Kick off any pending defered items
 	var currentExec = _struct[_structPointer];
 	// Sanity checks {{{
 	if (!currentExec.type) {
@@ -383,31 +437,15 @@ var execute = function(err) {
 			});
 			break;
 		case 'deferArray':
-			async.parallel(currentExec.payload.map(function(task) {
-				return function(next) {
-					task.call(context, next);
-				};
-			}), function(err) {
-				currentExec.completed = true;
-				if (_struct[_structPointer].type == 'await')
-					execute(err);
+			currentExec.payload.forEach(function(task) {
+				deferAdd(null, task, currentExec);
 			});
 			execute(); // Move on immediately
 			break;
 		case 'deferObject':
 			var tasks = [];
 			Object.keys(currentExec.payload).forEach(function(key) {
-				tasks.push(function(next, err) {
-					currentExec.payload[key].call(context, function(err, value) {
-						context[key] = value; // Allocate returned value to context
-						next(err);
-					})
-				});
-			});
-			async.parallel(tasks, function(err) {
-				currentExec.completed = true;
-				if (_struct[_structPointer].type == 'await')
-					execute(err);
+				deferAdd(key, currentExec.payload[key], currentExec);
 			});
 			execute(); // Move on immediately
 			break;
@@ -415,19 +453,8 @@ var execute = function(err) {
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
-					tasks.push(function(next, err) {
-						if (typeof task[key] != 'function') throw new Error('Collection item for defer exec is not a function', currentExec.payload);
-						task[key].call(context, function(err, value) {
-							context[key] = value; // Allocate returned value to context
-							next(err);
-						})
-					});
+					deferAdd(key, task[key], currentExec);
 				});
-			});
-			async.parallel(tasks, function(err) {
-				currentExec.completed = true;
-				if (_struct[_structPointer].type == 'await')
-					execute(err);
 			});
 			execute(); // Move on immediately
 			break;
