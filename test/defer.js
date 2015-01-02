@@ -5,7 +5,7 @@ describe('async-chainable.defer() - collections style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -19,6 +19,7 @@ describe('async-chainable.defer() - collections style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
@@ -48,7 +49,7 @@ describe('async-chainable.defer() - collections style', function(){
 describe('async-chainable.defer() - array style', function(){
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 
 		asyncChainable
@@ -72,12 +73,11 @@ describe('async-chainable.defer() - array style', function(){
 	});
 });
 
-
 describe('async-chainable.defer() - object style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -91,6 +91,7 @@ describe('async-chainable.defer() - object style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
@@ -116,12 +117,11 @@ describe('async-chainable.defer() - object style', function(){
 	});
 });
 
-
 describe('async-chainable.defer() - named function style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -133,6 +133,7 @@ describe('async-chainable.defer() - named function style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 

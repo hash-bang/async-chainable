@@ -5,7 +5,7 @@ describe('async-chainable.parallel() - collections style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -18,6 +18,7 @@ describe('async-chainable.parallel() - collections style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
@@ -47,7 +48,7 @@ describe('async-chainable.parallel() - collections style', function(){
 describe('async-chainable.parallel() - array style', function(){
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 
 		asyncChainable
@@ -75,7 +76,7 @@ describe('async-chainable.parallel() - object style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -88,6 +89,7 @@ describe('async-chainable.parallel() - object style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 

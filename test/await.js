@@ -6,7 +6,7 @@ var asyncChainable = require('../index');
 describe('async-chainable.await() - stepped blocking', function(){
 	var contextStep, contextFinal;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		contextStep = {};
 		contextFinal = {};
@@ -23,25 +23,26 @@ describe('async-chainable.await() - stepped blocking', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				contextFinal = this;
+				done();
 			});
 	});
 
 	it('should set the blocking context', function() {
-		expect(context).to.have.property('fooKey');
-		expect(context.fooKey).to.equal('fooValue');
+		expect(contextStep).to.have.property('fooKey');
+		expect(contextStep.fooKey).to.equal('fooValue');
 
-		expect(context).to.have.property('bazKey');
-		expect(context.bazKey).to.equal('bazValue');
+		expect(contextStep).to.have.property('bazKey');
+		expect(contextStep.bazKey).to.equal('bazValue');
 	});
 
 	it('should set the final context', function() {
-		expect(context).to.have.property('fooKey');
-		expect(context.fooKey).to.equal('fooValue');
+		expect(contextFinal).to.have.property('fooKey');
+		expect(contextFinal.fooKey).to.equal('fooValue');
 
-		expect(context).to.have.property('barKey');
-		expect(context.barKey).to.equal('barValue');
+		expect(contextFinal).to.have.property('barKey');
+		expect(contextFinal.barKey).to.equal('barValue');
 
-		expect(context).to.have.property('bazKey');
-		expect(context.bazKey).to.equal('bazValue');
+		expect(contextFinal).to.have.property('bazKey');
+		expect(contextFinal.bazKey).to.equal('bazValue');
 	});
 });

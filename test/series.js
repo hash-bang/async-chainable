@@ -5,7 +5,7 @@ describe('async-chainable.series() - collections style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -18,6 +18,7 @@ describe('async-chainable.series() - collections style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
@@ -94,6 +95,7 @@ describe('async-chainable.series() - object style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
@@ -130,7 +132,7 @@ describe('async-chainable.series() - single call style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -141,6 +143,7 @@ describe('async-chainable.series() - single call style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
@@ -152,12 +155,6 @@ describe('async-chainable.series() - single call style', function(){
 		expect(output).to.contain('foo');
 		expect(output).to.contain('bar');
 		expect(output).to.contain('baz');
-	});
-
-	it('should set the context', function() {
-		expect(context).to.have.property('fooKey');
-		expect(context).to.have.property('barKey');
-		expect(context).to.have.property('bazKey');
 	});
 
 	it('should be in the correct order', function() {
@@ -172,7 +169,7 @@ describe('async-chainable.series() - named single call style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -183,6 +180,7 @@ describe('async-chainable.series() - named single call style', function(){
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				context = this;
+				done();
 			});
 	});
 
