@@ -53,8 +53,29 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 	}
 
 	asyncChainable.end(); // Kick everything off
-	
 
+
+
+	// Specify prerequisites and let async-chainable figure everything out automatically
+	// This method replaces async.auto() which is a bit ugly
+
+	asyncChainable
+
+		// Task 'foo' relies on 'quz'
+		.defer('quz', 'foo', function(next) { next(null, 'fooValue') })
+
+		// Task 'bar' relies on 'baz' and 'foo'
+		.defer(['baz', 'foo'], 'bar', function(next) { next(null, 'barValue') })
+
+		// Task 'bar' doesnt need any pre-requisites
+		.defer('baz', function(next) { next(null, 'bazValue') })
+
+		// Task 'quz' relies on 'baz'
+		.defer('baz', 'quz', function(next) { next(null, 'quzValue') })
+		
+		// Wait for everything to finish
+		.await()
+		.end();
 
 
 This module extends the existing async object so you can use it as a drop in replacement for Async:
@@ -444,12 +465,3 @@ Each item in the `this._struct` object is composed of the following keys:
 | `completed`                          | Boolean        | An indicator as to whether this item has been executed yet               |
 | `payload`                            | Mixed          | The options for the item, in parallel or series modes this is an array or object of the tasks to execute |
 | `type`                               | String         | A supported internal execution type                                      |
-
-
-TODO
-====
-The following items need to be added at some point:
-
-* Prerequisite parallel and series calls don't yet work (defer works fine though)
-* Tests for defer() with prereqs
-* Docs: Nicer version of async.auto() in asycChainable.defer()
