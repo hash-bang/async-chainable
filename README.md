@@ -85,6 +85,10 @@ Some frequently asked questions:
 
 * **Is this the module I should use for Async JavaScript?** - If you're doing simple parallel or series based tasks use [Async](https://www.npmjs.com/package/async), if you're doing complex nested operations you might want to take a look at this one
 
+* **Whats license do you use?** - We use the [MIT license](LICENSE), please credit the original library and authors if you wish to fork or share
+
+* **Who wrote this / who do I blame?** - [Matt Carter](https://github.com/hash-bang) and [David Porter](https://github.com/DesertLynx)
+
 
 More complex examples
 =====================
