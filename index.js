@@ -188,7 +188,7 @@ module.exports.parallel = function() {
 * @type collection {payload: function, id: null|String, prereq: [dep1, dep2...]}
 * @access private
 */
-var _defered = []; // 
+var _defered = [];
 
 var deferAdd = function(id, task, parentChain) {
 	parentChain.waitingOn = (parentChain.waitingOn || 0) + 1;
@@ -202,7 +202,7 @@ var deferAdd = function(id, task, parentChain) {
 		prereq: parentChain.prereq || [],
 		payload: function(next) {
 			task.call(context, function(err, value) {
-				if (id && value)
+				if (id)
 					context[id] = value;
 				if (--parentChain.waitingOn == 0) {
 					parentChain.completed = true;
@@ -221,7 +221,7 @@ var deferCheck = function() {
 		if (
 			item.prereq.length == 0 || // No pre-reqs - can execute now
 			item.prereq.every(function(dep) { // All pre-reqs are satisfied
-				return !! context[dep];
+				return context.hasOwnProperty(dep);
 			})
 		) { 
 			setTimeout(item.payload);
