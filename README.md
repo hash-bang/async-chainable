@@ -12,6 +12,7 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 
 
 	asyncChainable
+		.limit(2) // Allow only 2 defer items to run at once from this point on
 		.defer('foo', fooFunc) // Run this now and continue on...
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -221,6 +222,7 @@ More complex examples
 		.end(console.log);
 
 	asyncChainable
+		.limit(2) // Allow only 2 defer operations to run at once
 		.defer('foo', fooFunc)
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -367,6 +369,33 @@ Wait for one or more fired defer functions to complete before contining down the
 		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
 
 
+.limit()
+--------
+Restrict the number of defer operations that can run at any one time.
+This function can be used in the pipeline as many times as needed to change the limit as we work down the execution chain.
+
+	asyncChainable
+		.limit(2) // Allow only 2 defer operations to run at once from this point onward
+		.defer(fooFunc)
+		.defer(barFunc)
+		.defer(bazFunc)
+		.defer(quzFunc)
+		.await()
+		.limit(3) // Allow 3 defer operations to run at once from this point onward
+		.defer(fooFunc)
+		.defer(barFunc)
+		.defer(bazFunc)
+		.defer(quzFunc)
+		.await()
+		.limit() // Allow unlimited operations to run at once from this point onward (0 / false / null is also permissable as 'unlimited')
+		.defer(fooFunc)
+		.defer(barFunc)
+		.defer(bazFunc)
+		.defer(quzFunc)
+		.await()
+		.end(console.log)
+
+
 .then()
 -------
 Execute a function, wait for it to complete and continue down the asyncChainable chain.
@@ -455,6 +484,8 @@ In addition to storing all named values the context object also provides the fol
 |--------------------------------------|----------------|--------------------------------------------------------------------------|
 | `this._struct`                       | Collection     | The structure of the async chain constructed by the developer            |
 | `this._structPointer`                | Int            | Offset in the `this._struct` collection as to the current executing function. Change this if you wish to move up and down |
+| `this._options`                      | Object         | Various options used by async-chainable including things like the defer limit |
+| `this._deferredRunning`              | Int            | The number of running deferred tasks (limit this using .limit())         |
 
 
 Each item in the `this._struct` object is composed of the following keys:

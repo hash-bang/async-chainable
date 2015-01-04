@@ -56,8 +56,9 @@ module.exports.dir = async.dir;
 module.exports.noConflict = async.noConflict;
 // }}}
 
-var options = {
+var _options = {
 	autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
+	limit: 10, // Number of defer functions that are allowed to execute at once
 };
 
 var _struct = [];
@@ -189,6 +190,7 @@ module.exports.parallel = function() {
 * @access private
 */
 var _defered = [];
+var _deferredRunning = 0;
 
 var deferAdd = function(id, task, parentChain) {
 	parentChain.waitingOn = (parentChain.waitingOn || 0) + 1;
@@ -204,6 +206,7 @@ var deferAdd = function(id, task, parentChain) {
 			task.call(context, function(err, value) {
 				if (id)
 					context[id] = value;
+				_deferredRunning--;
 				if (--parentChain.waitingOn == 0) {
 					parentChain.completed = true;
 					if (_struct.length && _struct[_structPointer].type == 'await')
@@ -217,13 +220,18 @@ var deferAdd = function(id, task, parentChain) {
 
 
 var deferCheck = function() {
+	if (_options.limit && _deferredRunning >= _options.limit) return; // Already over limit
 	_defered = _defered.filter(function(item) {
+		if (_options.limit && _deferredRunning >= _options.limit) {
+			return true; // Already over limit - all subseqent items should be left in place
+		}
 		if (
 			item.prereq.length == 0 || // No pre-reqs - can execute now
 			item.prereq.every(function(dep) { // All pre-reqs are satisfied
 				return context.hasOwnProperty(dep);
 			})
 		) { 
+			_deferredRunning++;
 			setTimeout(item.payload);
 			return false;
 		} else { // Can't do anything with this right now
@@ -313,6 +321,18 @@ module.exports.await = function() {
 
 
 /**
+* Queue up a limit setter
+* @param int|null|false Either the number of defer processes that are allowed to execute simultaniously or falsy values to disable
+* @return object This chainable object
+*/
+module.exports.limit = function(setLimit) {
+	_struct.push({ type: 'limit', payload: setLimit });
+	return this;
+};
+// }}}
+
+
+/**
 * Internal function executed at the end of the chain
 * This can occur either in sequence (i.e. no errors) or a jump to this position (i.e. an error happened somewhere)
 * @access private
@@ -326,7 +346,7 @@ var finalize = function(err) {
 	}
 	// }}}
 	_struct[_struct.length-1].payload.call(context, err);
-	if (options.autoReset)
+	if (_options.autoReset)
 		reset();
 };
 
@@ -481,6 +501,11 @@ var execute = function(err) {
 				}
 			}
 			break;
+		case 'limit': // Set the options.limit variable
+			_options.limit = currentExec.payload;
+			currentExec.completed = true;
+			execute(); // Move on to next action
+			break;
 		case 'end': // This should ALWAYS be the last item in the structure and indicates the final function call
 			finalize();
 			break;
@@ -501,7 +526,9 @@ var reset = function() {
 	_structPointer = 0;
 	context = {
 		_struct: _struct,
-		_structPointer: _structPointer
+		_structPointer: _structPointer,
+		_options: _options,
+		_deferredRunning: _deferredRunning,
 	};
 };
 module.exports.reset = reset;
