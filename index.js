@@ -561,12 +561,14 @@ var execute = function(err) {
 var reset = function() {
 	_struct = [];
 	_structPointer = 0;
+	var reAttachContext = (_options.context == context); // Reattach the context pointer after reset?
 	context = {
 		_struct: _struct,
 		_structPointer: _structPointer,
 		_options: _options,
 		_deferredRunning: _deferredRunning,
 	};
+	if (reAttachContext) _options.context = context;
 };
 module.exports.reset = reset;
 
