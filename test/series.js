@@ -269,3 +269,43 @@ describe('async-chainable.series() - array pointer during change', function(){
 		expect(output[21]).to.equal('end');
 	});
 });
+
+
+describe('async-chainable.series() - empty calls', function(){
+	var output;
+
+	beforeEach(function(done) {
+		output = [];
+
+		asyncChainable
+			.then(function(next) { output.push('series-1'); next() })
+			.series()
+			.then(function(next) { output.push('series-2'); next() })
+			.series([])
+			.then(function(next) { output.push('series-3'); next() })
+			.series({})
+			.end(function(err) {
+				output.push('series-end');
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(4);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('series-1');
+		expect(output).to.contain('series-2');
+		expect(output).to.contain('series-3');
+		expect(output).to.contain('series-end');
+	});
+
+	it('should be in the correct order', function() {
+		expect(output[0]).to.equal('series-1');
+		expect(output[1]).to.equal('series-2');
+		expect(output[2]).to.equal('series-3');
+		expect(output[3]).to.equal('series-end');
+	});
+});

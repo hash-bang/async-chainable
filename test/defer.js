@@ -158,3 +158,37 @@ describe('async-chainable.defer() - named function style', function(){
 		expect(context.bazKey).to.equal('bazValue');
 	});
 });
+
+
+describe('async-chainable.defer() - empty calls', function(){
+	var output;
+
+	beforeEach(function(done) {
+		output = [];
+
+		asyncChainable
+			.then(function(next) { output.push('defer-1'); next() })
+			.defer()
+			.then(function(next) { output.push('defer-2'); next() })
+			.defer([])
+			.then(function(next) { output.push('defer-3'); next() })
+			.defer({})
+			.await()
+			.end(function(err) {
+				output.push('defer-end');
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(4);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('defer-1');
+		expect(output).to.contain('defer-2');
+		expect(output).to.contain('defer-3');
+		expect(output).to.contain('defer-end');
+	});
+});

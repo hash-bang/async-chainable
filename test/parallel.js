@@ -163,3 +163,36 @@ describe('async-chainable.parallel() - array pointer during change', function(){
 		expect(output).to.contain('end');
 	});
 });
+
+
+describe('async-chainable.parallel() - empty calls', function(){
+	var output;
+
+	beforeEach(function(done) {
+		output = [];
+
+		asyncChainable
+			.then(function(next) { output.push('parallel-1'); next() })
+			.parallel()
+			.then(function(next) { output.push('parallel-2'); next() })
+			.parallel([])
+			.then(function(next) { output.push('parallel-3'); next() })
+			.parallel({})
+			.end(function(err) {
+				output.push('parallel-end');
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(4);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('parallel-1');
+		expect(output).to.contain('parallel-2');
+		expect(output).to.contain('parallel-3');
+		expect(output).to.contain('parallel-end');
+	});
+});

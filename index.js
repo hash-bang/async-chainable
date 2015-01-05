@@ -103,6 +103,9 @@ var getOverload = function(args) {
 module.exports.series = module.exports.then = function() {
 	var calledAs = getOverload(arguments);
 	switch(calledAs) {
+		case '':
+			// Pass
+			break;
 		case 'function': // Form: series(func)
 			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
 			break;
@@ -147,6 +150,9 @@ module.exports.series = module.exports.then = function() {
 module.exports.parallel = function() {
 	var calledAs = getOverload(arguments)
 	switch (calledAs) {
+		case '':
+			// Pass
+			break;
 		case 'function': // Form: parallel(func)
 			_struct.push({ type: 'parallelArray', payload: [arguments[0]] });
 			break;
@@ -250,6 +256,9 @@ var deferCheck = function() {
 module.exports.defer = function() {
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
+		case '':
+			// Pass
+			break;
 		case 'function': // Form: defer(func)
 			_struct.push({ type: 'deferArray', payload: [arguments[0]] });
 			break;
@@ -371,6 +380,7 @@ var execute = function(err) {
 	// Execute based on currentExec.type {{{
 	switch (currentExec.type) {
 		case 'parallelArray':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			async.parallel(currentExec.payload.map(function(task) {
 				return function(next) {
 					task.call(context, next);
@@ -382,7 +392,9 @@ var execute = function(err) {
 			break;
 		case 'parallelObject':
 			var tasks = [];
-			Object.keys(currentExec.payload).forEach(function(key) {
+			var keys = Object.keys(currentExec.payload);
+			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			keys.forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
 						context[key] = value; // Allocate returned value to context
@@ -396,6 +408,7 @@ var execute = function(err) {
 			});
 			break;
 		case 'parallelCollection':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
@@ -414,6 +427,7 @@ var execute = function(err) {
 			});
 			break;
 		case 'seriesArray':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			async.series(currentExec.payload.map(function(task) {
 				return function(next) {
 					task.call(context, next);
@@ -425,7 +439,9 @@ var execute = function(err) {
 			break;
 		case 'seriesObject':
 			var tasks = [];
-			Object.keys(currentExec.payload).forEach(function(key) {
+			var keys = Object.keys(currentExec.payload);
+			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			keys.forEach(function(key) {
 				tasks.push(function(next, err) {
 					currentExec.payload[key].call(context, function(err, value) {
 						context[key] = value; // Allocate returned value to context
@@ -439,6 +455,7 @@ var execute = function(err) {
 			});
 			break;
 		case 'seriesCollection':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
@@ -457,6 +474,7 @@ var execute = function(err) {
 			});
 			break;
 		case 'deferArray':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			currentExec.payload.forEach(function(task) {
 				deferAdd(null, task, currentExec);
 			});
@@ -464,12 +482,15 @@ var execute = function(err) {
 			break;
 		case 'deferObject':
 			var tasks = [];
-			Object.keys(currentExec.payload).forEach(function(key) {
+			var keys = Object.keys(currentExec.payload);
+			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			keys.forEach(function(key) {
 				deferAdd(key, currentExec.payload[key], currentExec);
 			});
 			execute(); // Move on immediately
 			break;
 		case 'deferCollection':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
