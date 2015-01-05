@@ -512,7 +512,7 @@ For example in the below `otherTasks` is an array which is passed into the .para
 
 	asyncChainable
 		.then(function(next) {
-			for (var i = 0; i < otherTasksCount; i++) {
+			for (var i = 0; i < 20; i++) {
 				(function(i) { // Make a closure so 'i' doesnt end up being 20 all the time (since its passed by reference)
 					otherTasks.push(function(next) {
 						console.log('Hello World', i);
