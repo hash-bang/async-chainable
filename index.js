@@ -56,14 +56,15 @@ module.exports.dir = async.dir;
 module.exports.noConflict = async.noConflict;
 // }}}
 
-var _options = {
-	autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
-	limit: 10, // Number of defer functions that are allowed to execute at once
-};
-
 var _struct = [];
 var _structPointer = 0;
 var context = {};
+
+var _options = {
+	autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
+	limit: 10, // Number of defer functions that are allowed to execute at once
+	context: context, // The context item passed to the functions (can be changed with .context())
+};
 
 /**
 * Examines an argument stack and returns all passed arguments as a CSV
@@ -209,7 +210,7 @@ var deferAdd = function(id, task, parentChain) {
 		id: id || null,
 		prereq: parentChain.prereq || [],
 		payload: function(next) {
-			task.call(context, function(err, value) {
+			task.call(_options.context, function(err, value) {
 				if (id)
 					context[id] = value;
 				_deferredRunning--;
@@ -338,7 +339,17 @@ module.exports.limit = function(setLimit) {
 	_struct.push({ type: 'limit', payload: setLimit });
 	return this;
 };
-// }}}
+
+
+/**
+* Queue up a context setter
+* @param object newContext The new context to pass to all subsequent functions via `this`
+* @return object This chainable object
+*/
+module.exports.context = function(newContext) {
+	_struct.push({ type: 'context', payload: newContext });
+	return this;
+};
 
 
 /**
@@ -354,7 +365,7 @@ var finalize = function(err) {
 		return;
 	}
 	// }}}
-	_struct[_struct.length-1].payload.call(context, err);
+	_struct[_struct.length-1].payload.call(_options.context, err);
 	if (_options.autoReset)
 		reset();
 };
@@ -377,13 +388,13 @@ var execute = function(err) {
 	}
 	// }}}
 	_structPointer++;
-	// Execute based on currentExec.type {{{
+	// _STRUCT ENTRIES - Execute based on currentExec.type {{{
 	switch (currentExec.type) {
 		case 'parallelArray':
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			async.parallel(currentExec.payload.map(function(task) {
 				return function(next) {
-					task.call(context, next);
+					task.call(_options.context, next);
 				};
 			}), function(err) {
 				currentExec.completed = true;
@@ -396,7 +407,7 @@ var execute = function(err) {
 			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
 			keys.forEach(function(key) {
 				tasks.push(function(next, err) {
-					currentExec.payload[key].call(context, function(err, value) {
+					currentExec.payload[key].call(_options.context, function(err, value) {
 						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
@@ -414,7 +425,7 @@ var execute = function(err) {
 				Object.keys(task).forEach(function(key) {
 					tasks.push(function(next, err) {
 						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
-						task[key].call(context, function(err, value) {
+						task[key].call(_options.context, function(err, value) {
 							context[key] = value; // Allocate returned value to context
 							next(err);
 						})
@@ -430,7 +441,7 @@ var execute = function(err) {
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
 			async.series(currentExec.payload.map(function(task) {
 				return function(next) {
-					task.call(context, next);
+					task.call(_options.context, next);
 				};
 			}), function(err) {
 				currentExec.completed = true;
@@ -443,7 +454,7 @@ var execute = function(err) {
 			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
 			keys.forEach(function(key) {
 				tasks.push(function(next, err) {
-					currentExec.payload[key].call(context, function(err, value) {
+					currentExec.payload[key].call(_options.context, function(err, value) {
 						context[key] = value; // Allocate returned value to context
 						next(err);
 					})
@@ -461,7 +472,7 @@ var execute = function(err) {
 				Object.keys(task).forEach(function(key) {
 					tasks.push(function(next, err) {
 						if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
-						task[key].call(context, function(err, value) {
+						task[key].call(_options.context, function(err, value) {
 							context[key] = value; // Allocate returned value to context
 							next(err);
 						})
@@ -527,6 +538,11 @@ var execute = function(err) {
 			currentExec.completed = true;
 			execute(); // Move on to next action
 			break;
+		case 'context': // Change the _options.context object
+			_options.context = currentExec.payload ? currentExec.payload : context; // Set context (if null use internal context)
+			currentExec.completed = true;
+			execute(); // Move on to next action
+			break;
 		case 'end': // This should ALWAYS be the last item in the structure and indicates the final function call
 			finalize();
 			break;
@@ -575,13 +591,5 @@ module.exports.end = function() {
 	execute();
 	return this;
 };
-
-// Setup initial context
-
-/**
-* The context used as `this` when calling all functions
-* @type object
-*/
-module.exports.context = context;
 
 module.exports.reset(); // Enter initial state

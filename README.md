@@ -455,6 +455,25 @@ Clear the result buffer, releasing all results held in memory.
 		.end(console.log) // Output: null, {quz: 'quz value'}
 
 
+.context()
+----------
+Set the context used by async-chainable during subsequent function calls.
+In effect this sets what `this` is for each call.
+Omiting an argument or supplying a 'falsy' value will instruct async-chainable to use its own default context object.
+
+	asyncChainable
+		.then({foo: fooFunc}) // `this` is async-chainables own context object
+		.context({hello: 'world'})
+		.then({bar: barFunc}) // `this` is now {hello: 'world'}
+		.context()
+		.then({baz: bazFunc}) // `this` is now async-chainables own context object again
+		.end(this) // Output: null, {foo: 'foo value', bar: 'bar value', quz: 'quz value'}
+
+Note that even if the context is switched async-chainable still stores any named values in its own context for later retreival (in the above example this is `barFunc()` returning a value even though the context has been changed to a custom object).
+
+See the [Context Section](#context) for further details on what the async-chainable context object contains.
+
+
 Context
 =======
 Unless overridden by a call to `.context()`, async-chainable will use its own context object which can be accessed via `this` inside any callback function.
@@ -496,6 +515,7 @@ Each item in the `this._struct` object is composed of the following keys:
 | `completed`                          | Boolean        | An indicator as to whether this item has been executed yet               |
 | `payload`                            | Mixed          | The options for the item, in parallel or series modes this is an array or object of the tasks to execute |
 | `type`                               | String         | A supported internal execution type                                      |
+| `waitingOn`                          | Int            | When the type is a defer operation this integer tracks the number of defers that have yet to resolve |
 
 
 
