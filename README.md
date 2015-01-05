@@ -100,9 +100,9 @@ FAQ
 ===
 Some frequently asked questions:
 
-* **Why not just use Async?** - Async is an excellent library and suitable for 90% of tasks out there but it quickly becomes unmanagable when dealing with complex nests such as a mix of series and parallel tasks.
+* **Why not just use Async?** - Async is an excellent library and suitable for 90% of tasks out there but it quickly becomes unmanageable when dealing with complex nests such as a mix of series and parallel tasks.
 
-* **Why was this developed?** - Some research I was doing involved the nesting of ridiculously complex parallel and series based tasks and Async was becoming more of a hinderence than a helper.
+* **Why was this developed?** - Some research I was doing involved the nesting of ridiculously complex parallel and series based tasks and Async was becoming more of a hindrance than a helper.
 
 * **What alternatives are there to this library?** - The only ones I've found that come close are [node-seq](https://github.com/substack/node-seq) and [queue-async](https://www.npmjs.com/package/queue-async) but both of them do not provide the functionality listed here
 
@@ -340,7 +340,7 @@ This can be considered the parallel process twin to `then()`.
 
 .await()
 --------
-Wait for one or more fired defer functions to complete before contining down the asyncChainable chain.
+Wait for one or more fired defer functions to complete before containing down the asyncChainable chain.
 
 	// Wait for everything
 	asyncChainable
@@ -413,7 +413,7 @@ This can be considered the series process twin to `then()`.
 The final stage in the chain, `.end()` must be called to execute the queue of actions.
 If given arguments it functions the same as `.then(func).reset()` (i.e. execute the action in series and then reset).
 
-While similar to `then()` this function is used primerially as the *last* thing a chain should resolve as it can also catch errors.
+While similar to `then()` this function is used as the *last* thing a chain should resolve as it can also catch errors.
 
 	asyncChainable.
 		.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
@@ -496,3 +496,31 @@ Each item in the `this._struct` object is composed of the following keys:
 | `completed`                          | Boolean        | An indicator as to whether this item has been executed yet               |
 | `payload`                            | Mixed          | The options for the item, in parallel or series modes this is an array or object of the tasks to execute |
 | `type`                               | String         | A supported internal execution type                                      |
+
+
+
+Useful techniques
+=================
+
+Make a variable number of tasks then execute them
+-------------------------------------------------
+Since JavaScript passes everything via pointers you can pass in an array or object to a .parallel() or .series() call which will get evaluated only when that chain item gets executed. This means that preceding items can rewrite the actual tasks conducted during that call.
+
+For example in the below `otherTasks` is an array which is passed into the .parallel() call (the second chain item). However the initial .then() callback actually writes the items that that parallel call should make.
+
+	var otherTasks = [];
+
+	asyncChainable
+		.then(function(next) {
+			for (var i = 0; i < otherTasksCount; i++) {
+				(function(i) { // Make a closure so 'i' doesnt end up being 20 all the time (since its passed by reference)
+					otherTasks.push(function(next) {
+						console.log('Hello World', i);
+						next();
+					});
+				})(i);
+			}
+			next();
+		})
+		.parallel(otherTasks)
+		.end();

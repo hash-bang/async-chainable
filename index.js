@@ -84,7 +84,7 @@ var getOverload = function(args) {
 		if (argType == 'undefined') break;
 		if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Array]') { // Special case for arrays being classed as objects
 			argType = 'array';
-			if (args[i].every(function(item) {
+			if (args[i].length && args[i].every(function(item) {
 				return (typeof item == 'object' && Object.prototype.toString.call(item) == '[object Object]');
 			}))
 				argType = 'collection';

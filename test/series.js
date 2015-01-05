@@ -211,3 +211,61 @@ describe('async-chainable.series() - named single call style', function(){
 		expect(context.bazKey).to.equal('bazValue');
 	});
 });
+
+
+/**
+* This test checks that async-chainable can cope with an array of tasks changing in a preceeding tasks
+* Here the intial .then() condition rewrites the tasks that the next .series() call will actually execute
+*/
+describe('async-chainable.series() - array pointer during change', function(){
+	var output;
+	var otherTasksCount = 20;
+
+	beforeEach(function(done) {
+		output = [];
+
+		var otherTasks = [];
+
+		asyncChainable
+			.then(function(next) {
+				output.push('parallel-1');
+				for (var i = 0; i < otherTasksCount; i++) {
+					(function(i) { // Make a closure so 'i' doesnt end up being 20 all the time (since its passed by reference)
+						otherTasks.push(function(next) {
+							setTimeout(function() {
+								output.push('parallel-other-' + i);
+								next();
+							}, Math.ceil(Math.random() * 10));
+						});
+					})(i);
+				}
+				next();
+			})
+			.series(otherTasks)
+			.end(function(err) {
+				output.push('end');
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(22);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('parallel-1');
+		for (var i = 0; i < otherTasksCount; i++) {
+			expect(output).to.contain('parallel-other-' + i);
+		}
+		expect(output).to.contain('end');
+	});
+
+	it('should be in the correct order', function() {
+		expect(output[0]).to.equal('parallel-1');
+		for (var i = 0; i < otherTasksCount; i++) {
+			expect(output[i+1]).to.equal('parallel-other-' + i);
+		}
+		expect(output[21]).to.equal('end');
+	});
+});
