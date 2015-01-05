@@ -353,6 +353,42 @@ module.exports.context = function(newContext) {
 
 
 /**
+* Queue up a varable setter (i.e. set a hash of variables in context)
+* @param string The named key to set
+* @param mixed The value to set
+* @return object This chainable object
+*/
+module.exports.set = function() {
+	var calledAs = getOverload(arguments);
+	switch(calledAs) {
+		case '':
+			// Pass
+			break;
+		case 'string,string': // Form: set(String <key>, String <value)
+			var payload = {};
+			payload[arguments[0]] = arguments[1];
+			_struct.push({ type: 'set', payload: payload });
+			break;
+		case 'object': // Form: set(Object)
+			_struct.push({ type: 'set', payload: arguments[0] });
+			break;
+		case 'function': // Form: set(func) -> series(func)
+			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
+			break;
+		case  'string,function': // Form: set(String, func) -> series(String <id>, func)
+			var payload = {};
+			payload[arguments[0]] = arguments[1];
+			_struct.push({ type: 'seriesObject', payload: payload});
+			break;
+		default:
+			console.error('Unknown call style for .set():', calledAs);
+	}
+
+	return this;
+};
+
+
+/**
 * Internal function executed at the end of the chain
 * This can occur either in sequence (i.e. no errors) or a jump to this position (i.e. an error happened somewhere)
 * @access private
@@ -540,6 +576,15 @@ var execute = function(err) {
 			break;
 		case 'context': // Change the _options.context object
 			_options.context = currentExec.payload ? currentExec.payload : context; // Set context (if null use internal context)
+			currentExec.completed = true;
+			execute(); // Move on to next action
+			break;
+		case 'set': // Set a hash of variables within context
+			var keys = Object.keys(currentExec.payload);
+			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			keys.forEach(function(key) {
+				context[key] = currentExec.payload[key];
+			});
 			currentExec.completed = true;
 			execute(); // Move on to next action
 			break;

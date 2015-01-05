@@ -474,6 +474,22 @@ Note that even if the context is switched async-chainable still stores any named
 See the [Context Section](#context) for further details on what the async-chainable context object contains.
 
 
+.set()
+------
+Set is a helper function to quickly allocate the value of a context item as we move down the chain.
+It can be used as a named single item key/value or as a setter object.
+
+	asyncChainable
+		.set('foo', 'foo value'])
+		.then(function(next) { console.log(this.foo); next() }) // this.foo is now 'foo value'
+		.set({bar: 'bar value']) 
+		.then(function(next) { console.log(this.foo); next() }) // this.bar is now 'bar value' (as well as .foo being also set)
+		.set(baz, function(next) { next(null, 'baz value') }) // this.baz is now 'baz value' (this is actually just an alias for .series())
+		.then(function(next) { console.log(this.foo); next() }) // this.baz is now 'baz value' (as well as .foo, .bar being also set)
+		.end()
+
+
+
 Context
 =======
 Unless overridden by a call to `.context()`, async-chainable will use its own context object which can be accessed via `this` inside any callback function.
