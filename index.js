@@ -1,71 +1,5 @@
 var async = require('async');
 
-// Import all Async functionality so this module becomes a drop-in replacement {{{
-// Collections
-module.exports.each = async.each;
-module.exports.eachSeries = async.eachSeries;
-module.exports.eachLimit = async.eachLimit;
-module.exports.map = async.map;
-module.exports.mapSeries = async.mapSeries;
-module.exports.mapLimit = async.mapLimit;
-module.exports.filter = async.filter;
-module.exports.filterSeries = async.filterSeries;
-module.exports.reject = async.reject;
-module.exports.rejectSeries = async.rejectSeries;
-module.exports.reduce = async.reduce;
-module.exports.reduceRight = async.reduceRight;
-module.exports.detect = async.detect;
-module.exports.detectSeries = async.detectSeries;
-module.exports.sortBy = async.sortBy;
-module.exports.some = async.some;
-module.exports.every = async.every;
-module.exports.concat = async.concat;
-module.exports.concatSeries = async.concatSeries;
-
-// Control Flow
-// module.exports.series = async.series;
-// module.exports.parallel = async.parallel;
-module.exports.parallelLimit = async.parallelLimit;
-module.exports.whilst = async.whilst;
-module.exports.doWhilst = async.doWhilst;
-module.exports.until = async.until;
-module.exports.doUntil = async.doUntil;
-module.exports.forever = async.forever;
-module.exports.waterfall = async.waterfall;
-module.exports.compose = async.compose;
-module.exports.seq = async.seq;
-module.exports.applyEach = async.applyEach;
-module.exports.applyEachSeries = async.applyEachSeries;
-module.exports.queue = async.queue;
-module.exports.priorityQueue = async.priorityQueue;
-module.exports.cargo = async.cargo;
-module.exports.auto = async.auto;
-module.exports.retry = async.retry;
-module.exports.iterator = async.iterator;
-module.exports.apply = async.apply;
-module.exports.nextTick = async.nextTick;
-module.exports.times = async.times;
-module.exports.timesSeries = async.timesSeries;
-module.exports.Utils = async.Utils;
-
-// Utils
-module.exports.memoize = async.memoize;
-module.exports.unmemoize = async.unmemoize;
-module.exports.log = async.log;
-module.exports.dir = async.dir;
-module.exports.noConflict = async.noConflict;
-// }}}
-
-var _struct = [];
-var _structPointer = 0;
-var context = {};
-
-var _options = {
-	autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
-	limit: 10, // Number of defer functions that are allowed to execute at once
-	context: context, // The context item passed to the functions (can be changed with .context())
-};
-
 /**
 * Examines an argument stack and returns all passed arguments as a CSV
 * e.g.
@@ -77,7 +11,7 @@ var _options = {
 * @param object args The special JavaScript 'arguments' object
 * @return string CSV of all passed arguments
 */
-var getOverload = function(args) {
+function getOverload(args) {
 	var i = 0;
 	var out = [];
 	while(1) {
@@ -101,38 +35,38 @@ var getOverload = function(args) {
 * @param array,object,function The function(s) to execute
 * @return object This chainable object
 */
-module.exports.series = module.exports.then = function() {
+function series() {
 	var calledAs = getOverload(arguments);
 	switch(calledAs) {
 		case '':
 			// Pass
 			break;
 		case 'function': // Form: series(func)
-			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
+			this._struct.push({ type: 'seriesArray', payload: [arguments[0]] });
 			break;
 		case  'string,function': // Form: series(String <id>, func)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
-			_struct.push({ type: 'seriesObject', payload: payload});
+			this._struct.push({ type: 'seriesObject', payload: payload});
 			break;
 		case 'array': // Form: series(Array <funcs>)
-			_struct.push({ type: 'seriesArray', payload: arguments[0] });
+			this._struct.push({ type: 'seriesArray', payload: arguments[0] });
 			break;
 		case 'object': // Form: series(Object <funcs>)
-			_struct.push({ type: 'seriesObject', payload: arguments[0] });
+			this._struct.push({ type: 'seriesObject', payload: arguments[0] });
 			break;
 		case 'collection': // Form: series(Collection <funcs>)
-			_struct.push({ type: 'seriesCollection', payload: arguments[0] });
+			this._struct.push({ type: 'seriesCollection', payload: arguments[0] });
 			break;
 
 		// Async library compatibility {{{
 		case 'array,function':
-			_struct.push({ type: 'seriesArray', payload: arguments[0] });
-			module.exports.end(arguments[1]);
+			this._struct.push({ type: 'seriesArray', payload: arguments[0] });
+			this.end(arguments[1]);
 			break;
 		case 'object,function':
-			_struct.push({ type: 'seriesObject', payload: arguments[0] });
-			module.exports.end(arguments[1]);
+			this._struct.push({ type: 'seriesObject', payload: arguments[0] });
+			this.end(arguments[1]);
 			break;
 		// }}}
 		default:
@@ -148,38 +82,38 @@ module.exports.series = module.exports.then = function() {
 * @param array,object,function The function(s) to execute
 * @return object This chainable object
 */
-module.exports.parallel = function() {
+function parallel() {
 	var calledAs = getOverload(arguments)
 	switch (calledAs) {
 		case '':
 			// Pass
 			break;
 		case 'function': // Form: parallel(func)
-			_struct.push({ type: 'parallelArray', payload: [arguments[0]] });
+			this._struct.push({ type: 'parallelArray', payload: [arguments[0]] });
 			break;
 		case 'string,function': // Form: parallel(String <id>, func)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
-			_struct.push({ type: 'parallelArray', payload: payload });
+			this._struct.push({ type: 'parallelArray', payload: payload });
 			break;
 		case 'array': // Form: parallel(Array <funcs>)
-			_struct.push({ type: 'parallelArray', payload: arguments[0] });
+			this._struct.push({ type: 'parallelArray', payload: arguments[0] });
 			break;
 		case 'object': // Form: series(Object <funcs>)
-			_struct.push({ type: 'parallelObject', payload: arguments[0] });
+			this._struct.push({ type: 'parallelObject', payload: arguments[0] });
 			break;
 		case 'collection': // Form: series(Collection <funcs>)
-			_struct.push({ type: 'parallelCollection', payload: arguments[0] });
+			this._struct.push({ type: 'parallelCollection', payload: arguments[0] });
 			break;
 
 		// Async library compatibility {{{
 		case 'array,function':
-			_struct.push({ type: 'parallelArray', payload: arguments[0] });
-			module.exports.end(arguments[1]);
+			this._struct.push({ type: 'parallelArray', payload: arguments[0] });
+			this.end(arguments[1]);
 			break;
 		case 'object,function':
-			_struct.push({ type: 'parallelObject', payload: arguments[0] });
-			module.exports.end(arguments[1]);
+			this._struct.push({ type: 'parallelObject', payload: arguments[0] });
+			this.end(arguments[1]);
 			break;
 		// }}}
 		default:
@@ -192,56 +126,55 @@ module.exports.parallel = function() {
 
 // Defer functionality - Here be dragons! {{{
 /**
-* Collection of items that have been defered
+* Collection of items that have been deferred
 * @type collection {payload: function, id: null|String, prereq: [dep1, dep2...]}
 * @access private
 */
-var _defered = [];
-var _deferredRunning = 0;
-
-var deferAdd = function(id, task, parentChain) {
+function deferAdd(id, task, parentChain) {
+	var self = this;
 	parentChain.waitingOn = (parentChain.waitingOn || 0) + 1;
 
 	if (! parentChain.waitingOnIds)
 		parentChain.waitingOnIds = [];
 	parentChain.waitingOnIds.push(id);
 
-	_defered.push({
+	self._deferred.push({
 		id: id || null,
 		prereq: parentChain.prereq || [],
 		payload: function(next) {
-			task.call(_options.context, function(err, value) {
+			task.call(self._options.context, function(err, value) {
 				if (id)
-					context[id] = value;
-				_deferredRunning--;
+					self._context[id] = value;
+				self._deferredRunning--;
 				if (--parentChain.waitingOn == 0) {
 					parentChain.completed = true;
-					if (_struct.length && _struct[_structPointer].type == 'await')
-						execute(err);
+					if (self._struct.length && self._struct[self._structPointer].type == 'await')
+						self._execute(err);
 				}
-				execute(err);
+				self._execute(err);
 			});
 		}
 	});
 };
 
 
-var deferCheck = function() {
-	if (_options.limit && _deferredRunning >= _options.limit) return; // Already over limit
-	_defered = _defered.filter(function(item) {
-		if (_options.limit && _deferredRunning >= _options.limit) {
+function _deferCheck() {
+	var self = this;
+	if (self._options.limit && self._deferredRunning >= self._options.limit) return; // Already over limit
+	self._deferred = self._deferred.filter(function(item) {
+		if (self._options.limit && self._deferredRunning >= self._options.limit) {
 			return true; // Already over limit - all subseqent items should be left in place
 		}
 		if (
 			item.prereq.length == 0 || // No pre-reqs - can execute now
 			item.prereq.every(function(dep) { // All pre-reqs are satisfied
-				return context.hasOwnProperty(dep);
+				return self._context.hasOwnProperty(dep);
 			})
 		) { 
-			_deferredRunning++;
+			self._deferredRunning++;
 			setTimeout(item.payload);
 			return false;
-		} else { // Can't do anything with this right now
+		} else { // Can't do anything with self right now
 			return true;
 		}
 	});
@@ -250,43 +183,43 @@ var deferCheck = function() {
 
 
 /**
-* Queue up a function(s) to execute as defered - i.e. dont stop to wait for it
+* Queue up a function(s) to execute as deferred - i.e. dont stop to wait for it
 * @param array,object,function The function(s) to execute as a defer
 * @return object This chainable object
 */
-module.exports.defer = function() {
+function defer() {
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
 		case '':
 			// Pass
 			break;
 		case 'function': // Form: defer(func)
-			_struct.push({ type: 'deferArray', payload: [arguments[0]] });
+			this._struct.push({ type: 'deferArray', payload: [arguments[0]] });
 			break;
 		case 'string,function': // Form: defer(String <id>, func)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
-			_struct.push({ type: 'deferObject', payload: payload });
+			this._struct.push({ type: 'deferObject', payload: payload });
 			break;
 		case 'array': // Form: defer(Array <funcs>)
-			_struct.push({ type: 'deferArray', payload: arguments[0] });
+			this._struct.push({ type: 'deferArray', payload: arguments[0] });
 			break;
 		case 'object': // Form: defer(Object <funcs>)
-			_struct.push({ type: 'deferObject', payload: arguments[0] });
+			this._struct.push({ type: 'deferObject', payload: arguments[0] });
 			break;
 		case 'collection': // Form defer(Collection <funcs>)
-			_struct.push({ type: 'deferCollection', payload: arguments[0] });
+			this._struct.push({ type: 'deferCollection', payload: arguments[0] });
 			break;
 		case 'string,string,function': // Form: defer(String <prereq>, String <name>, func)
 			var payload = {};
 			payload[arguments[1]] = arguments[2];
-			_struct.push({ type: 'deferObject', prereq: [arguments[0]], payload: payload });
+			this._struct.push({ type: 'deferObject', prereq: [arguments[0]], payload: payload });
 			break;
 			break;
 		case 'array,string,function': //Form: defer(Array <prereqs>, String <name>, func)
 			var payload = {};
 			payload[arguments[1]] = arguments[2];
-			_struct.push({ type: 'deferObject', prereq: arguments[0], payload: payload });
+			this._struct.push({ type: 'deferObject', prereq: arguments[0], payload: payload });
 			break;
 		default:
 			console.error('Unknown call style for .defer():', calledAs);
@@ -302,7 +235,7 @@ module.exports.defer = function() {
 * @param array,... The dependencies to check resolution of. If omitted all are checked
 * @return object This chainable object
 */
-module.exports.await = function() {
+function await() {
 	var payload = [];
 
 	// Slurp all args into payload {{{
@@ -324,7 +257,7 @@ module.exports.await = function() {
 	});
 	// }}}
 
-	_struct.push({ type: 'await', payload: payload });
+	this._struct.push({ type: 'await', payload: payload });
 
 	return this;
 };
@@ -335,8 +268,8 @@ module.exports.await = function() {
 * @param int|null|false Either the number of defer processes that are allowed to execute simultaniously or falsy values to disable
 * @return object This chainable object
 */
-module.exports.limit = function(setLimit) {
-	_struct.push({ type: 'limit', payload: setLimit });
+function setLimit(setLimit) {
+	this._struct.push({ type: 'limit', payload: setLimit });
 	return this;
 };
 
@@ -346,8 +279,8 @@ module.exports.limit = function(setLimit) {
 * @param object newContext The new context to pass to all subsequent functions via `this`
 * @return object This chainable object
 */
-module.exports.context = function(newContext) {
-	_struct.push({ type: 'context', payload: newContext });
+function setContext(newContext) {
+	this._struct.push({ type: 'context', payload: newContext });
 	return this;
 };
 
@@ -358,7 +291,7 @@ module.exports.context = function(newContext) {
 * @param mixed The value to set
 * @return object This chainable object
 */
-module.exports.set = function() {
+function set() {
 	var calledAs = getOverload(arguments);
 	switch(calledAs) {
 		case '':
@@ -367,18 +300,18 @@ module.exports.set = function() {
 		case 'string,string': // Form: set(String <key>, String <value)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
-			_struct.push({ type: 'set', payload: payload });
+			this._struct.push({ type: 'set', payload: payload });
 			break;
 		case 'object': // Form: set(Object)
-			_struct.push({ type: 'set', payload: arguments[0] });
+			this._struct.push({ type: 'set', payload: arguments[0] });
 			break;
 		case 'function': // Form: set(func) -> series(func)
-			_struct.push({ type: 'seriesArray', payload: [arguments[0]] });
+			this._struct.push({ type: 'seriesArray', payload: [arguments[0]] });
 			break;
 		case  'string,function': // Form: set(String, func) -> series(String <id>, func)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
-			_struct.push({ type: 'seriesObject', payload: payload});
+			this._struct.push({ type: 'seriesObject', payload: payload});
 			break;
 		default:
 			console.error('Unknown call style for .set():', calledAs);
@@ -393,17 +326,17 @@ module.exports.set = function() {
 * This can occur either in sequence (i.e. no errors) or a jump to this position (i.e. an error happened somewhere)
 * @access private
 */
-var finalize = function(err) {
+function _finalize(err) {
 	// Sanity checks {{{
-	if (_struct.length == 0) return; // Finalize called on dead object - probably a defer() fired without an await()
-	if (_struct[_struct.length - 1].type != 'end') {
-		console.error('While trying to find an end point in the async-chainable structure the last item in the _struct does not have type==end!');
+	if (this._struct.length == 0) return; // Finalize called on dead object - probably a defer() fired without an await()
+	if (this._struct[this._struct.length - 1].type != 'end') {
+		console.error('While trying to find an end point in the async-chainable structure the last item in the this._struct does not have type==end!');
 		return;
 	}
 	// }}}
-	_struct[_struct.length-1].payload.call(_options.context, err);
-	if (_options.autoReset)
-		reset();
+	this._struct[this._struct.length-1].payload.call(this._options.context, err);
+	if (this._options.autoReset)
+		this.reset();
 };
 
 
@@ -412,57 +345,58 @@ var finalize = function(err) {
 * This is usually called after the completion of every async.series() / async.parallel() call
 * @access private
 */
-var execute = function(err) {
-	if (_structPointer >= _struct.length) return finalize(err); // Nothing more to execute in struct
-	if (err) return finalize(err); // An error has been raised - stop exec and call finalize now
-	deferCheck(); // Kick off any pending defered items
-	var currentExec = _struct[_structPointer];
+function _execute(err) {
+	var self = this;
+	if (self._structPointer >= self._struct.length) return this._finalize(err); // Nothing more to execute in struct
+	if (err) return this._finalize(err); // An error has been raised - stop exec and call finalize now
+	self._deferCheck(); // Kick off any pending deferred items
+	var currentExec = self._struct[self._structPointer];
 	// Sanity checks {{{
 	if (!currentExec.type) {
-		console.error('No type is specified for async-chainable structure at position', _structPointer, currentExec);
-		return this;
+		console.error('No type is specified for async-chainable structure at position', self._structPointer, currentExec);
+		return self;
 	}
 	// }}}
-	_structPointer++;
-	// _STRUCT ENTRIES - Execute based on currentExec.type {{{
+	self._structPointer++;
+	// self._struct exec - Execute based on currentExec.type {{{
 	switch (currentExec.type) {
 		case 'parallelArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			async.parallel(currentExec.payload.map(function(task) {
 				return function(next) {
-					task.call(_options.context, next);
+					task.call(self._options.context, next);
 				};
 			}), function(err) {
 				currentExec.completed = true;
-				execute(err);
+				self._execute(err);
 			});
 			break;
 		case 'parallelObject':
 			var tasks = [];
 			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
 				tasks.push(function(next, err) {
-					currentExec.payload[key].call(_options.context, function(err, value) {
-						context[key] = value; // Allocate returned value to context
+					currentExec.payload[key].call(self._options.context, function(err, value) {
+						self._context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
 			});
 			async.parallel(tasks, function(err) {
 				currentExec.completed = true;
-				execute(err);
+				self._execute(err);
 			});
 			break;
 		case 'parallelCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
 					tasks.push(function(next, err) {
 						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
-						task[key].call(_options.context, function(err, value) {
-							context[key] = value; // Allocate returned value to context
+						task[key].call(self._options.context, function(err, value) {
+							self._context[key] = value; // Allocate returned value to context
 							next(err);
 						})
 					});
@@ -470,46 +404,46 @@ var execute = function(err) {
 			});
 			async.parallel(tasks, function(err) {
 				currentExec.completed = true;
-				execute(err);
+				self._execute(err);
 			});
 			break;
 		case 'seriesArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			async.series(currentExec.payload.map(function(task) {
 				return function(next) {
-					task.call(_options.context, next);
+					task.call(self._options.context, next);
 				};
 			}), function(err) {
 				currentExec.completed = true;
-				execute(err);
+				self._execute(err);
 			});
 			break;
 		case 'seriesObject':
 			var tasks = [];
 			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
 				tasks.push(function(next, err) {
-					currentExec.payload[key].call(_options.context, function(err, value) {
-						context[key] = value; // Allocate returned value to context
+					currentExec.payload[key].call(self._options.context, function(err, value) {
+						self._context[key] = value; // Allocate returned value to context
 						next(err);
 					})
 				});
 			});
 			async.series(tasks, function(err) {
 				currentExec.completed = true;
-				execute(err);
+				self._execute(err);
 			});
 			break;
 		case 'seriesCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
 					tasks.push(function(next, err) {
 						if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
-						task[key].call(_options.context, function(err, value) {
-							context[key] = value; // Allocate returned value to context
+						task[key].call(self._options.context, function(err, value) {
+							self._context[key] = value; // Allocate returned value to context
 							next(err);
 						})
 					});
@@ -517,79 +451,79 @@ var execute = function(err) {
 			});
 			async.series(tasks, function(err) {
 				currentExec.completed = true;
-				execute(err);
+				self._execute(err);
 			});
 			break;
 		case 'deferArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			currentExec.payload.forEach(function(task) {
-				deferAdd(null, task, currentExec);
+				self._deferAdd(null, task, currentExec);
 			});
-			execute(); // Move on immediately
+			self._execute(); // Move on immediately
 			break;
 		case 'deferObject':
 			var tasks = [];
 			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
-				deferAdd(key, currentExec.payload[key], currentExec);
+				self._deferAdd(key, currentExec.payload[key], currentExec);
 			});
-			execute(); // Move on immediately
+			self._execute(); // Move on immediately
 			break;
 		case 'deferCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return execute() };
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			var tasks = [];
 			currentExec.payload.forEach(function(task) {
 				Object.keys(task).forEach(function(key) {
-					deferAdd(key, task[key], currentExec);
+					self._deferAdd(key, task[key], currentExec);
 				});
 			});
-			execute(); // Move on immediately
+			self._execute(); // Move on immediately
 			break;
 		case 'await': // Await can operate in two modes, either payload=[] (examine all) else (examine specific keys)
 			if (!currentExec.payload.length) { // Check all tasks are complete
-				if (_struct.slice(0, _structPointer - 1).every(function(stage) { // Examine all items UP TO this one and check they are complete
+				if (self._struct.slice(0, self._structPointer - 1).every(function(stage) { // Examine all items UP TO self one and check they are complete
 					return stage.completed;
-				})) { // All tasks up to this point are marked as completed
+				})) { // All tasks up to self point are marked as completed
 					currentExec.completed = true;
-					execute(); // Go onto next stage
+					self._execute(); // Go onto next stage
 				} else {
-					_structPointer--; // At least one task is outstanding - rewind to this stage so we repeat on next resolution
+					self._structPointer--; // At least one task is outstanding - rewind to self stage so we repeat on next resolution
 				}
 
 			} else { // Check certain tasks are complete by key
 				var allOk = true;
 				if (currentExec.payload.every(function(dep) { // Examine all named dependencies
-					return !! context[dep];
+					return !! self._context[dep];
 				})) { // All are present
 					currentExec.completed = true;
-					execute(); // Go onto next stage
+					self._execute(); // Go onto next stage
 				} else {
-					_structPointer--; // At least one dependency is outstanding - rewind to this stage so we repeat on next resolution
+					self._structPointer--; // At least one dependency is outstanding - rewind to self stage so we repeat on next resolution
 				}
 			}
 			break;
 		case 'limit': // Set the options.limit variable
-			_options.limit = currentExec.payload;
+			self._options.limit = currentExec.payload;
 			currentExec.completed = true;
-			execute(); // Move on to next action
+			self._execute(); // Move on to next action
 			break;
-		case 'context': // Change the _options.context object
-			_options.context = currentExec.payload ? currentExec.payload : context; // Set context (if null use internal context)
+		case 'context': // Change the self._options.context object
+			self._options.context = currentExec.payload ? currentExec.payload : self._context; // Set context (if null use internal context)
 			currentExec.completed = true;
-			execute(); // Move on to next action
+			self._execute(); // Move on to next action
 			break;
 		case 'set': // Set a hash of variables within context
 			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return execute() };
+			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
-				context[key] = currentExec.payload[key];
+				self._context[key] = currentExec.payload[key];
 			});
 			currentExec.completed = true;
-			execute(); // Move on to next action
+			self._execute(); // Move on to next action
 			break;
-		case 'end': // This should ALWAYS be the last item in the structure and indicates the final function call
-			finalize();
+		case 'end': // self should ALWAYS be the last item in the structure and indicates the final function call
+			this._finalize();
 			break;
 		default:
 			console.error('Unknown async-chainable exec type:', currentExec);
@@ -603,40 +537,145 @@ var execute = function(err) {
 * Reset all state variables and return the object into a pristine condition
 * @return object This chainable object
 */
-var reset = function() {
-	_struct = [];
-	_structPointer = 0;
-	var reAttachContext = (_options.context == context); // Reattach the context pointer after reset?
-	context = {
-		_struct: _struct,
-		_structPointer: _structPointer,
-		_options: _options,
-		_deferredRunning: _deferredRunning,
+function reset() {
+	this._struct = [];
+	this._structPointer = 0;
+
+	var reAttachContext = (this._options.context == this._context); // Reattach the context pointer after reset?
+	this._context = {
+		_struct: this._struct,
+		_structPointer: this._structPointer,
+		_options: this._options,
+		_deferredRunning: this._deferredRunning,
 	};
-	if (reAttachContext) _options.context = context;
+
+	if (reAttachContext) this._options.context = this._context;
 };
-module.exports.reset = reset;
 
 /**
 * Queue up an optional single function for execution on completion
 * This function also starts the queue executing
 * @return object This chainable object
 */
-module.exports.end = function() { 
+function end() { 
 	var calledAs = getOverload(arguments);
 	switch (calledAs) {
 		case '': // No functions passed - do nothing
-			_struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
+			this._struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
 			break;
 		case 'function': // Form: end(func) -> redirect as if called with series(func)
-			_struct.push({ type: 'end', payload: arguments[0] });
+			this._struct.push({ type: 'end', payload: arguments[0] });
 			break;
 		default:
 			console.error('Unknown call style for .end():', calledAs);
 	}
 
-	execute();
+	this._execute();
 	return this;
 };
 
-module.exports.reset(); // Enter initial state
+var objectInstance = function() {
+	// Variables {{{
+	this._struct = [];
+	this._structPointer = 0;
+	this._context = {};
+
+	this._options = {
+		autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
+		limit: 10, // Number of defer functions that are allowed to execute at once
+		context: this._context, // The context item passed to the functions (can be changed with .context())
+	};
+	// }}}
+
+	// Async-Chainable functions {{{
+	// Private {{{
+	this._execute = _execute;
+	this._deferCheck = _deferCheck;
+	this._deferAdd = deferAdd;
+	this._deferred = [];
+	this._deferredRunning = 0;
+	this._finalize = _finalize;
+	// }}}
+
+	this.await = await;
+	this.context = setContext;
+	this.defer = defer;
+	this.end = end;
+	this.limit = setLimit;
+	this.parallel = parallel;
+	this.reset = reset;
+	this.series = series;
+	this.set = set;
+	this.then = series;
+	this.new = newObjectInstance;
+	this.examine = function() {
+		console.log('EXAMINE', this);
+		return this;
+	};
+	// }}}
+
+	// Async compat functionality - so this module becomes a drop-in replacement {{{
+	// Collections
+	this.each = async.each;
+	this.eachSeries = async.eachSeries;
+	this.eachLimit = async.eachLimit;
+	this.map = async.map;
+	this.mapSeries = async.mapSeries;
+	this.mapLimit = async.mapLimit;
+	this.filter = async.filter;
+	this.filterSeries = async.filterSeries;
+	this.reject = async.reject;
+	this.rejectSeries = async.rejectSeries;
+	this.reduce = async.reduce;
+	this.reduceRight = async.reduceRight;
+	this.detect = async.detect;
+	this.detectSeries = async.detectSeries;
+	this.sortBy = async.sortBy;
+	this.some = async.some;
+	this.every = async.every;
+	this.concat = async.concat;
+	this.concatSeries = async.concatSeries;
+
+	// Control Flow
+	// See main .series() and .parallel() code for async compatibility
+	this.parallelLimit = async.parallelLimit;
+	this.whilst = async.whilst;
+	this.doWhilst = async.doWhilst;
+	this.until = async.until;
+	this.doUntil = async.doUntil;
+	this.forever = async.forever;
+	this.waterfall = async.waterfall;
+	this.compose = async.compose;
+	this.seq = async.seq;
+	this.applyEach = async.applyEach;
+	this.applyEachSeries = async.applyEachSeries;
+	this.queue = async.queue;
+	this.priorityQueue = async.priorityQueue;
+	this.cargo = async.cargo;
+	this.auto = async.auto;
+	this.retry = async.retry;
+	this.iterator = async.iterator;
+	this.apply = async.apply;
+	this.nextTick = async.nextTick;
+	this.times = async.times;
+	this.timesSeries = async.timesSeries;
+	this.Utils = async.Utils;
+
+	// Utils
+	this.memoize = async.memoize;
+	this.unmemoize = async.unmemoize;
+	this.log = async.log;
+	this.dir = async.dir;
+	this.noConflict = async.noConflict;
+	// }}}
+
+	this.reset();
+}
+
+function newObjectInstance() {
+	return new objectInstance;
+}
+
+
+// Return the output object
+module.exports = newObjectInstance();

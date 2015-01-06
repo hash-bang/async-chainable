@@ -440,6 +440,32 @@ If an error is caused in the middle of execution the result object is still avai
 		.end(console.log) // Output: 'Error in bar', {foo: 'foo value'}
 
 
+.new()
+------
+Async-chainable operates as an instanciated object. In order to get a new instance (e.g. for nesting invokations) call `.new()` to get a fresh object which wont interfear with any currently live versions.
+
+The below example uses two versions of async-chainable. The default outer item wraps a new instance of the inner one.
+
+	asyncChainable
+		.series([
+			fooFunc,
+			function(outerNext) { 
+				asyncChainable.new() // Make new instance of async-chainable so we can nest
+					.series([
+						barFunc,
+						bazFunc,
+						quzFunc,
+					])
+					.end(function(err) {
+						outerNext(err);
+					});
+			},
+		])
+		.end(function(err) {
+			done();
+		});
+
+
 .reset()
 ---------
 Clear the result buffer, releasing all results held in memory.
@@ -560,3 +586,12 @@ For example in the below `otherTasks` is an array which is passed into the .para
 		})
 		.parallel(otherTasks)
 		.end();
+
+
+TODO
+====
+* Nested instance tests
+* Better error resolution when calling series/parallel/defer/set with weird and wonderful overloads - use `throw new Error()` instead of console.log
+* Ability to pipe input via function like async.cargo() e.g. `.parallel(Array <items>, func)`
+* README: Exampe of .set() / .then() with something like downloading a stream of data
+* `this.next()` as a possible way to call the next handler?
