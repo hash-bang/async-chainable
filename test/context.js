@@ -1,3 +1,4 @@
+var _ = require('lodash');
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
@@ -10,24 +11,24 @@ describe('async-chainable.context()', function(){
 		contexts = [];
 
 		asyncChainable
-			.then(function(next) { contexts.push(this); next() })
+			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.parallel({
 				fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)},
 				barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 10)},
 			})
-			.then(function(next) { contexts.push(this); next() })
+			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.context({'hello': 'world'})
 			.parallel({
 				bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 10)},
 				quzKey: function(next) { setTimeout(function(){ output.push('quz'); next(null, 'quzValue') }, 10)},
 			})
-			.then(function(next) { contexts.push(this); next() })
+			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.context()
 			.parallel({
 				quuzKey: function(next) { setTimeout(function(){ output.push('quuz'); next(null, 'quuzValue') }, 10)},
 				quuuzKey: function(next) { setTimeout(function(){ output.push('quuuz'); next(null, 'quuuzValue') }, 10)},
 			})
-			.then(function(next) { contexts.push(this); next() })
+			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.end(function(err) {
 				expect(err).to.be.undefined();
 				done();
