@@ -673,9 +673,17 @@ var objectInstance = function() {
 }
 
 function newObjectInstance() {
+	// Really nasty hack to ensure that a subsequent require() gets a new object instance
+	// This is to prevent nested calls spanned over requires() (i.e. in different modules / controllers / models) from getting the 'global' parent object
+	// This is annoying but the only way the one-instance-per-require() pattern can work
+	// See the `/tests/nesting#nesting via require()` test to see this in action
+	// If anyone knows of a away around this please contact me
+	// @author Matt Carter <m@ttcarter.com>
+	// @date 2015-01-06
+	require.cache[require.resolve(__filename)].exports = new objectInstance;
+
 	return new objectInstance;
 }
-
 
 // Return the output object
 module.exports = newObjectInstance();

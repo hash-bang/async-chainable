@@ -229,3 +229,56 @@ describe('async-chainable - nesting (3 level with error)', function(){
 		expect(output[9]).to.equal('alpha-end');
 	});
 });
+
+
+describe('async-chainable - nesting via require()', function(){
+	var output;
+
+	beforeEach(function(done) {
+		output = [];
+
+		asyncChainable
+			.then(function(next) { output.push('outer-1'); next() })
+			.series([
+				function(next) { setTimeout(function(){ output.push('outer-2'); next() }, 10)},
+				function(outerNext) { 
+					output.push('outer-3');
+					require('./nesting-require').subtasks(output, outerNext);
+				},
+				function(next) { setTimeout(function(){ output.push('outer-4'); next() }, 5)},
+			])
+			.end(function(err) {
+				output.push('outer-end')
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(9);
+	});
+	
+	it('should have run everything', function() {
+		expect(output).to.contain('outer-1');
+		expect(output).to.contain('outer-2');
+		expect(output).to.contain('outer-3');
+		expect(output).to.contain('inner-1');
+		expect(output).to.contain('inner-2');
+		expect(output).to.contain('inner-3');
+		expect(output).to.contain('outer-4');
+		expect(output).to.contain('inner-end');
+		expect(output).to.contain('outer-end');
+	});
+
+	it('should have run all sections in the right order', function() {
+		expect(output[0]).to.equal('outer-1');
+		expect(output[1]).to.equal('outer-2');
+		expect(output[2]).to.equal('outer-3');
+		expect(output[3]).to.equal('inner-1');
+		expect(output[4]).to.equal('inner-2');
+		expect(output[5]).to.equal('inner-3');
+		expect(output[6]).to.equal('inner-end');
+		expect(output[7]).to.equal('outer-4');
+		expect(output[8]).to.equal('outer-end');
+	});
+});
