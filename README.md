@@ -3,7 +3,7 @@ async-chainable
 An extension to the otherwise excellent [Async](https://www.npmjs.com/package/async) library adding better handling of mixed Series / Parallel tasks via object chaining.
 
 
-	var asyncChainable = require('async-chainable');
+	var asyncChainable = require('async-chainable')();
 
 	asyncChainable
 		.parallel([fooFunc, barFunc, bazFunc]) // Do these operations in parallel THEN
@@ -81,7 +81,7 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 
 This module extends the existing async object so you can use it as a drop in replacement for Async:
 
-	var async = require('async-chainable');
+	var async = require('async-chainable')();
 
 	async.waterfall([fooFunc, barFunc, bazFunc], console.log); // Async goodness
 
@@ -116,7 +116,7 @@ Some frequently asked questions:
 More complex examples
 =====================
 
-	var asyncChainable = require('async-chainable');
+	var asyncChainable = require('async-chainable')();
 
 	// Simple nesting of series and parallel operations
 	asyncChainable
@@ -559,6 +559,73 @@ Each item in the `this._struct` object is composed of the following keys:
 | `type`                               | String         | A supported internal execution type                                      |
 | `waitingOn`                          | Int            | When the type is a defer operation this integer tracks the number of defers that have yet to resolve |
 
+
+Gotchas
+=======
+**Forgetting a final `await()` when using `end()`**
+By default Async-chainable will not *imply* an `.await()` call before each `.end()` call. For example:
+
+	asyncChainable
+		.defer('foo', fooFunc)
+		.defer('bar', barFunc)
+		.defer('baz', bazFunc)
+		.end(console.log);
+
+In the above no `.await()` call is made before `.end()` so this chain will *immediately* complete - async-chainable will **not** wait for the deferred tasks to complete.
+
+	asyncChainable
+		.defer('foo', fooFunc)
+		.defer('bar', barFunc)
+		.defer('baz', bazFunc)
+		.await()
+		.end(console.log);
+
+In the above async-chainable will wait for the deferred tasks to complete before firing the end condition.
+
+
+**Forgetting the `()` when using require**
+
+Async-chainable needs to store state as it processes the task stack, to do this it instanciates itself as an object. This means you must declare it with an additional `()` after the `require()` statement if you wish to use it straight away. For example:
+
+
+	var asyncChainable = require('async-chainable')(); // NOTE '()'
+	asyncChainable
+		.parallel([fooFunc, barFunc, bazFunc])
+		.series([fooFunc, barFunc, bazFunc])
+		.end(console.log)
+
+
+If you want to use multiple instances you can use either:
+
+
+	var asyncChainable = require('async-chainable'); // NOTE: this returns the libray not the instance
+
+	asyncChainable()
+		.parallel([fooFunc, barFunc, bazFunc])
+		.series([fooFunc, barFunc, bazFunc])
+		.end(console.log)
+
+	asyncChainable()
+		.parallel([fooFunc, barFunc, bazFunc])
+		.series([fooFunc, barFunc, bazFunc])
+		.end(console.log)
+
+Or you can use the built in `.new()` variable to get a new instance:
+
+	var asyncChainable = require('async-chainable')(); // NOTE: this returns an instance
+
+	asyncChainable()
+		.parallel([fooFunc, barFunc, bazFunc])
+		.series([fooFunc, barFunc, bazFunc])
+		.end(console.log)
+
+	asyncChainable().new() // NOTE: 'new' request
+		.parallel([fooFunc, barFunc, bazFunc])
+		.series([fooFunc, barFunc, bazFunc])
+		.end(console.log)
+
+
+Its annoying we have to do this but without hacking around how Nodes module system works its not possible to return a singleton object like the async library does *and also* work with nested instances (i.e. having one .js file require() another that uses async-chainable and the whole thing not end up in a messy stack trace as the second instance inherits the first's state).
 
 
 Useful techniques

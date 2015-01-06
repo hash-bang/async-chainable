@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index');
+var asyncChainable = require('../index')();
 
 // Most of the global await functionality (i.e. `.await()` without args) is contained in test/defer
 

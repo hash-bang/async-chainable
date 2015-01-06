@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index');
+var asyncChainable = require('../index')();
 
 describe('async-chainable - mixed chain', function(){
 	var context;

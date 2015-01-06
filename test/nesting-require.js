@@ -1,4 +1,4 @@
-var asyncChainable = require('../index');
+var asyncChainable = require('../index')();
 
 /**
 * Used by tests/nesting.js to test require() based nesting

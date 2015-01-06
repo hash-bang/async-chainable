@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var expect = require('chai').expect;
-var asyncChainable = require('../index');
+var asyncChainable = require('../index')();
 
 describe('async-chainable.set()', function(){
 	var contexts;
