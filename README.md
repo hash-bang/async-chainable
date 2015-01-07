@@ -29,6 +29,21 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
 
 
+	asyncChainable
+		.forEach([
+			'What do we want?',
+			'Race conditions!',
+			'When do we want them?',
+			'Whenever!',
+		], function(next, item) {
+			// Prints the above array items to the console in parallel (i.e. whichever resolve first - no gurenteeed order)
+			console.log(item);
+			next();
+		})
+		.end();
+
+
+
 	// Or use contexts (i.e. `this`) - see Contexts section for more information
 	asyncChainable
 		.parallel({
@@ -547,6 +562,8 @@ In addition to storing all named values the context object also provides the fol
 | `this._structPointer`                | Int            | Offset in the `this._struct` collection as to the current executing function. Change this if you wish to move up and down |
 | `this._options`                      | Object         | Various options used by async-chainable including things like the defer limit |
 | `this._deferredRunning`              | Int            | The number of running deferred tasks (limit this using .limit())         |
+| `this._item`                         | Mixed          | During a forEach loop `_item` gets set to the currently iterating item value |
+| `this._key`                          | Mixed          | During a forEach loop `_key` gets set to the currently iterating array offset or object key |
 
 
 Each item in the `this._struct` object is composed of the following keys:
@@ -655,10 +672,32 @@ For example in the below `otherTasks` is an array which is passed into the .para
 		.end();
 
 
+Compose an array of items then run each though a handler function
+-----------------------------------------------------------------
+Like the above example async-chainable can be used to prepare items for execution then thread them into a subequent chain for processing.
+This is a neater version of the above that uses a fixed processing function to process an array of data.
+
+
+	var asyncChainable = require('./index');
+
+	var items = [];
+
+	asyncChainable()
+		.then(function(next) {
+			for (var i = 0; i < 20; i++) {
+				items.push({text: 'Hello World ' + i});
+			}
+			next();
+		})
+		.forEach(items, function(next, item) {
+			console.log(item);
+			next();
+		})
+		.end();
+
+
 TODO
 ====
-* Nested instance tests
 * Better error resolution when calling series/parallel/defer/set with weird and wonderful overloads - use `throw new Error()` instead of console.log
-* Ability to pipe input via function like async.cargo() e.g. `.parallel(Array <items>, func)`
 * README: Exampe of .set() / .then() with something like downloading a stream of data
 * `this.next()` as a possible way to call the next handler?

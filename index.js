@@ -99,10 +99,10 @@ function parallel() {
 		case 'array': // Form: parallel(Array <funcs>)
 			this._struct.push({ type: 'parallelArray', payload: arguments[0] });
 			break;
-		case 'object': // Form: series(Object <funcs>)
+		case 'object': // Form: parallel(Object <funcs>)
 			this._struct.push({ type: 'parallelObject', payload: arguments[0] });
 			break;
-		case 'collection': // Form: series(Collection <funcs>)
+		case 'collection': // Form: parallel(Collection <funcs>)
 			this._struct.push({ type: 'parallelCollection', payload: arguments[0] });
 			break;
 
@@ -122,6 +122,33 @@ function parallel() {
 
 	return this;
 };
+
+
+/**
+* Run an array/object/collection though a function
+* This is similar to the async native .each() function but chainable
+*/
+function forEach() {
+	var calledAs = getOverload(arguments)
+	switch (calledAs) {
+		case '':
+			// Pass
+			break;
+		case 'array,function': // Form: forEach(Array, func)
+			this._struct.push({ type: 'forEachArray', payload: arguments[0], callback: arguments[1] });
+			break;
+		case 'object,function': // Form: forEach(Object, func)
+			this._struct.push({ type: 'forEachObject', payload: arguments[0], callback: arguments[1] });
+			break;
+		case 'collection,function': // Form: forEach(Collection <funcs>)
+			this._struct.push({ type: 'forEachCollection', payload: arguments[0], callback: arguments[1] });
+			break;
+		default:
+			console.error('Unknown call style for .forEach():', calledAs);
+	}
+
+	return this;
+}
 
 
 // Defer functionality - Here be dragons! {{{
@@ -376,7 +403,7 @@ function _execute(err) {
 			var keys = Object.keys(currentExec.payload);
 			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
-				tasks.push(function(next, err) {
+				tasks.push(function(next) {
 					currentExec.payload[key].call(self._options.context, function(err, value) {
 						self._context[key] = value; // Allocate returned value to context
 						next(err);
@@ -407,6 +434,58 @@ function _execute(err) {
 				self._execute(err);
 			});
 			break;
+		case 'forEachArray':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
+			async.parallel(currentExec.payload.map(function(item, iter) {
+				self._context._item = item;
+				self._context._key = iter;
+				return function(next) {
+					currentExec.callback.call(self._options.context, next, item, iter);
+				};
+			}), function(err) {
+				currentExec.completed = true;
+				self._execute(err);
+			});
+			break;
+		case 'forEachObject':
+			var tasks = [];
+			var keys = Object.keys(currentExec.payload);
+			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
+			keys.forEach(function(key) {
+				tasks.push(function(next) {
+					self._context._item = currentExec.payload[key];
+					self._context._key = key;
+					currentExec.callback.call(self._options.context, function(err, value) {
+						self._context[key] = value; // Allocate returned value to context
+						next(err);
+					}, currentExec.payload[key], key);
+				});
+			});
+			async.parallel(tasks, function(err) {
+				currentExec.completed = true;
+				self._execute(err);
+			});
+			break;
+		case 'forEachCollection':
+			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
+			var tasks = [];
+			currentExec.payload.forEach(function(task) {
+				Object.keys(task).forEach(function(key) {
+					tasks.push(function(next, err) {
+						self._context._item = task[key];
+						self._context._key = key;
+						currentExec.callback.call(self._options.context, function(err, value) {
+							self._context[key] = value; // Allocate returned value to context
+							next(err);
+						}, task[key], key)
+					});
+				});
+			});
+			async.parallel(tasks, function(err) {
+				currentExec.completed = true;
+				self._execute(err);
+			});
+			break;
 		case 'seriesArray':
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
 			async.series(currentExec.payload.map(function(task) {
@@ -423,7 +502,7 @@ function _execute(err) {
 			var keys = Object.keys(currentExec.payload);
 			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
-				tasks.push(function(next, err) {
+				tasks.push(function(next) {
 					currentExec.payload[key].call(self._options.context, function(err, value) {
 						self._context[key] = value; // Allocate returned value to context
 						next(err);
@@ -601,6 +680,7 @@ var objectInstance = function() {
 	this.context = setContext;
 	this.defer = defer;
 	this.end = end;
+	this.forEach = forEach;
 	this.limit = setLimit;
 	this.parallel = parallel;
 	this.reset = reset;
