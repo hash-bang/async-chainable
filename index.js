@@ -140,8 +140,11 @@ function forEach() {
 		case 'object,function': // Form: forEach(Object, func)
 			this._struct.push({ type: 'forEachObject', payload: arguments[0], callback: arguments[1] });
 			break;
-		case 'collection,function': // Form: forEach(Collection <funcs>)
+		case 'collection,function': // Form: forEach(Collection func)
 			this._struct.push({ type: 'forEachCollection', payload: arguments[0], callback: arguments[1] });
+			break;
+		case 'string,function': // Form: forEach(String <set lookup>, func)
+			this._struct.push({ type: 'forEachLateBound', payload: arguments[0], callback: arguments[1] });
 			break;
 		default:
 			console.error('Unknown call style for .forEach():', calledAs);
@@ -485,6 +488,35 @@ function _execute(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
+			break;
+		case 'forEachLateBound':
+			if (
+				(!currentExec.payload || !currentExec.payload.length) || // Payload is blank
+				(!self._context[currentExec.payload]) // Payload doesnt exist within context
+			) { // Goto next chain
+				currentExec.completed = true;
+				return self._execute()
+			};
+
+			// Replace own exec array with actual type of payload now we know what it is {{{
+			var overloadType = getOverload([self._context[currentExec.payload]]);
+			switch (overloadType) {
+				case 'array':
+					currentExec.type = 'forEachArray';
+					break;
+				case 'object':
+					currentExec.type = 'forEachObject';
+					break;
+				case 'collection':
+					currentExec.type = 'forEachCollection';
+					break;
+				default:
+					throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);
+			}
+			currentExec.payload = self._context[currentExec.payload];
+			self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
+			self._execute();
+			// }}}
 			break;
 		case 'seriesArray':
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };

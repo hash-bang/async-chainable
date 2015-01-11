@@ -426,6 +426,30 @@ This can be considered the series process twin to `then()`.
 		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
 
 
+.forEach()
+----------
+The `forEach()` funciton is a slight variation on the `parallel()` function but with some additional behaviour.
+It can be given an array, object or collection as the first argument and a function as the second. All items in the array will be iterated over *in parallel* and passed to the function which is expected to execute a next condition returning an error if the forEach iteration should stop.
+
+	asyncChainable()
+		.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+		.end();
+
+In the above example the simple array is passed to the function with each payload item as a parameter and the iteration key (an offset if its an array or collection, a key if its an object).
+
+`forEach()` has one additional piece of behaviour where if the first argument is a string the context will be examined for a value to iterate over.
+
+
+	asyncChainable()
+		.set({
+			items: ['foo', 'bar', 'baz'],
+		})
+		.forEach('items', function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+		.end();
+
+This allows *late binding* of variables who's content will only be examined when the chain item is executed.
+
+
 .end()
 ------
 The final stage in the chain, `.end()` must be called to execute the queue of actions.

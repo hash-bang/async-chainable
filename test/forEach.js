@@ -131,7 +131,6 @@ describe('async-chainable.forEach() - this._key + this._item', function(){
 			}, function(next, item, key) { output.push(this._item, this._key); next(); })
 			.end(function(err) {
 				expect(err).to.be.undefined();
-				context = this;
 				done();
 			});
 	});
@@ -147,5 +146,86 @@ describe('async-chainable.forEach() - this._key + this._item', function(){
 		expect(output).to.contain('barValue');
 		expect(output).to.contain('bazKey');
 		expect(output).to.contain('bazValue');
+	});
+});
+
+
+describe('async-chainable.forEach() - named set', function(){
+	var outputArray, outputObject, outputCollection;
+
+	beforeEach(function(done) {
+		outputArray = [];
+		outputObject = [];
+		outputCollection = [];
+
+		asyncChainable
+			.set({
+				items: ['foo', 'bar', 'baz'],
+				hitchhikers: {
+					arthur: 'british',
+					ford: 'froody',
+					zaphod: 'president'
+				},
+				numbers: [
+					{one: 'Number 1'},
+					{two: 'Number 2'},
+					{three: 'Number 3'},
+				],
+			})
+			.forEach('items', function(next, item) { // Array form
+				outputArray.push(item);
+				next();
+			})
+			.forEach('hitchhikers', function(next, item, key) { // Object form
+				outputObject.push(item, key);
+				next();
+			})
+			.forEach('numbers', function(next, item, key) { // Collection form
+				outputCollection.push(item, key);
+				next();
+			})
+
+
+			// Finish
+			.end(function(err) {
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('array method should have the correct number of output elements', function() {
+		expect(outputArray).to.have.length(3);
+	});
+	
+	it('array method should contain the expected output', function() {
+		expect(outputArray).to.contain('foo');
+		expect(outputArray).to.contain('bar');
+		expect(outputArray).to.contain('baz');
+	});
+
+	it('object method should have the correct number of output elements', function() {
+		expect(outputObject).to.have.length(6);
+	});
+	
+	it('object method should contain the expected output', function() {
+		expect(outputObject).to.contain('arthur');
+		expect(outputObject).to.contain('british');
+		expect(outputObject).to.contain('ford');
+		expect(outputObject).to.contain('froody');
+		expect(outputObject).to.contain('zaphod');
+		expect(outputObject).to.contain('president');
+	});
+
+	it('collection method should have the correct number of output elements', function() {
+		expect(outputCollection).to.have.length(6);
+	});
+	
+	it('collection method should contain the expected output', function() {
+		expect(outputCollection).to.contain('one');
+		expect(outputCollection).to.contain('two');
+		expect(outputCollection).to.contain('three');
+		expect(outputCollection).to.contain('Number 1');
+		expect(outputCollection).to.contain('Number 2');
+		expect(outputCollection).to.contain('Number 3');
 	});
 });
