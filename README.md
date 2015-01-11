@@ -3,15 +3,15 @@ async-chainable
 An extension to the otherwise excellent [Async](https://www.npmjs.com/package/async) library adding better handling of mixed Series / Parallel tasks via object chaining.
 
 
-	var asyncChainable = require('async-chainable')();
+	var asyncChainable = require('async-chainable');
 
-	asyncChainable
+	asyncChainable() // <- Note '()' as this module is not stateless
 		.parallel([fooFunc, barFunc, bazFunc]) // Do these operations in parallel THEN
 		.series([fooFunc, barFunc, bazFunc]) // Do these in series (NOTE: these only run when the above has resolved)
 		.end(console.log)
 
 
-	asyncChainable
+	asyncChainable()
 		.limit(2) // Allow only 2 defer items to run at once from this point on
 		.defer('foo', fooFunc) // Run this now and continue on...
 		.defer('bar', barFunc)
@@ -22,14 +22,14 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
 
 
-	asyncChainable
+	asyncChainable()
 		.parallel('foo', fooFunc)
 		.prereq('foo', 'bar', barFunc) // Only let this function run when 'foo' has completed
 		.prereq(['foo', 'bar'], 'baz', bazFunc) // Only let this function run when both 'foo' and 'bar' have completed
 		.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
 
 
-	asyncChainable
+	asyncChainable()
 		.forEach([
 			'What do we want?',
 			'Race conditions!',
@@ -45,7 +45,7 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 
 
 	// Or use contexts (i.e. `this`) - see Contexts section for more information
-	asyncChainable
+	asyncChainable()
 		.parallel({
 			foo: fooFunc,
 			bar: barFunc,
@@ -60,22 +60,24 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 
 
 	// Call in stages without chaining
-	asyncChainable.defer('foo', fooFunc);
+	var tasks = asyncChainable();
 
-	asyncChainable.defer('bar', barFunc);
+	tasks.defer('foo', fooFunc);
+
+	tasks.defer('bar', barFunc);
 
 	if (/* some internal logic */) {
-		asyncChainable.defer('bar', 'baz', bazFunc); // Only start 'baz' when 'bar' has completed
+		tasks.defer('bar', 'baz', bazFunc); // Only start 'baz' when 'bar' has completed
 	}
 
-	asyncChainable.end(); // Kick everything off
+	tasks.end(); // Kick everything off
 
 
 
 	// Specify prerequisites and let async-chainable figure everything out automatically
-	// This method replaces async.auto() which is a bit ugly
+	// This style replaces async.auto() which is a bit ugly
 
-	asyncChainable
+	asyncChainable()
 
 		// Task 'foo' relies on 'quz'
 		.defer('quz', 'foo', function(next) { next(null, 'fooValue') })
@@ -96,12 +98,12 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 
 This module extends the existing async object so you can use it as a drop in replacement for Async:
 
-	var async = require('async-chainable')();
+	var async = require('async-chainable');
 
-	async.waterfall([fooFunc, barFunc, bazFunc], console.log); // Async goodness
+	async().waterfall([fooFunc, barFunc, bazFunc], console.log); // Async goodness
 
 	// With new async-chainable flexibility
-	async
+	async() // <- Note unfortunately you still have to add '()' to the main invoker
 		.parallel([fooFunc, barFunc, bazFunc]) // Do these operations in parallel THEN
 		.series([fooFunc, barFunc, bazFunc]) // Do these in series (note these only run when the above has resolved)
 		.end(console.log)
@@ -131,10 +133,10 @@ Some frequently asked questions:
 More complex examples
 =====================
 
-	var asyncChainable = require('async-chainable')();
+	var asyncChainable = require('async-chainable');
 
 	// Simple nesting of series and parallel operations
-	asyncChainable
+	asyncChainable()
 		// The following 3 functions execute in series
 		.series([
 			function(next) { setTimeout(function() { console.log('Series 1'); next(); }, 100); },
@@ -160,7 +162,7 @@ More complex examples
 	
 	// Parameters can be passed by using named functions
 
-	asyncChainable
+	asyncChainable()
 		.series({ // Since this is node we can KINDA rely on it storing the hash in the right order, don't splice or alter the hash past declaring it though or this functionality will break. Alternatively use the below syntax
 			foo: function(next) {
 				setTimeout(function() { console.log('Series 2-1'); next(null, 'foo result'); }, 100);
@@ -208,19 +210,19 @@ More complex examples
 
 	// Hash style syntax
 	// NOTE: This relies on the hash not changing order of the keys which is a bit of an issue if you're adding / removing from it out of sequence
-	asyncChainable
+	asyncChainable()
 		.series({foo: fooFunc, bar: barFunc, baz: bazFunc})
 		.end(console.log);
 
 	// Named function style syntax - series only
-	asyncChainable
+	asyncChainable()
 		.then('foo', fooFunc)
 		.then('bar', barFunc)
 		.then('baz', bazFunc)
 		.end(console.log);
 
 	// Named function style syntax - parallel only
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc) // Start this function immediately and continue on
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -229,14 +231,14 @@ More complex examples
 
 	// Named function style syntax - parallel only
 	// This works the same as above where if parallel() is NOT passed a hash or array it will act as if called with defer()
-	asyncChainable
+	asyncChainable()
 		.parallel('foo', fooFunc) // Start this function immediately and continue on
 		.parallel('bar', barFunc)
 		.parallel('baz', bazFunc)
 		.await() // Resolve all deferred functions before continuing
 		.end(console.log);
 
-	asyncChainable
+	asyncChainable()
 		.limit(2) // Allow only 2 defer operations to run at once
 		.defer('foo', fooFunc)
 		.defer('bar', barFunc)
@@ -250,7 +252,7 @@ More complex examples
 
 	// Classic asyncChainable functionality is still available
 
-	asyncChainable
+	asyncChainable()
 		.waterfall([
 			function(next) { next(null, 'foo') };
 			function(next, fooResult) { console.log(fooResult); next(); } // Output = 'foo'
@@ -260,7 +262,7 @@ More complex examples
 
 	// Regular asyncChainable functionality is all there but is now chainable
 
-	asyncChainable
+	asyncChainable()
 		.each()
 		.eachSeries()
 		.map()
@@ -280,7 +282,7 @@ More complex examples
 		.concat()
 		.concatSeries()
 
-	asyncChainable
+	asyncChainable()
 		.parallelLimit()
 		.whilst()
 		.doWhilst()
@@ -303,7 +305,7 @@ More complex examples
 		.times()
 		.timesSeries()
 
-	asyncChainable
+	asyncChainable()
 		.memoize()
 		.unmemoize()
 		.log()
@@ -321,7 +323,7 @@ Execute an array or object of functions either in series or parallel.
 There are a variety of ways of calling these functions:
 
 
-	asyncChainable
+	asyncChainable()
 		.parallel(Array) // Execute all items in the array in parallel
 		.parallel(Object) // Execute all items in the object in parallel storing any return against the object key
 		.parallel(Collection) // i.e. an array of objects - this is to work around JS not maintaining hash key orders
@@ -329,7 +331,8 @@ There are a variety of ways of calling these functions:
 		.parallel(function) // Exactly the same functionality as `defer()`
 		.end()
 
-	asyncChainable
+
+	asyncChainable()
 		.series(Array) // Execute all items in the array in parallel
 		.series(Object) // Execute all items in the object in series storing any return against the object key
 		.series(Collection) // i.e. an array of objects - this is to work around JS not maintaining hash key orders
@@ -344,7 +347,7 @@ Execute a function and continue down the asyncChainable chain.
 Use `await()` to gather the parallel functions.
 This can be considered the parallel process twin to `then()`.
 
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -358,7 +361,7 @@ This can be considered the parallel process twin to `then()`.
 Wait for one or more fired defer functions to complete before containing down the asyncChainable chain.
 
 	// Wait for everything
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -367,7 +370,7 @@ Wait for one or more fired defer functions to complete before containing down th
 
 
 	// Wait for certain defers
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -376,7 +379,7 @@ Wait for one or more fired defer functions to complete before containing down th
 
 
 	// Wait for certain defers - array syntax
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -389,7 +392,7 @@ Wait for one or more fired defer functions to complete before containing down th
 Restrict the number of defer operations that can run at any one time.
 This function can be used in the pipeline as many times as needed to change the limit as we work down the execution chain.
 
-	asyncChainable
+	asyncChainable()
 		.limit(2) // Allow only 2 defer operations to run at once from this point onward
 		.defer(fooFunc)
 		.defer(barFunc)
@@ -416,7 +419,7 @@ This function can be used in the pipeline as many times as needed to change the 
 Execute a function, wait for it to complete and continue down the asyncChainable chain.
 This can be considered the series process twin to `then()`.
 
-	asyncChainable.
+	asyncChainable()
 		.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
 		.then('bar', barFunc) // Likewise barFunc()
 		.then('baz', bazFunc) // Likewise bazFunc()
@@ -430,7 +433,7 @@ If given arguments it functions the same as `.then(func).reset()` (i.e. execute 
 
 While similar to `then()` this function is used as the *last* thing a chain should resolve as it can also catch errors.
 
-	asyncChainable.
+	asyncChainable()
 		.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
 		.then('bar', barFunc) // Likewise barFunc()
 		.then('baz', bazFunc) // Likewise bazFunc()
@@ -439,7 +442,7 @@ While similar to `then()` this function is used as the *last* thing a chain shou
 
 In the above if fooFunc, barFunc or bazFunc call next with a first parameter that is true execution will stop and continue on passing the error to `end()`:
 
-	asyncChainable.
+	asyncChainable()
 		.then('foo', fooFunc) // Assuming fooFunc calls next('This is an error')
 		.then('bar', barFunc) // Gets skipped as we have an error
 		.then('baz', bazFunc) // Gets skipped as we have an error
@@ -448,7 +451,7 @@ In the above if fooFunc, barFunc or bazFunc call next with a first parameter tha
 
 If an error is caused in the middle of execution the result object is still available:
 
-	asyncChainable.
+	asyncChainable()
 		.then('foo', fooFunc) // Assuming this calls `next()` with next(null, 'foo value')
 		.then('bar', barFunc) // Assuming this calls next('Error in bar')
 		.then('baz', bazFunc) // Gets skipped as we have an error
@@ -461,7 +464,7 @@ Async-chainable operates as an instanciated object. In order to get a new instan
 
 The below example uses two versions of async-chainable. The default outer item wraps a new instance of the inner one.
 
-	asyncChainable
+	asyncChainable()
 		.series([
 			fooFunc,
 			function(outerNext) { 
@@ -485,7 +488,7 @@ The below example uses two versions of async-chainable. The default outer item w
 ---------
 Clear the result buffer, releasing all results held in memory.
 
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -502,7 +505,7 @@ Set the context used by async-chainable during subsequent function calls.
 In effect this sets what `this` is for each call.
 Omiting an argument or supplying a 'falsy' value will instruct async-chainable to use its own default context object.
 
-	asyncChainable
+	asyncChainable()
 		.then({foo: fooFunc}) // `this` is async-chainables own context object
 		.context({hello: 'world'})
 		.then({bar: barFunc}) // `this` is now {hello: 'world'}
@@ -520,7 +523,7 @@ See the [Context Section](#context) for further details on what the async-chaina
 Set is a helper function to quickly allocate the value of a context item as we move down the chain.
 It can be used as a named single item key/value or as a setter object.
 
-	asyncChainable
+	asyncChainable()
 		.set('foo', 'foo value'])
 		.then(function(next) { console.log(this.foo); next() }) // this.foo is now 'foo value'
 		.set({bar: 'bar value']) 
@@ -537,7 +540,7 @@ Unless overridden by a call to `.context()`, async-chainable will use its own co
 The context contains the results of any *named* functions as well as some meta data.
 
 
-	asyncChainable
+	asyncChainable()
 		.series('foo', fooFunc)
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
 		.defer('bar', barFunc)
@@ -582,7 +585,7 @@ Gotchas
 **Forgetting a final `await()` when using `end()`**
 By default Async-chainable will not *imply* an `.await()` call before each `.end()` call. For example:
 
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc)
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -590,7 +593,7 @@ By default Async-chainable will not *imply* an `.await()` call before each `.end
 
 In the above no `.await()` call is made before `.end()` so this chain will *immediately* complete - async-chainable will **not** wait for the deferred tasks to complete.
 
-	asyncChainable
+	asyncChainable()
 		.defer('foo', fooFunc)
 		.defer('bar', barFunc)
 		.defer('baz', bazFunc)
@@ -606,7 +609,8 @@ Async-chainable needs to store state as it processes the task stack, to do this 
 
 
 	var asyncChainable = require('async-chainable')(); // NOTE '()'
-	asyncChainable
+
+	asyncChainable()
 		.parallel([fooFunc, barFunc, bazFunc])
 		.series([fooFunc, barFunc, bazFunc])
 		.end(console.log)
@@ -625,6 +629,7 @@ If you want to use multiple instances you can use either:
 	asyncChainable()
 		.parallel([fooFunc, barFunc, bazFunc])
 		.series([fooFunc, barFunc, bazFunc])
+
 		.end(console.log)
 
 Or you can use the built in `.new()` variable to get a new instance:
@@ -656,7 +661,7 @@ For example in the below `otherTasks` is an array which is passed into the .para
 
 	var otherTasks = [];
 
-	asyncChainable
+	asyncChainable()
 		.then(function(next) {
 			for (var i = 0; i < 20; i++) {
 				(function(i) { // Make a closure so 'i' doesnt end up being 20 all the time (since its passed by reference)
