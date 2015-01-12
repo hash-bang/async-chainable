@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.series() - collections style', function(){
 	var context;
@@ -9,7 +9,7 @@ describe('async-chainable.series() - collections style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.series([
 				{fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)}},
 				{barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)}},
@@ -51,7 +51,7 @@ describe('async-chainable.series() - array style', function(){
 	beforeEach(function(done){
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.series([
 				function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)},
 				function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
@@ -86,7 +86,7 @@ describe('async-chainable.series() - object style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.series({
 				fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)},
 				barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)},
@@ -136,7 +136,7 @@ describe('async-chainable.series() - single call style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.series(function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)})
 			.series(function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)})
 			.series(function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)})
@@ -173,7 +173,7 @@ describe('async-chainable.series() - named single call style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.series('fooKey', function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)})
 			.series('barKey', function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)})
 			.series('bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})
@@ -226,7 +226,7 @@ describe('async-chainable.series() - array pointer during change', function(){
 
 		var otherTasks = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) {
 				output.push('parallel-1');
 				for (var i = 0; i < otherTasksCount; i++) {
@@ -277,7 +277,7 @@ describe('async-chainable.series() - empty calls', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('series-1'); next() })
 			.series()
 			.then(function(next) { output.push('series-2'); next() })

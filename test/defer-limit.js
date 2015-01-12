@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.defer() - limit', function(){
 	var output;
@@ -10,12 +10,14 @@ describe('async-chainable.defer() - limit', function(){
 		executing = 0;
 		executingPeak = 0;
 
-		asyncChainable.limit(5);
+		var tasks = asyncChainable();
+
+		tasks.limit(5);
 
 		for (var i = 0; i < 50; i++) {
 			(function () {
 				var name = 'iter-' + i;
-				asyncChainable.defer(function(next) {
+				tasks.defer(function(next) {
 					executing++;
 					output.push(name);
 					setTimeout(function() {
@@ -28,7 +30,7 @@ describe('async-chainable.defer() - limit', function(){
 			}());
 		}
 
-		asyncChainable
+		tasks
 			.await()
 			.end(function(err) {
 				expect(err).to.be.undefined();

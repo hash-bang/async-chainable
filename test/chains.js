@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable - mixed chain', function(){
 	var context;
@@ -11,7 +11,7 @@ describe('async-chainable - mixed chain', function(){
 		outputSections = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { outputSections.push('sec-01-parallel'); next() })
 			.parallel([
 				function(next) { setTimeout(function(){ output.push('01-parallel'); next() }, 10)},
@@ -105,7 +105,7 @@ describe('async-chainable - blocked parallel() chain', function(){
 		outputSections = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { outputSections.push('sec-1'); next() })
 			.parallel({
 				step1: function(next) { setTimeout(function(){ output.push('step1'); next(null, 'step1Value'); }, 0)},

@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable - parallel() chain with errors', function(){
 	var context;
@@ -12,7 +12,7 @@ describe('async-chainable - parallel() chain with errors', function(){
 		context = {};
 		error = null;
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { outputSections.push('sec-1'); next() })
 			.parallel({
 				step1: function(next) { setTimeout(function(){ output.push('step1'); next(null, 'step1Value'); }, 0)},
@@ -73,7 +73,7 @@ describe('async-chainable - series() chain with errors', function(){
 		context = {};
 		error = null;
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { outputSections.push('sec-01-series'); next() })
 			.series([
 				function(next) { setTimeout(function(){ output.push('01-series'); next() }, 10)},
@@ -132,7 +132,7 @@ describe('async-chainable - then() chain with errors', function(){
 		context = {};
 		error = null;
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { outputSections.push('sec-01'); next() })
 			.then(function(next) { outputSections.push('sec-02'); next() })
 			.then(function(next) { next('Error in sec-03') })

@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.defer() - isosceles', function(){
 	var context;
@@ -9,7 +9,7 @@ describe('async-chainable.defer() - isosceles', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer('fooKey', function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)})
 			.defer('fooKey', 'barKey', function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)})
 			.defer('fooKey', 'bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})
@@ -56,7 +56,7 @@ describe('async-chainable.defer() - isosceles (contextless)', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer('fooKey', function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)})
 			.defer('fooKey', 'barKey', function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)})
 			.defer('fooKey', 'bazKey', function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)})
@@ -92,7 +92,7 @@ describe('async-chainable.defer() - prereq labyrinth', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer('quzKey', 'fooKey', function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)})
 			.defer(['bazKey', 'fooKey'], 'barKey', function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)})
 			.defer('bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})

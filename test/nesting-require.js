@@ -1,10 +1,10 @@
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 /**
 * Used by tests/nesting.js to test require() based nesting
 */
 module.exports.subtasks = function(output, finish) {
-	asyncChainable
+	asyncChainable()
 		.series([
 			function(next) { setTimeout(function(){ output.push('inner-1'); next() }, 10)},
 			function(next) { setTimeout(function(){ output.push('inner-2'); next() }, 10)},

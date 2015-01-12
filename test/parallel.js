@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.parallel() - collections style', function(){
 	var context;
@@ -9,7 +9,7 @@ describe('async-chainable.parallel() - collections style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.parallel([
 				{fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)}},
 				{barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)}},
@@ -51,7 +51,7 @@ describe('async-chainable.parallel() - array style', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.parallel([
 				function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)},
 				function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
@@ -80,7 +80,7 @@ describe('async-chainable.parallel() - object style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.parallel({
 				fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)},
 				barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)},
@@ -128,7 +128,7 @@ describe('async-chainable.parallel() - array pointer during change', function(){
 
 		var otherTasks = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) {
 				output.push('parallel-1');
 				for (var i = 0; i < otherTasksCount; i++) {
@@ -171,7 +171,7 @@ describe('async-chainable.parallel() - empty calls', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('parallel-1'); next() })
 			.parallel()
 			.then(function(next) { output.push('parallel-2'); next() })

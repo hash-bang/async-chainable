@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.defer() - collections style', function(){
 	var context;
@@ -9,7 +9,7 @@ describe('async-chainable.defer() - collections style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer([
 				{fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)}},
 				{barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)}},
@@ -52,7 +52,7 @@ describe('async-chainable.defer() - array style', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.defer([
 				function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)},
 				function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
@@ -81,7 +81,7 @@ describe('async-chainable.defer() - object style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer({
 				fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)},
 				barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)},
@@ -125,7 +125,7 @@ describe('async-chainable.defer() - named function style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer('fooKey', function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)})
 			.defer('barKey', function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)})
 			.defer('bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})
@@ -166,7 +166,7 @@ describe('async-chainable.defer() - empty calls', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('defer-1'); next() })
 			.defer()
 			.then(function(next) { output.push('defer-2'); next() })

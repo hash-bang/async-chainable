@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable - nesting (2 level)', function(){
 	var output;
@@ -7,13 +7,13 @@ describe('async-chainable - nesting (2 level)', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('outer-1'); next() })
 			.series([
 				function(next) { setTimeout(function(){ output.push('outer-2'); next() }, 10)},
 				function(outerNext) { 
 					output.push('outer-3')
-					asyncChainable.new()
+					asyncChainable()
 						.series([
 							function(next) { setTimeout(function(){ output.push('inner-1'); next() }, 10)},
 							function(next) { setTimeout(function(){ output.push('inner-2'); next() }, 10)},
@@ -70,19 +70,19 @@ describe('async-chainable - nesting (3 level)', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('alpha-1'); next() })
 			.series([
 				function(next) { setTimeout(function(){ output.push('alpha-2'); next() }, 10)},
 				function(alphaNext) { 
 					output.push('alpha-3')
-					asyncChainable.new()
+					asyncChainable()
 						.series([
 							function(next) { setTimeout(function(){ output.push('beta-1'); next() }, 10)},
 							function(betaNext) { setTimeout(function(){
 								output.push('beta-2');
 
-								asyncChainable.new()
+								asyncChainable()
 									.series([
 										function(next) { setTimeout(function(){ output.push('gamma-1'); next() }, 10)},
 										function(next) { setTimeout(function(){ output.push('gamma-2'); next() }, 10)},
@@ -157,19 +157,19 @@ describe('async-chainable - nesting (3 level with error)', function(){
 		output = [];
 		finalError = null;
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('alpha-1'); next() })
 			.series([
 				function(next) { setTimeout(function(){ output.push('alpha-2'); next() }, 10)},
 				function(alphaNext) { 
 					output.push('alpha-3')
-					asyncChainable.new()
+					asyncChainable()
 						.series([
 							function(next) { setTimeout(function(){ output.push('beta-1'); next() }, 10)},
 							function(betaNext) { setTimeout(function(){
 								output.push('beta-2');
 
-								asyncChainable.new()
+								asyncChainable()
 									.series([
 										function(next) { setTimeout(function(){ output.push('gamma-1'); next() }, 10)},
 										function(next) { setTimeout(function(){ output.push('gamma-2'); next('Error in gamma-2') }, 10)},
@@ -237,7 +237,7 @@ describe('async-chainable - nesting via require()', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { output.push('outer-1'); next() })
 			.series([
 				function(next) { setTimeout(function(){ output.push('outer-2'); next() }, 10)},

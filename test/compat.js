@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.parallel() - compability mode', function(){
 	var output;
@@ -7,7 +7,7 @@ describe('async-chainable.parallel() - compability mode', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable.parallel([
+		asyncChainable().parallel([
 			function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)},
 			function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
 			function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)},
@@ -38,7 +38,7 @@ describe('async-chainable.series() - compability mode', function(){
 		outputSections = [];
 		context = {};
 
-		asyncChainable.series([
+		asyncChainable().series([
 			function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)},
 			function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
 			function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)},

@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.set()', function(){
 	var contexts;
@@ -8,7 +8,7 @@ describe('async-chainable.set()', function(){
 	beforeEach(function(done) {
 		contexts = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.set('fooKey', 'fooValue')
 			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })

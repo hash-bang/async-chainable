@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.series() - single item style', function(){
 	var context;
@@ -9,7 +9,7 @@ describe('async-chainable.series() - single item style', function(){
 		output = [];
 		context = {};
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)})
 			.then(function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)})
 			.then(function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)})

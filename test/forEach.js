@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.forEach() - array style', function(){
 	var output;
@@ -7,7 +7,7 @@ describe('async-chainable.forEach() - array style', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.forEach(['foo', 'bar', 'baz'], function(next, item) { output.push(item); next(); })
 			.end(function(err) {
 				expect(err).to.be.undefined();
@@ -35,7 +35,7 @@ describe('async-chainable.forEach() - object style', function(){
 		context = {};
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.forEach({fooKey: 'fooValue', barKey: 'barValue', bazKey: 'bazValue'}, function(next, item, key) { output.push(item, key); next(null, item); })
 			.end(function(err) {
 				expect(err).to.be.undefined();
@@ -78,7 +78,7 @@ describe('async-chainable.forEach() - collection style', function(){
 		context = {};
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.forEach([
 				{foo: 'Foo!'},
 				{bar: 'Bar!'},
@@ -123,7 +123,7 @@ describe('async-chainable.forEach() - this._key + this._item', function(){
 	beforeEach(function(done) {
 		output = [];
 
-		asyncChainable
+		asyncChainable()
 			.forEach({
 				fooKey: 'fooValue',
 				barKey: 'barValue',
@@ -158,7 +158,7 @@ describe('async-chainable.forEach() - named set', function(){
 		outputObject = [];
 		outputCollection = [];
 
-		asyncChainable
+		asyncChainable()
 			.set({
 				items: ['foo', 'bar', 'baz'],
 				hitchhikers: {

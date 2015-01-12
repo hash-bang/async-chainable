@@ -1,5 +1,5 @@
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 // Most of the global await functionality (i.e. `.await()` without args) is contained in test/defer
 
@@ -11,7 +11,7 @@ describe('async-chainable.await() - stepped blocking', function(){
 		contextStep = {};
 		contextFinal = {};
 
-		asyncChainable
+		asyncChainable()
 			.defer('fooKey', function(next) { setTimeout(function(){ next(null, 'fooValue') }, 10)})
 			.defer('barKey', function(next) { setTimeout(function(){ next(null, 'barValue') }, 0)})
 			.defer('bazKey', function(next) { setTimeout(function(){ next(null, 'bazValue') }, 50)})

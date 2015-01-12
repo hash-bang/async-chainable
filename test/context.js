@@ -1,6 +1,6 @@
 var _ = require('lodash');
 var expect = require('chai').expect;
-var asyncChainable = require('../index')();
+var asyncChainable = require('../index');
 
 describe('async-chainable.context()', function(){
 	var output;
@@ -10,7 +10,7 @@ describe('async-chainable.context()', function(){
 		output = [];
 		contexts = [];
 
-		asyncChainable
+		asyncChainable()
 			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.parallel({
 				fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)},
