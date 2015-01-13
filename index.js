@@ -70,7 +70,7 @@ function series() {
 			break;
 		// }}}
 		default:
-			console.error('Unknown call style for .series():', calledAs);
+			throw new Error('Unknown call style for .series(): ' + calledAs);
 	}
 
 	return this;
@@ -117,7 +117,7 @@ function parallel() {
 			break;
 		// }}}
 		default:
-			console.error('Unknown call style for .parallel():', calledAs);
+			throw new Error('Unknown call style for .parallel(): ' + calledAs);
 	}
 
 	return this;
@@ -147,7 +147,7 @@ function forEach() {
 			this._struct.push({ type: 'forEachLateBound', payload: arguments[0], callback: arguments[1] });
 			break;
 		default:
-			console.error('Unknown call style for .forEach():', calledAs);
+			throw new Error('Unknown call style for .forEach(): ' + calledAs);
 	}
 
 	return this;
@@ -245,14 +245,13 @@ function defer() {
 			payload[arguments[1]] = arguments[2];
 			this._struct.push({ type: 'deferObject', prereq: [arguments[0]], payload: payload });
 			break;
-			break;
 		case 'array,string,function': //Form: defer(Array <prereqs>, String <name>, func)
 			var payload = {};
 			payload[arguments[1]] = arguments[2];
 			this._struct.push({ type: 'deferObject', prereq: arguments[0], payload: payload });
 			break;
 		default:
-			console.error('Unknown call style for .defer():', calledAs);
+			throw new Error('Unknown call style for .defer():' + calledAs);
 	}
 
 	return this;
@@ -282,7 +281,7 @@ function await() {
 				payload.concat(args[offset]);
 				break;
 			default:
-				console.error('Unknown argument type passed to .await():', type);
+				throw new Error('Unknown argument type passed to .await(): ' + type);
 		}
 	});
 	// }}}
@@ -344,7 +343,7 @@ function set() {
 			this._struct.push({ type: 'seriesObject', payload: payload});
 			break;
 		default:
-			console.error('Unknown call style for .set():', calledAs);
+			throw new Error('Unknown call style for .set():' + calledAs);
 	}
 
 	return this;
@@ -360,7 +359,7 @@ function _finalize(err) {
 	// Sanity checks {{{
 	if (this._struct.length == 0) return; // Finalize called on dead object - probably a defer() fired without an await()
 	if (this._struct[this._struct.length - 1].type != 'end') {
-		console.error('While trying to find an end point in the async-chainable structure the last item in the this._struct does not have type==end!');
+		throw new Error('While trying to find an end point in the async-chainable structure the last item in the this._struct does not have type==end!');
 		return;
 	}
 	// }}}
@@ -383,7 +382,7 @@ function _execute(err) {
 	var currentExec = self._struct[self._structPointer];
 	// Sanity checks {{{
 	if (!currentExec.type) {
-		console.error('No type is specified for async-chainable structure at position', self._structPointer, currentExec);
+		throw new Error('No type is specified for async-chainable structure at offset ' + self._structPointer);
 		return self;
 	}
 	// }}}
@@ -637,7 +636,7 @@ function _execute(err) {
 			this._finalize();
 			break;
 		default:
-			console.error('Unknown async-chainable exec type:', currentExec);
+			throw new Error('Unknown async-chainable exec type: ' + currentExec.type);
 			return;
 	}
 	// }}}
@@ -678,7 +677,7 @@ function end() {
 			this._struct.push({ type: 'end', payload: arguments[0] });
 			break;
 		default:
-			console.error('Unknown call style for .end():', calledAs);
+			throw new Error('Unknown call style for .end(): ' + calledAs);
 	}
 
 	this._execute();
