@@ -320,7 +320,24 @@ API
 -----------------------
 Execute an array or object of functions either in series or parallel.
 
-There are a variety of ways of calling these functions:
+	series(function)
+	series(string, function) // Named function (`this.name` gets set to whatever gets passed to `next()`)
+	series(array)
+	series(object) // Named function object (each object key gets assigned to this with the value passed to `next()`)
+	series(collection) // See 'object' definition
+	series(array, function) // Backwards compatibility with `async.series`
+	series(object, function) // Backwards compatibility with `async.series`
+
+	parallel(function)
+	parallel(string, function) // Named function (`this.name` gets set to whatever gets passed to `next()`)
+	parallel(array)
+	parallel(object) // Named function object (each object key gets assigned to this with the value passed to `next()`)
+	parallel(collection) // See 'object' definition
+	parallel(array, function) // Backwards compatibility with `parallel.series`
+	parallel(object, function) // Backwards compatibility with `parallel.series`
+
+
+Some examples:
 
 
 	asyncChainable()
@@ -344,8 +361,19 @@ There are a variety of ways of calling these functions:
 .defer()
 --------
 Execute a function and continue down the asyncChainable chain.
+
+	defer(function)
+	defer(string, function) // Named function (`this.name` gets set to whatever gets passed to `next()`)
+	defer(string, string, function) // Named function (name is second arg) with prereq (first arg)
+	defer(array, string, function) // Named function (name is second arg) with prereq array (first arg)
+	defer(array)
+	defer(object) // Named function object (each object key gets assigned to this with the value passed to `next()`)
+	defer(collection) // See 'object' definition
+	defer(null) // Gets skipped automatically
+
+
 Use `await()` to gather the parallel functions.
-This can be considered the parallel process twin to `then()`.
+This can be considered the parallel process twin to `series()` / `then()`.
 
 	asyncChainable()
 		.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
@@ -359,6 +387,14 @@ This can be considered the parallel process twin to `then()`.
 .await()
 --------
 Wait for one or more fired defer functions to complete before containing down the asyncChainable chain.
+
+	await() // Wait for all defered functions to finish
+	await(string) // Wait for at least the named defer to finish
+	await(string,...) // Wait for the specified named defers to finish
+	await(array) // Wait for the specified named defers to finish
+
+
+Some examples:
 
 	// Wait for everything
 	asyncChainable()
@@ -390,6 +426,11 @@ Wait for one or more fired defer functions to complete before containing down th
 .limit()
 --------
 Restrict the number of defer operations that can run at any one time.
+
+	limit() // Allow unlimited parallel / defer functions to execute at once after this chain item
+	limit(Number) // Restrict the number of parallel / defer functions after this chain item
+
+
 This function can be used in the pipeline as many times as needed to change the limit as we work down the execution chain.
 
 	asyncChainable()
@@ -417,6 +458,9 @@ This function can be used in the pipeline as many times as needed to change the 
 .then()
 -------
 Execute a function, wait for it to complete and continue down the asyncChainable chain.
+
+This function is an alias for `series()`.
+
 This can be considered the series process twin to `then()`.
 
 	asyncChainable()
@@ -428,7 +472,16 @@ This can be considered the series process twin to `then()`.
 
 .forEach()
 ----------
-The `forEach()` funciton is a slight variation on the `parallel()` function but with some additional behaviour.
+The `forEach()` function is a slight variation on the `parallel()` function but with some additional behaviour.
+
+
+	forEach(array, function) // Run each item in the array though `function(next, value)`
+	forEach(object, function) // Run each item in the object though `function(next, value, key)`
+	forEach(collection,function) // see 'object, function' definition
+	forEach(string, function) // Lookup `this[string]` then process according to its type (see above type styles) - This is used for late binding
+	forEach(null) // Gets skipped automatically (also empty arrays, objects)
+
+
 It can be given an array, object or collection as the first argument and a function as the second. All items in the array will be iterated over *in parallel* and passed to the function which is expected to execute a next condition returning an error if the forEach iteration should stop.
 
 	asyncChainable()
@@ -453,9 +506,11 @@ This allows *late binding* of variables who's content will only be examined when
 .end()
 ------
 The final stage in the chain, `.end()` must be called to execute the queue of actions.
-If given arguments it functions the same as `.then(func).reset()` (i.e. execute the action in series and then reset).
 
-While similar to `then()` this function is used as the *last* thing a chain should resolve as it can also catch errors.
+	end(function) // Final function to execute as `function(err)`
+
+
+While similar to `series()` / `then()` this function will always be executed *last* and be given the error if any occurred in the form `function(err)`.
 
 	asyncChainable()
 		.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
@@ -484,7 +539,7 @@ If an error is caused in the middle of execution the result object is still avai
 
 .new()
 ------
-Async-chainable operates as an instanciated object. In order to get a new instance (e.g. for nesting invokations) call `.new()` to get a fresh object which wont interfear with any currently live versions.
+Async-chainable operates as an instantiated object. In order to get a new instance (e.g. for nesting invocations) call `.new()` to get a fresh object which wont interfere with any currently live versions.
 
 The below example uses two versions of async-chainable. The default outer item wraps a new instance of the inner one.
 
@@ -527,7 +582,7 @@ Clear the result buffer, releasing all results held in memory.
 ----------
 Set the context used by async-chainable during subsequent function calls.
 In effect this sets what `this` is for each call.
-Omiting an argument or supplying a 'falsy' value will instruct async-chainable to use its own default context object.
+Omitting an argument or supplying a 'falsy' value will instruct async-chainable to use its own default context object.
 
 	asyncChainable()
 		.then({foo: fooFunc}) // `this` is async-chainables own context object
@@ -537,7 +592,7 @@ Omiting an argument or supplying a 'falsy' value will instruct async-chainable t
 		.then({baz: bazFunc}) // `this` is now async-chainables own context object again
 		.end(this) // Output: null, {foo: 'foo value', bar: 'bar value', quz: 'quz value'}
 
-Note that even if the context is switched async-chainable still stores any named values in its own context for later retreival (in the above example this is `barFunc()` returning a value even though the context has been changed to a custom object).
+Note that even if the context is switched async-chainable still stores any named values in its own context for later retrieval (in the above example this is `barFunc()` returning a value even though the context has been changed to a custom object).
 
 See the [Context Section](#context) for further details on what the async-chainable context object contains.
 
@@ -545,6 +600,13 @@ See the [Context Section](#context) for further details on what the async-chaina
 .set()
 ------
 Set is a helper function to quickly allocate the value of a context item as we move down the chain.
+
+	set(string, mixed) // Set the single item in `this` specified the first string to the value of the second arg
+	set(object) // Merge the object into `this` to quickly set a number of values
+	set(function) // Alias for `series(function)`
+	set(string, function) // Alias for `series(string, function)`
+
+
 It can be used as a named single item key/value or as a setter object.
 
 	asyncChainable()
@@ -606,8 +668,13 @@ Each item in the `this._struct` object is composed of the following keys:
 
 Gotchas
 =======
-**Forgetting a final `await()` when using `end()`**
-By default Async-chainable will not *imply* an `.await()` call before each `.end()` call. For example:
+A list of some common errors when using async-chainable.
+
+
+Forgetting a final `await()` when using `end()`
+-----------------------------------------------
+
+By default async-chainable will not *imply* an `.await()` call before each `.end()` call. For example:
 
 	asyncChainable()
 		.defer('foo', fooFunc)
@@ -627,9 +694,10 @@ In the above no `.await()` call is made before `.end()` so this chain will *imme
 In the above async-chainable will wait for the deferred tasks to complete before firing the end condition.
 
 
-**Forgetting the `()` when using require**
+Forgetting the `()` when initializing
+-------------------------------------
 
-Async-chainable needs to store state as it processes the task stack, to do this it instanciates itself as an object. This means you must declare it with an additional `()` after the `require()` statement if you wish to use it straight away. For example:
+Async-chainable needs to store state as it processes the task stack, to do this it instantiates itself as an object. This means you must declare it with an additional `()` after the `require()` statement if you wish to use it straight away. For example:
 
 
 	var asyncChainable = require('async-chainable')(); // NOTE '()'
@@ -671,7 +739,7 @@ Or you can use the built in `.new()` variable to get a new instance:
 		.end(console.log)
 
 
-Its annoying we have to do this but without hacking around how Nodes module system works its not possible to return a singleton object like the async library does *and also* work with nested instances (i.e. having one .js file require() another that uses async-chainable and the whole thing not end up in a messy stack trace as the second instance inherits the first's state).
+Its annoying we have to do this but without hacking around how Nodes module system works its not possible to return a singleton object like the async library does *and also* work with nested instances (i.e. having one .js file require() another that uses async-chainable and the whole thing not end up in a messy stack trace as the second instance inherits the firsts return state).
 
 
 Useful techniques
@@ -703,7 +771,7 @@ For example in the below `otherTasks` is an array which is passed into the .para
 
 Compose an array of items then run each though a handler function
 -----------------------------------------------------------------
-Like the above example async-chainable can be used to prepare items for execution then thread them into a subequent chain for processing.
+Like the above example async-chainable can be used to prepare items for execution then thread them into a subsequent chain for processing.
 This is a neater version of the above that uses a fixed processing function to process an array of data.
 
 
@@ -727,6 +795,5 @@ This is a neater version of the above that uses a fixed processing function to p
 
 TODO
 ====
-* Better error resolution when calling series/parallel/defer/set with weird and wonderful overloads - use `throw new Error()` instead of console.log
-* README: Exampe of .set() / .then() with something like downloading a stream of data
+* README: Example of .set() / .then() with something like downloading a stream of data
 * `this.next()` as a possible way to call the next handler?
