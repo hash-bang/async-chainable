@@ -30,6 +30,14 @@ function getOverload(args) {
 	return out.toString();
 };
 
+// Plugin functionality - via `use()`
+var _plugins = {};
+function use(module) {
+	module.call(this);
+	return this;
+};
+// }}}
+
 /**
 * Queue up a function(s) to execute in series
 * @param array,object,function The function(s) to execute
@@ -636,7 +644,11 @@ function _execute(err) {
 			this._finalize();
 			break;
 		default:
-			throw new Error('Unknown async-chainable exec type: ' + currentExec.type);
+			if (this._plugins[currentExec.type]) { // Is there a plugin that should manage this?
+				this._plugins[currentExec.type].call(this, currentExec);
+			} else {
+				throw new Error('Unknown async-chainable exec type: ' + currentExec.type);
+			}
 			return;
 	}
 	// }}}
@@ -705,6 +717,8 @@ var objectInstance = function() {
 	this._deferred = [];
 	this._deferredRunning = 0;
 	this._finalize = _finalize;
+	this._getOverload = getOverload; // So this function is accessible by plugins
+	this._plugins = _plugins;
 	// }}}
 
 	this.await = await;
@@ -719,6 +733,7 @@ var objectInstance = function() {
 	this.set = set;
 	this.then = series;
 	this.new = function() { return new objectInstance };
+	this.use = use;
 	// }}}
 
 	// Async compat functionality - so this module becomes a drop-in replacement {{{
