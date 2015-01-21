@@ -71,7 +71,6 @@ describe('async-chainable.forEach() - object style', function(){
 
 
 describe('async-chainable.forEach() - collection style', function(){
-	var context;
 	var output;
 
 	beforeEach(function(done) {
@@ -80,39 +79,24 @@ describe('async-chainable.forEach() - collection style', function(){
 
 		asyncChainable()
 			.forEach([
-				{foo: 'Foo!'},
-				{bar: 'Bar!'},
-				{baz: 'Baz!'},
-			], function(next, item, key) { output.push(item, key); next(null, item); })
+				{foo: 'Foo!', crash: 'Crash!'},
+				{bar: 'Bar!', bang: 'Bang!'},
+				{baz: 'Baz!', wallop: 'Wallop!'},
+			], function(next, item) { output.push(item); next(null, item); })
 			.end(function(err) {
 				expect(err).to.be.undefined();
-				context = this;
 				done();
 			});
 	});
 
 	it('should have the correct number of output elements', function() {
-		expect(output).to.have.length(6);
+		expect(output).to.have.length(3);
 	});
 	
 	it('contain the expected output', function() {
-		expect(output).to.contain('foo');
-		expect(output).to.contain('Foo!');
-		expect(output).to.contain('bar');
-		expect(output).to.contain('Bar!');
-		expect(output).to.contain('baz');
-		expect(output).to.contain('Baz!');
-	});
-
-	it('should set the context', function() {
-		expect(context).to.have.property('foo');
-		expect(context.foo).to.equal('Foo!');
-
-		expect(context).to.have.property('bar');
-		expect(context.bar).to.equal('Bar!');
-
-		expect(context).to.have.property('baz');
-		expect(context.baz).to.equal('Baz!');
+		expect(output).to.contain({foo: 'Foo!', crash: 'Crash!'});
+		expect(output).to.contain({bar: 'Bar!', bang: 'Bang!'});
+		expect(output).to.contain({baz: 'Baz!', wallop: 'Wallop!'});
 	});
 });
 
@@ -180,8 +164,8 @@ describe('async-chainable.forEach() - named set', function(){
 				outputObject.push(item, key);
 				next();
 			})
-			.forEach('numbers', function(next, item, key) { // Collection form
-				outputCollection.push(item, key);
+			.forEach('numbers', function(next, item) { // Collection form
+				outputCollection.push(item);
 				next();
 			})
 
@@ -217,15 +201,12 @@ describe('async-chainable.forEach() - named set', function(){
 	});
 
 	it('collection method should have the correct number of output elements', function() {
-		expect(outputCollection).to.have.length(6);
+		expect(outputCollection).to.have.length(3);
 	});
 	
 	it('collection method should contain the expected output', function() {
-		expect(outputCollection).to.contain('one');
-		expect(outputCollection).to.contain('two');
-		expect(outputCollection).to.contain('three');
-		expect(outputCollection).to.contain('Number 1');
-		expect(outputCollection).to.contain('Number 2');
-		expect(outputCollection).to.contain('Number 3');
+		expect(outputCollection).to.contain({one: 'Number 1'});
+		expect(outputCollection).to.contain({two: 'Number 2'});
+		expect(outputCollection).to.contain({three: 'Number 3'});
 	});
 });

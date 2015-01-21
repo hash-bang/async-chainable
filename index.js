@@ -142,14 +142,12 @@ function forEach() {
 		case '':
 			// Pass
 			break;
+		case 'collection,function': // Form: forEach(Collection func)
 		case 'array,function': // Form: forEach(Array, func)
 			this._struct.push({ type: 'forEachArray', payload: arguments[0], callback: arguments[1] });
 			break;
 		case 'object,function': // Form: forEach(Object, func)
 			this._struct.push({ type: 'forEachObject', payload: arguments[0], callback: arguments[1] });
-			break;
-		case 'collection,function': // Form: forEach(Collection func)
-			this._struct.push({ type: 'forEachCollection', payload: arguments[0], callback: arguments[1] });
 			break;
 		case 'string,function': // Form: forEach(String <set lookup>, func)
 			this._struct.push({ type: 'forEachLateBound', payload: arguments[0], callback: arguments[1] });
@@ -476,26 +474,6 @@ function _execute(err) {
 				self._execute(err);
 			});
 			break;
-		case 'forEachCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			var tasks = [];
-			currentExec.payload.forEach(function(task) {
-				Object.keys(task).forEach(function(key) {
-					tasks.push(function(next, err) {
-						self._context._item = task[key];
-						self._context._key = key;
-						currentExec.callback.call(self._options.context, function(err, value) {
-							self._context[key] = value; // Allocate returned value to context
-							next(err);
-						}, task[key], key)
-					});
-				});
-			});
-			async.parallel(tasks, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
 		case 'forEachLateBound':
 			if (
 				(!currentExec.payload || !currentExec.payload.length) || // Payload is blank
@@ -508,14 +486,12 @@ function _execute(err) {
 			// Replace own exec array with actual type of payload now we know what it is {{{
 			var overloadType = getOverload([self._context[currentExec.payload]]);
 			switch (overloadType) {
+				case 'collection':
 				case 'array':
 					currentExec.type = 'forEachArray';
 					break;
 				case 'object':
 					currentExec.type = 'forEachObject';
-					break;
-				case 'collection':
-					currentExec.type = 'forEachCollection';
 					break;
 				default:
 					throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);

@@ -477,7 +477,7 @@ The `forEach()` function is a slight variation on the `parallel()` function but 
 
 	forEach(array, function) // Run each item in the array though `function(next, value)`
 	forEach(object, function) // Run each item in the object though `function(next, value, key)`
-	forEach(collection,function) // see 'object, function' definition
+	forEach(collection,function) // see 'array, function' definition (collections are just treated like an array of objects with 'forEach')
 	forEach(string, function) // Lookup `this[string]` then process according to its type (see above type styles) - This is used for late binding
 	forEach(null) // Gets skipped automatically (also empty arrays, objects)
 
