@@ -377,7 +377,7 @@ function _finalize(err) {
 
 /**
 * Internal function to execute the next pending queue item
-* This is usually called after the completion of every async.series() / async.parallel() call
+* This is usually called after the completion of every async.series() / async.parallel() / asyncChainable._run call
 * @access private
 */
 function _execute(err) {
@@ -397,11 +397,11 @@ function _execute(err) {
 	switch (currentExec.type) {
 		case 'parallelArray':
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			async.parallel(currentExec.payload.map(function(task) {
+			self._run(currentExec.payload.map(function(task) {
 				return function(next) {
 					task.call(self._options.context, next);
 				};
-			}), function(err) {
+			}), self._options.limit, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -418,7 +418,7 @@ function _execute(err) {
 					})
 				});
 			});
-			async.parallel(tasks, function(err) {
+			self._run(tasks, self._options.limit, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -437,20 +437,20 @@ function _execute(err) {
 					});
 				});
 			});
-			async.parallel(tasks, function(err) {
+			self._run(tasks, self._options.limit, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
 			break;
 		case 'forEachArray':
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			async.parallel(currentExec.payload.map(function(item, iter) {
+			self._run(currentExec.payload.map(function(item, iter) {
 				self._context._item = item;
 				self._context._key = iter;
 				return function(next) {
 					currentExec.callback.call(self._options.context, next, item, iter);
 				};
-			}), function(err) {
+			}), self._options.limit, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -469,7 +469,7 @@ function _execute(err) {
 					}, currentExec.payload[key], key);
 				});
 			});
-			async.parallel(tasks, function(err) {
+			self._run(tasks, self._options.limit, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -503,11 +503,11 @@ function _execute(err) {
 			break;
 		case 'seriesArray':
 			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			async.series(currentExec.payload.map(function(task) {
+			self._run(currentExec.payload.map(function(task) {
 				return function(next) {
 					task.call(self._options.context, next);
 				};
-			}), function(err) {
+			}), 1, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -524,7 +524,7 @@ function _execute(err) {
 					})
 				});
 			});
-			async.series(tasks, function(err) {
+			self._run(tasks, 1, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -543,7 +543,7 @@ function _execute(err) {
 					});
 				});
 			});
-			async.series(tasks, function(err) {
+			self._run(tasks, 1, function(err) {
 				currentExec.completed = true;
 				self._execute(err);
 			});
@@ -632,6 +632,24 @@ function _execute(err) {
 
 
 /**
+* Internal function to run an array of functions (usually in parallel)
+* Series execution can be obtained by setting limit = 1
+* @param array tasks The array of tasks to execute
+* @param int limit The limiter of tasks (if limit==1 tasks are run in series, if limit>1 tasks are run in limited parallel, else tasks are run in parallel)
+* @param function callback(err) The callback to fire on finish
+*/
+function _run(tasks, limit, callback) {
+	if (limit == 1) {
+		async.series(tasks, callback);
+	} else if (limit > 0) {
+		async.parallelLimit(tasks, limit, callback);
+	} else {
+		async.parallel(tasks, callback);
+	}
+}
+
+
+/**
 * Reset all state variables and return the object into a pristine condition
 * @return object This chainable object
 */
@@ -688,6 +706,7 @@ var objectInstance = function() {
 	// Async-Chainable functions {{{
 	// Private {{{
 	this._execute = _execute;
+	this._run = _run;
 	this._deferCheck = _deferCheck;
 	this._deferAdd = deferAdd;
 	this._deferred = [];

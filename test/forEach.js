@@ -27,6 +27,100 @@ describe('async-chainable.forEach() - array style', function(){
 });
 
 
+describe('async-chainable.forEach() - array style, unlimited', function(){
+	var output, running = 0, maxRunning = 0;
+	this.timeout(5000);
+
+	beforeEach(function(done) {
+		output = [];
+
+		asyncChainable()
+			.limit(null)
+			.forEach(['foo', 'bar', 'baz', 'quz', 'quuz', 'quuuz'], function(next, item) {
+				running++;
+				if (running > maxRunning) maxRunning = running;
+				setTimeout(function() {
+					running--;
+					output.push(item);
+					next();
+				}, Math.random() * 500)
+			})
+			.end(function(err) {
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(6);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('foo');
+		expect(output).to.contain('bar');
+		expect(output).to.contain('baz');
+		expect(output).to.contain('quz');
+		expect(output).to.contain('quuz');
+		expect(output).to.contain('quuuz');
+	});
+
+	it('should have no threads left over', function() {
+		expect(running).to.equal(0);
+	});
+
+	it('upper limit of 6 running threads', function() {
+		expect(maxRunning).to.equal(6);
+	});
+});
+
+
+describe('async-chainable.forEach() - array style, limited', function(){
+	var output, running = 0, maxRunning = 0;
+	this.timeout(5000);
+
+	beforeEach(function(done) {
+		output = [];
+
+		asyncChainable()
+			.limit(2)
+			.forEach(['foo', 'bar', 'baz', 'quz', 'quuz', 'quuuz'], function(next, item) {
+				running++;
+				if (running > maxRunning) maxRunning = running;
+				setTimeout(function() {
+					running--;
+					output.push(item);
+					next();
+				}, Math.random() * 500)
+			})
+			.end(function(err) {
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(6);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('foo');
+		expect(output).to.contain('bar');
+		expect(output).to.contain('baz');
+		expect(output).to.contain('quz');
+		expect(output).to.contain('quuz');
+		expect(output).to.contain('quuuz');
+	});
+
+	it('should have no threads left over', function() {
+		expect(running).to.equal(0);
+	});
+
+	it('limit to 2 running threads', function() {
+		expect(maxRunning).to.equal(2);
+	});
+});
+
+
 describe('async-chainable.forEach() - object style', function(){
 	var context;
 	var output;
