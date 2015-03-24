@@ -653,6 +653,7 @@ In addition to storing all named values the context object also provides the fol
 | `this._deferredRunning`              | Int            | The number of running deferred tasks (limit this using .limit())         |
 | `this._item`                         | Mixed          | During a forEach loop `_item` gets set to the currently iterating item value |
 | `this._key`                          | Mixed          | During a forEach loop `_key` gets set to the currently iterating array offset or object key |
+| `this._id`                           | Mixed          | During a defer call `_id` gets set to the currently defered task id      |
 
 
 Each item in the `this._struct` object is composed of the following keys:

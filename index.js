@@ -178,6 +178,7 @@ function deferAdd(id, task, parentChain) {
 		id: id || null,
 		prereq: parentChain.prereq || [],
 		payload: function(next) {
+			self._context._id = id;
 			task.call(self._options.context, function(err, value) {
 				if (id)
 					self._context[id] = value;
