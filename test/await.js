@@ -6,7 +6,7 @@ var asyncChainable = require('../index');
 describe('async-chainable.await() - stepped blocking', function(){
 	var contextStep, contextFinal;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		contextStep = {};
 		contextFinal = {};

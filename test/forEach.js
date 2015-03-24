@@ -4,7 +4,7 @@ var asyncChainable = require('../index');
 describe('async-chainable.forEach() - array style', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -31,7 +31,7 @@ describe('async-chainable.forEach() - array style, unlimited', function(){
 	var output, running = 0, maxRunning = 0;
 	this.timeout(5000);
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -78,7 +78,7 @@ describe('async-chainable.forEach() - array style, limited', function(){
 	var output, running = 0, maxRunning = 0;
 	this.timeout(5000);
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -125,7 +125,7 @@ describe('async-chainable.forEach() - object style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		context = {};
 		output = [];
 
@@ -167,7 +167,7 @@ describe('async-chainable.forEach() - object style', function(){
 describe('async-chainable.forEach() - collection style', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		context = {};
 		output = [];
 
@@ -198,7 +198,7 @@ describe('async-chainable.forEach() - collection style', function(){
 describe('async-chainable.forEach() - this._key + this._item', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -231,7 +231,7 @@ describe('async-chainable.forEach() - this._key + this._item', function(){
 describe('async-chainable.forEach() - named set', function(){
 	var outputArray, outputObject, outputCollection;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		outputArray = [];
 		outputObject = [];
 		outputCollection = [];

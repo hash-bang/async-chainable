@@ -5,7 +5,7 @@ describe('async-chainable.defer() - collections style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -49,7 +49,7 @@ describe('async-chainable.defer() - collections style', function(){
 describe('async-chainable.defer() - array style', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -77,7 +77,7 @@ describe('async-chainable.defer() - object style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -121,7 +121,7 @@ describe('async-chainable.defer() - named function style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -163,7 +163,7 @@ describe('async-chainable.defer() - named function style', function(){
 describe('async-chainable.defer() - empty calls', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()

@@ -5,7 +5,7 @@ describe('async-chainable - mixed chain', function(){
 	var context;
 	var output, outputSeries, outputSections;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		outputSeries = [];
 		outputSections = [];

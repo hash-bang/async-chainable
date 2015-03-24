@@ -4,7 +4,7 @@ var asyncChainable = require('../index');
 describe('async-chainable.parallel() - compability mode', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable().parallel([
@@ -32,7 +32,7 @@ describe('async-chainable.parallel() - compability mode', function(){
 describe('async-chainable.series() - compability mode', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		outputSeries = [];
 		outputSections = [];

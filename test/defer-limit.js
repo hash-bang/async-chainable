@@ -5,7 +5,7 @@ describe('async-chainable.defer() - limit', function(){
 	var output;
 	var executing, executingPeak;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		executing = 0;
 		executingPeak = 0;

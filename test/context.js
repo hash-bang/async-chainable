@@ -6,7 +6,7 @@ describe('async-chainable.context()', function(){
 	var output;
 	var contexts;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		contexts = [];
 

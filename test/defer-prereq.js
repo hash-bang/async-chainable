@@ -5,7 +5,7 @@ describe('async-chainable.defer() - isosceles', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -52,7 +52,7 @@ describe('async-chainable.defer() - isosceles (contextless)', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -88,7 +88,7 @@ describe('async-chainable.defer() - prereq labyrinth', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
