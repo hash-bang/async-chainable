@@ -332,7 +332,9 @@ function set() {
 		case '':
 			// Pass
 			break;
-		case 'string,string': // Form: set(String <key>, String <value)
+		case 'string,string': // Form: set(String <key>, String <value>)
+		case 'string,array': // Form: set(String <key>, Array <value>)
+		case 'string,object': // Form: set(String <key>, Object <value>)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
 			this._struct.push({ type: 'set', payload: payload });

@@ -2,7 +2,56 @@ var _ = require('lodash');
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.set()', function(){
+describe('async-chainable.set() - simple setters', function(){
+	var context;
+
+	beforeEach(function(done) {
+		contexts = [];
+
+		asyncChainable()
+			.set('fooKey', 'fooValue')
+			.set('barKey', ['hello!'])
+			.set({bazKey: 'bazValue'})
+			.set('quzKey', {subkey: 'Hi!'})
+			.set('quuzKey', function(next) {
+				next(null, 'quuzValue');
+			})
+			.end(function(err) {
+				expect(err).to.be.undefined();
+				context = this;
+				done();
+			});
+	});
+
+	it('set strings', function() {
+		expect(context).to.have.property('fooKey');
+		expect(context.fooKey).to.equal('fooValue');
+	});
+
+	it('set arrays', function() {
+		expect(context).to.have.property('barKey');
+		expect(context.barKey).to.have.length(1);
+		expect(context.barKey[0]).to.equal('hello!');
+	});
+
+	it('set objects', function() {
+		expect(context).to.have.property('bazKey');
+		expect(context.bazKey).to.equal('bazValue');
+	});
+
+	it('set objects to objects', function() {
+		expect(context).to.have.property('quzKey');
+		expect(context.quzKey.subkey).to.equal('Hi!');
+	});
+
+	it('set functions', function() {
+		expect(context).to.have.property('quuzKey');
+		expect(context.quuzKey).to.equal('quuzValue');
+	});
+});
+
+
+describe('async-chainable.set() - context access', function(){
 	var contexts;
 
 	beforeEach(function(done) {
