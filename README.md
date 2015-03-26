@@ -113,6 +113,14 @@ This module extends the existing async object so you can use it as a drop in rep
 	async.parallel([fooFunc, barFunc, bazFunc], console.log);
 
 
+Plugins
+=======
+There are a number of async-chainable plugins available which can extend the default functionality of the module:
+
+* [async-chainable-exec](https://github.com/hash-bang/async-chainable-exec) - External program support
+* [async-chainable-cluster](https://github.com/hash-bang/async-chainable-cluster) - Clustering support allowing tasks to be run over multiple cores rather than just via threads
+
+
 FAQ
 ===
 Some frequently asked questions:
