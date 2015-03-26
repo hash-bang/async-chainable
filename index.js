@@ -360,6 +360,60 @@ function set() {
 
 
 /**
+* Set a context items value
+* Not to be confused with `set()` which is the chainable external visible version of this
+* Unlike `set()` this function sets an item of _context immediately
+* @access private
+* @see _setRaw()
+*/
+function _set() {
+	var calledAs = getOverload(arguments);
+	switch(calledAs) {
+		case '':
+			// Pass
+			break;
+		case 'string,string': // Form: set(String <key>, String <value>)
+		case 'string,array': // Form: set(String <key>, Array <value>)
+		case 'string,collection': // Form: set(String <key>, Collection <value>)
+		case 'string,object': // Form: set(String <key>, Object <value>)
+			this._setRaw(arguments[0], arguments[1]);
+			break;
+		case 'object': // Form: set(Object)
+			for (var key in arguments[0])
+				this._setRaw(key, arguments[0][key]);
+			break;
+		case  'string,function': // Form: set(String, func) -> series(String <id>, func)
+			this._setRaw(arguments[0], arguments[1].call(this));
+			break;
+		case 'function': // Form: _set(func) // Expect func to return something which is then processed to _set
+			this._set(arguments[1].call(this));
+			break;
+		case 'string': // Set to undefined
+			this._setRaw(arguments[0], undefined);
+			break;
+		default:
+			throw new Error('Unknown call style for .set():' + calledAs);
+	}
+
+	return this;
+}
+
+
+/**
+* Actual raw value setter
+* This function is the internal version of _set which takes exactly two values, the key and the value to set
+* Override this function if some alternative _context platform is required
+* @param string key The key within _context to set the value of
+* @param mixed value The value within _context[key] to set the value of
+* @access private
+*/
+function _setRaw(key, value) {
+	this._context[key] = value;
+	return this;
+}
+
+
+/**
 * Internal function executed at the end of the chain
 * This can occur either in sequence (i.e. no errors) or a jump to this position (i.e. an error happened somewhere)
 * @access private
@@ -416,7 +470,7 @@ function _execute(err) {
 			keys.forEach(function(key) {
 				tasks.push(function(next) {
 					currentExec.payload[key].call(self._options.context, function(err, value) {
-						self._context[key] = value; // Allocate returned value to context
+						self._set(key, value); // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -434,7 +488,7 @@ function _execute(err) {
 					tasks.push(function(next, err) {
 						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
 						task[key].call(self._options.context, function(err, value) {
-							self._context[key] = value; // Allocate returned value to context
+							self._set(key, value); // Allocate returned value to context
 							next(err);
 						})
 					});
@@ -467,7 +521,7 @@ function _execute(err) {
 					self._context._item = currentExec.payload[key];
 					self._context._key = key;
 					currentExec.callback.call(self._options.context, function(err, value) {
-						self._context[key] = value; // Allocate returned value to context
+						self._set(key, value); // Allocate returned value to context
 						next(err);
 					}, currentExec.payload[key], key);
 				});
@@ -522,7 +576,7 @@ function _execute(err) {
 			keys.forEach(function(key) {
 				tasks.push(function(next) {
 					currentExec.payload[key].call(self._options.context, function(err, value) {
-						self._context[key] = value; // Allocate returned value to context
+						self._set(key, value); // Allocate returned value to context
 						next(err);
 					})
 				});
@@ -540,7 +594,7 @@ function _execute(err) {
 					tasks.push(function(next, err) {
 						if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
 						task[key].call(self._options.context, function(err, value) {
-							self._context[key] = value; // Allocate returned value to context
+							self._set(key, value); // Allocate returned value to context
 							next(err);
 						})
 					});
@@ -614,7 +668,7 @@ function _execute(err) {
 			var keys = Object.keys(currentExec.payload);
 			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
 			keys.forEach(function(key) {
-				self._context[key] = currentExec.payload[key];
+				self._set(key, currentExec.payload[key]);
 			});
 			currentExec.completed = true;
 			self._execute(); // Move on to next action
@@ -729,6 +783,8 @@ var objectInstance = function() {
 	this.reset = reset;
 	this.series = series;
 	this.set = set;
+	this._set = _set;
+	this._setRaw = _setRaw;
 	this.then = series;
 	this.new = function() { return new objectInstance };
 	this.use = use;
