@@ -335,6 +335,7 @@ function set() {
 			break;
 		case 'string,string': // Form: set(String <key>, String <value>)
 		case 'string,array': // Form: set(String <key>, Array <value>)
+		case 'string,collection': // Form: set(String <key>, Collection <value>)
 		case 'string,object': // Form: set(String <key>, Object <value>)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
@@ -350,6 +351,9 @@ function set() {
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
 			this._struct.push({ type: 'seriesObject', payload: payload});
+			break;
+		case 'string': // Set to undefined
+			this._setRaw(arguments[0], undefined);
 			break;
 		default:
 			throw new Error('Unknown call style for .set():' + calledAs);
