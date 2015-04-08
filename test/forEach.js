@@ -27,7 +27,7 @@ describe('async-chainable.forEach() - array style', function(){
 });
 
 
-describe('async-chainable.forEach() - out-of-order style', function(){
+describe('async-chainable.forEach() - bogosort array', function(){
 	var output;
 
 	before(function(done) {
@@ -224,6 +224,48 @@ describe('async-chainable.forEach() - collection style', function(){
 		expect(output).to.contain({foo: 'Foo!', crash: 'Crash!'});
 		expect(output).to.contain({bar: 'Bar!', bang: 'Bang!'});
 		expect(output).to.contain({baz: 'Baz!', wallop: 'Wallop!'});
+	});
+});
+
+
+describe('async-chainable.forEach() - bogosort collection', function(){
+	var output;
+
+	before(function(done) {
+		output = [];
+
+		asyncChainable()
+			.set({
+				metaWords: [
+					{title: 'quuz', delay: 500},
+					{title: 'baz', delay: 300},
+					{title: 'foo', delay: 100},
+					{title: 'bar', delay: 200},
+					{title: 'quz', delay: 400},
+				]
+			})
+			.forEach('metaWords', function(next, item) {
+				setTimeout(function() {
+					output.push(item.title);
+					next();
+				}, item.delay);
+			})
+			.end(function(err) {
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(5);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output[0]).to.equal('foo');
+		expect(output[1]).to.equal('bar');
+		expect(output[2]).to.equal('baz');
+		expect(output[3]).to.equal('quz');
+		expect(output[4]).to.equal('quuz');
 	});
 });
 
