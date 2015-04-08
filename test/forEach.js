@@ -27,6 +27,39 @@ describe('async-chainable.forEach() - array style', function(){
 });
 
 
+describe('async-chainable.forEach() - out-of-order style', function(){
+	var output;
+
+	before(function(done) {
+		output = [];
+
+		asyncChainable()
+			.forEach([500, 300, 200, 100, 400], function(next, value) {
+				setTimeout(function() {
+					output.push(value);
+					next();
+				}, value);
+			})
+			.end(function(err) {
+				expect(err).to.be.undefined();
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(5);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output[0]).to.equal(100);
+		expect(output[1]).to.equal(200);
+		expect(output[2]).to.equal(300);
+		expect(output[3]).to.equal(400);
+		expect(output[4]).to.equal(500);
+	});
+});
+
+
 describe('async-chainable.forEach() - array style, unlimited', function(){
 	var output, running = 0, maxRunning = 0;
 	this.timeout(5000);
