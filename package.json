@@ -1,6 +1,6 @@
 {
   "name": "async-chainable",
-  "version": "1.7.6",
+  "version": "1.7.7",
   "description": "An extension to Async adding better handling of mixed Series / Parallel tasks via object chaining",
   "main": "index.js",
   "repository": {
@@ -33,6 +33,6 @@
     "mocha-istanbul": "^0.2.0"
   },
   "dependencies": {
-    "async": "~0.9.0"
+    "async": "^0.9.0"
   }
 }
