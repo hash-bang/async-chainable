@@ -17,7 +17,7 @@ describe('async-chainable.set() - simple setters', function(){
 				next(null, 'quuzValue');
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -79,7 +79,7 @@ describe('async-chainable.set() - context access', function(){
 			})
 			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});

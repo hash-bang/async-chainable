@@ -17,7 +17,7 @@ describe('async-chainable.defer() - collections style', function(){
 			])
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok
 				context = this;
 				done();
 			});
@@ -89,7 +89,7 @@ describe('async-chainable.defer() - object style', function(){
 			})
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok
 				context = this;
 				done();
 			});
@@ -117,6 +117,36 @@ describe('async-chainable.defer() - object style', function(){
 	});
 });
 
+
+describe('async-chainable.defer() - function style', function(){
+	var output;
+
+	before(function(done) {
+		output = [];
+
+		asyncChainable()
+			.defer(function(next) { setTimeout(function(){ output.push('foo'); next(null) }, 10)})
+			.defer(function(next) { setTimeout(function(){ output.push('bar'); next(null) }, 0)})
+			.defer(function(next) { setTimeout(function(){ output.push('baz'); next(null) }, 5)})
+			.await()
+			.end(function(err) {
+				expect(err).to.be.not.ok;
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(3);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('foo');
+		expect(output).to.contain('bar');
+		expect(output).to.contain('baz');
+	});
+});
+
+
 describe('async-chainable.defer() - named function style', function(){
 	var context;
 	var output;
@@ -131,7 +161,7 @@ describe('async-chainable.defer() - named function style', function(){
 			.defer('bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok
 				context = this;
 				done();
 			});
@@ -176,7 +206,7 @@ describe('async-chainable.defer() - empty calls', function(){
 			.await()
 			.end(function(err) {
 				output.push('defer-end');
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok
 				done();
 			});
 	});

@@ -1,3 +1,4 @@
+var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
 /**
@@ -11,6 +12,7 @@ module.exports.subtasks = function(output, finish) {
 			function(next) { setTimeout(function(){ output.push('inner-3'); next() }, 10)},
 		])
 		.end(function(err) {
+			expect(err).to.be.not.ok;
 			output.push('inner-end')
 			finish(err);
 		});

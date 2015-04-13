@@ -10,7 +10,7 @@ describe('async-chainable.forEach() - array style', function(){
 		asyncChainable()
 			.forEach(['foo', 'bar', 'baz'], function(next, item) { output.push(item); next(); })
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -41,7 +41,7 @@ describe('async-chainable.forEach() - bogosort array', function(){
 				}, value);
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -79,7 +79,7 @@ describe('async-chainable.forEach() - array style, unlimited', function(){
 				}, Math.random() * 500)
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -126,7 +126,7 @@ describe('async-chainable.forEach() - array style, limited', function(){
 				}, Math.random() * 500)
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -165,7 +165,7 @@ describe('async-chainable.forEach() - object style', function(){
 		asyncChainable()
 			.forEach({fooKey: 'fooValue', barKey: 'barValue', bazKey: 'bazValue'}, function(next, item, key) { output.push(item, key); next(null, item); })
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -211,7 +211,7 @@ describe('async-chainable.forEach() - collection style', function(){
 				{baz: 'Baz!', wallop: 'Wallop!'},
 			], function(next, item) { output.push(item); next(null, item); })
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -251,7 +251,7 @@ describe('async-chainable.forEach() - bogosort collection', function(){
 				}, item.delay);
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -283,7 +283,7 @@ describe('async-chainable.forEach() - this._key + this._item', function(){
 				bazKey: 'bazValue',
 			}, function(next, item, key) { output.push(this._item, this._key); next(); })
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -341,7 +341,7 @@ describe('async-chainable.forEach() - named set', function(){
 
 			// Finish
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});

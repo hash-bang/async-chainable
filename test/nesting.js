@@ -21,7 +21,7 @@ describe('async-chainable - nesting (2 level)', function(){
 						])
 						.end(function(err) {
 							output.push('inner-end')
-							expect(err).to.be.undefined();
+							expect(err).to.be.not.ok;
 							outerNext(err);
 						});
 				},
@@ -29,7 +29,7 @@ describe('async-chainable - nesting (2 level)', function(){
 			])
 			.end(function(err) {
 				output.push('outer-end')
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -90,7 +90,7 @@ describe('async-chainable - nesting (3 level)', function(){
 									])
 									.end(function(err) {
 										output.push('gamma-end')
-										expect(err).to.be.undefined();
+										expect(err).to.be.not.ok;
 										betaNext(err);
 									});
 							}, 10)},
@@ -98,7 +98,7 @@ describe('async-chainable - nesting (3 level)', function(){
 						])
 						.end(function(err) {
 							output.push('beta-end')
-							expect(err).to.be.undefined();
+							expect(err).to.be.not.ok;
 							alphaNext(err);
 						});
 				},
@@ -106,7 +106,7 @@ describe('async-chainable - nesting (3 level)', function(){
 			])
 			.end(function(err) {
 				output.push('alpha-end')
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -249,7 +249,7 @@ describe('async-chainable - nesting via require()', function(){
 			])
 			.end(function(err) {
 				output.push('outer-end')
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});

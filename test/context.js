@@ -30,7 +30,7 @@ describe('async-chainable.context()', function(){
 			})
 			.then(function(next) { contexts.push(_.cloneDeep(this)); next() })
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});

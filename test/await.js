@@ -21,7 +21,7 @@ describe('async-chainable.await() - stepped blocking', function(){
 				next();
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok
 				contextFinal = this;
 				done();
 			});

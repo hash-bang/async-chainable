@@ -12,7 +12,7 @@ describe('async-chainable.parallel() - compability mode', function(){
 			function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
 			function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)},
 		], function(err) {
-			expect(err).to.be.undefined();
+			expect(err).to.be.not.ok;
 			done();
 		})
 	});
@@ -43,7 +43,7 @@ describe('async-chainable.series() - compability mode', function(){
 			function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)},
 			function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)},
 		], function(err) {
-			expect(err).to.be.undefined();
+			expect(err).to.be.not.ok;
 			done();
 		})
 	});

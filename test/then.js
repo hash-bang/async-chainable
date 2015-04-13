@@ -14,7 +14,7 @@ describe('async-chainable.series() - single item style', function(){
 			.then(function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)})
 			.then(function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});

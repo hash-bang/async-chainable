@@ -16,7 +16,7 @@ describe('async-chainable.series() - collections style', function(){
 				{bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)}},
 			])
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -93,7 +93,7 @@ describe('async-chainable.series() - object style', function(){
 				bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)},
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -141,7 +141,7 @@ describe('async-chainable.series() - single call style', function(){
 			.series(function(next) { setTimeout(function(){ output.push('bar'); next() }, 0)})
 			.series(function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -178,7 +178,7 @@ describe('async-chainable.series() - named single call style', function(){
 			.series('barKey', function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)})
 			.series('bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -244,7 +244,7 @@ describe('async-chainable.series() - array pointer during change', function(){
 			.series(otherTasks)
 			.end(function(err) {
 				output.push('end');
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -286,7 +286,7 @@ describe('async-chainable.series() - empty calls', function(){
 			.series({})
 			.end(function(err) {
 				output.push('series-end');
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});

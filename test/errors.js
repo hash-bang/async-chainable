@@ -41,7 +41,7 @@ describe('async-chainable - parallel() chain with errors', function(){
 	});
 
 	it('should raise an error', function() {
-		expect(error).to.not.be.undefined();
+		expect(error).to.be.ok;
 		expect(error).to.be.equal('Error in step 6');
 	});
 
@@ -96,7 +96,7 @@ describe('async-chainable - series() chain with errors', function(){
 	});
 
 	it('should raise an error', function() {
-		expect(error).to.not.be.undefined();
+		expect(error).to.be.ok;
 		expect(error).to.be.equal('Error in 02-series');
 	});
 
@@ -148,7 +148,7 @@ describe('async-chainable - then() chain with errors', function(){
 	});
 
 	it('should raise an error', function() {
-		expect(error).to.not.be.undefined();
+		expect(error).to.be.ok;
 		expect(error).to.be.equal('Error in sec-03');
 	});
 

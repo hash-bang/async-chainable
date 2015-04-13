@@ -31,7 +31,7 @@ describe('async-chainable.defer() - generated maze', function(){
 		maze
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});

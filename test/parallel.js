@@ -16,7 +16,7 @@ describe('async-chainable.parallel() - collections style', function(){
 				{bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)}},
 			])
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -87,7 +87,7 @@ describe('async-chainable.parallel() - object style', function(){
 				bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)},
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -146,7 +146,7 @@ describe('async-chainable.parallel() - array pointer during change', function(){
 			.parallel(otherTasks)
 			.end(function(err) {
 				output.push('end');
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				done();
 			});
 	});
@@ -179,8 +179,8 @@ describe('async-chainable.parallel() - empty calls', function(){
 			.then(function(next) { output.push('parallel-3'); next() })
 			.parallel({})
 			.end(function(err) {
+				expect(err).to.be.not.ok;
 				output.push('parallel-end');
-				expect(err).to.be.undefined();
 				done();
 			});
 	});

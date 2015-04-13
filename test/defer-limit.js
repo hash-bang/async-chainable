@@ -33,7 +33,7 @@ describe('async-chainable.defer() - limit', function(){
 		tasks
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});

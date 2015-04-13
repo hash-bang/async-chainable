@@ -15,7 +15,7 @@ describe('async-chainable.defer() - isosceles', function(){
 			.defer('fooKey', 'bazKey', function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)})
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -62,7 +62,7 @@ describe('async-chainable.defer() - isosceles (contextless)', function(){
 			.defer('fooKey', 'bazKey', function(next) { setTimeout(function(){ output.push('baz'); next() }, 5)})
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -99,7 +99,7 @@ describe('async-chainable.defer() - prereq labyrinth', function(){
 			.defer('bazKey', 'quzKey', function(next) { setTimeout(function(){ output.push('quz'); next(null, 'quzValue') }, 20)})
 			.await()
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});

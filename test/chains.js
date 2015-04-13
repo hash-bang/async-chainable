@@ -45,7 +45,7 @@ describe('async-chainable - mixed chain', function(){
 			.await() // Let defer items catch up
 			.end(function(err) {
 				output.push('17-end')
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				context = this;
 				done();
 			});
@@ -126,7 +126,7 @@ describe('async-chainable - blocked parallel() chain', function(){
 				step9: function(next) { setTimeout(function(){ output.push('step9'); next(null, 'step9Value'); }, 5)},
 			})
 			.end(function(err) {
-				expect(err).to.be.undefined();
+				expect(err).to.be.not.ok;
 				outputSections.push('sec-end');
 				context = this;
 				done();
