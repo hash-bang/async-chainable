@@ -9,13 +9,19 @@ describe('async-chainable.set() - simple setters', function(){
 		contexts = [];
 
 		asyncChainable()
-			.set('fooKey', 'fooValue')
-			.set('barKey', ['hello!'])
-			.set({bazKey: 'bazValue'})
-			.set('quzKey', {subkey: 'Hi!'})
-			.set('quuzKey', function(next) {
+			.set('foo', 'fooValue')
+			.set('bar', ['hello!'])
+			.set({baz: 'bazValue'})
+			.set('quz', {subkey: 'Hi!'})
+			.set('quuz', function(next) {
 				next(null, 'quuzValue');
 			})
+			.set('flarp', 672)
+			.set('thud', 81.923)
+			.set('snork', new Date())
+			.set('mumble', undefined)
+			.set('bongo', null)
+			.set('bazola', /./)
 			.end(function(err) {
 				expect(err).to.be.not.ok;
 				context = this;
@@ -24,29 +30,58 @@ describe('async-chainable.set() - simple setters', function(){
 	});
 
 	it('set strings', function() {
-		expect(context).to.have.property('fooKey');
-		expect(context.fooKey).to.equal('fooValue');
+		expect(context).to.have.property('foo');
+		expect(context.foo).to.equal('fooValue');
 	});
 
 	it('set arrays', function() {
-		expect(context).to.have.property('barKey');
-		expect(context.barKey).to.have.length(1);
-		expect(context.barKey[0]).to.equal('hello!');
+		expect(context).to.have.property('bar');
+		expect(context.bar).to.have.length(1);
+		expect(context.bar[0]).to.equal('hello!');
 	});
 
 	it('set objects', function() {
-		expect(context).to.have.property('bazKey');
-		expect(context.bazKey).to.equal('bazValue');
+		expect(context).to.have.property('baz');
+		expect(context.baz).to.equal('bazValue');
 	});
 
 	it('set objects to objects', function() {
-		expect(context).to.have.property('quzKey');
-		expect(context.quzKey.subkey).to.equal('Hi!');
+		expect(context).to.have.property('quz');
+		expect(context.quz.subkey).to.equal('Hi!');
 	});
 
 	it('set functions', function() {
-		expect(context).to.have.property('quuzKey');
-		expect(context.quuzKey).to.equal('quuzValue');
+		expect(context).to.have.property('quuz');
+		expect(context.quuz).to.equal('quuzValue');
+	});
+
+	it('set numbers', function() {
+		expect(context).to.have.property('flarp');
+		expect(context.flarp).to.equal(672);
+	});
+
+	it('set floats', function() {
+		expect(context).to.have.property('thud');
+		expect(context.thud).to.equal(81.923);
+	});
+
+	it('set dates', function() {
+		expect(context).to.have.property('snork');
+	});
+
+	it('set undefined', function() {
+		expect(context).to.not.have.property('mumble');
+		expect(context.mumble).to.be.undefined;
+	});
+
+	it('set null', function() {
+		expect(context).to.have.property('bongo');
+		expect(context.bongo).to.be.null;
+	});
+
+	it('set regexp', function() {
+		expect(context).to.have.property('bazola');
+		expect(context.bazola).to.be.regexp;
 	});
 });
 
