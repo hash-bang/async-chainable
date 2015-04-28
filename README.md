@@ -96,6 +96,29 @@ An extension to the otherwise excellent [Async](https://www.npmjs.com/package/as
 		.end();
 
 
+	// Use async-chainable within ExpressJS
+	// This example provides an `/order/123` style URL where the order is fetched and returned as a JSON object
+
+	app.get('/order/:id', function(req, res) {
+		asyncChainable()
+			.then(function(next) { // Sanity checks
+				if (!req.params.id) return next('No ID specified');
+				next();
+			})
+			.then('order', function(next) { // Fetch order into this.order
+				Orders.findOne({_id: req.params.id}, next);
+			})
+			.then(function(next) {
+				// Do something complicated
+				setTimeout(next, 1000);
+			})
+			.end(function(err) {
+				if (err) return res.status(400).send(err);
+				res.send(this.order);
+			});
+	});
+
+
 This module extends the existing async object so you can use it as a drop in replacement for Async:
 
 	var async = require('async-chainable');
@@ -111,6 +134,16 @@ This module extends the existing async object so you can use it as a drop in rep
 	// Or just like async
 	// NOTE: This style cannot be chained in order to maintain compability with async
 	async.parallel([fooFunc, barFunc, bazFunc], console.log);
+
+
+Project Goals
+=============
+This project has the following goals:
+
+* Be compatible with the [Async](https://www.npmjs.com/package/async) library so existing applications are portable over time
+* Provide a readable and dependable model for asynchronous tasks
+* Have a 'sane' ([YMMV](http://tvtropes.org/pmwiki/pmwiki.php/Main/YMMV)) syntax that will fit most use cases
+* Have an extendible plugin system to allow [additional components](#plugins) to be easily brought into the project
 
 
 Plugins
