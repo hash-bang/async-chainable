@@ -30,6 +30,33 @@ function getOverload(args) {
 	return out.toString();
 };
 
+// Utility functions {{{
+/**
+* Return true if a variable is an array
+* @param mixed thing The varable to examine
+* @return bool True if the item is a classic JS array and not an object
+*/
+function isArray(thing) {
+	return (
+		typeof thing == 'object' &&
+		Object.prototype.toString.call(thing) == '[object Array]'
+	);
+}
+
+
+/**
+* Return true if a variable is an object
+* @param mixed thing The varable to examine
+* @return bool True if the item is a classic JS array and not an object
+*/
+function isObject(thing) {
+	return (
+		typeof thing == 'object' &&
+		Object.prototype.toString.call(thing) != '[object Array]'
+	);
+}
+// }}}
+
 // Plugin functionality - via `use()`
 var _plugins = {};
 function use(module) {
@@ -445,252 +472,255 @@ function _finalize(err) {
 */
 function _execute(err) {
 	var self = this;
-	if (self._structPointer >= self._struct.length) return this._finalize(err); // Nothing more to execute in struct
 	if (err) return this._finalize(err); // An error has been raised - stop exec and call finalize now
-	self._deferCheck(); // Kick off any pending deferred items
-	var currentExec = self._struct[self._structPointer];
-	// Sanity checks {{{
-	if (!currentExec.type) {
-		throw new Error('No type is specified for async-chainable structure at offset ' + self._structPointer);
-		return self;
-	}
-	// }}}
-	self._structPointer++;
-	// self._struct exec - Execute based on currentExec.type {{{
-	switch (currentExec.type) {
-		case 'parallelArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			self._run(currentExec.payload.map(function(task) {
-				return function(next) {
-					task.call(self._options.context, next);
-				};
-			}), self._options.limit, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'parallelObject':
-			var tasks = [];
-			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
-			keys.forEach(function(key) {
-				tasks.push(function(next) {
-					currentExec.payload[key].call(self._options.context, function(err, value) {
-						self._set(key, value); // Allocate returned value to context
-						next(err);
-					})
+	do {
+		var redo = false;
+		if (self._structPointer >= self._struct.length) return this._finalize(err); // Nothing more to execute in struct
+		self._deferCheck(); // Kick off any pending deferred items
+		var currentExec = self._struct[self._structPointer];
+		// Sanity checks {{{
+		if (!currentExec.type) {
+			throw new Error('No type is specified for async-chainable structure at offset ' + self._structPointer);
+			return self;
+		}
+		// }}}
+		self._structPointer++;
+
+		// Skip step when function supports skipping if the argument is empty {{{
+		if (
+			currentExec.type != 'forEachLateBound' &&
+			currentExec.type != 'await' &&
+			currentExec.type != 'limit' &&
+			currentExec.type != 'context' &&
+			currentExec.type != 'end' &&
+			(
+				!currentExec.payload || // Not set OR
+				(isArray(currentExec.payload) && !currentExec.payload.length) || // An empty array
+				(isObject(currentExec.payload) && !Object.keys(currentExec.payload).length) // An empty object
+			)
+		) {
+			currentExec.completed = true;
+			redo = true;
+			continue;
+		}
+		// }}}
+
+		switch (currentExec.type) {
+			case 'parallelArray':
+				self._run(currentExec.payload.map(function(task) {
+					return function(next) {
+						task.call(self._options.context, next);
+					};
+				}), self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
 				});
-			});
-			self._run(tasks, self._options.limit, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'parallelCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			var tasks = [];
-			currentExec.payload.forEach(function(task) {
-				Object.keys(task).forEach(function(key) {
-					tasks.push(function(next, err) {
-						if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
-						task[key].call(self._options.context, function(err, value) {
+				break;
+			case 'parallelObject':
+				var tasks = [];
+				Object.keys(currentExec.payload).forEach(function(key) {
+					tasks.push(function(next) {
+						currentExec.payload[key].call(self._options.context, function(err, value) {
 							self._set(key, value); // Allocate returned value to context
 							next(err);
 						})
 					});
 				});
-			});
-			self._run(tasks, self._options.limit, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'forEachArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			self._run(currentExec.payload.map(function(item, iter) {
-				self._context._item = item;
-				self._context._key = iter;
-				return function(next) {
-					currentExec.callback.call(self._options.context, next, item, iter);
-				};
-			}), self._options.limit, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'forEachObject':
-			var tasks = [];
-			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
-			keys.forEach(function(key) {
-				tasks.push(function(next) {
-					self._context._item = currentExec.payload[key];
-					self._context._key = key;
-					currentExec.callback.call(self._options.context, function(err, value) {
-						self._set(key, value); // Allocate returned value to context
-						next(err);
-					}, currentExec.payload[key], key);
+				self._run(tasks, self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
 				});
-			});
-			self._run(tasks, self._options.limit, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'forEachLateBound':
-			if (
-				(!currentExec.payload || !currentExec.payload.length) || // Payload is blank
-				(!self._context[currentExec.payload]) // Payload doesnt exist within context
-			) { // Goto next chain
-				currentExec.completed = true;
-				return self._execute()
-			};
+				break;
+			case 'parallelCollection':
+				var tasks = [];
+				currentExec.payload.forEach(function(task) {
+					Object.keys(task).forEach(function(key) {
+						tasks.push(function(next, err) {
+							if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
+							task[key].call(self._options.context, function(err, value) {
+								self._set(key, value); // Allocate returned value to context
+								next(err);
+							})
+						});
+					});
+				});
+				self._run(tasks, self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
+				});
+				break;
+			case 'forEachArray':
+				self._run(currentExec.payload.map(function(item, iter) {
+					self._context._item = item;
+					self._context._key = iter;
+					return function(next) {
+						currentExec.callback.call(self._options.context, next, item, iter);
+					};
+				}), self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
+				});
+				break;
+			case 'forEachObject':
+				var tasks = [];
+				Object.keys(currentExec.payload).forEach(function(key) {
+					tasks.push(function(next) {
+						self._context._item = currentExec.payload[key];
+						self._context._key = key;
+						currentExec.callback.call(self._options.context, function(err, value) {
+							self._set(key, value); // Allocate returned value to context
+							next(err);
+						}, currentExec.payload[key], key);
+					});
+				});
+				self._run(tasks, self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
+				});
+				break;
+			case 'forEachLateBound':
+				if (
+					(!currentExec.payload || !currentExec.payload.length) || // Payload is blank
+					(!self._context[currentExec.payload]) // Payload doesnt exist within context
+				) { // Goto next chain
+					currentExec.completed = true;
+					redo = true;
+					break;
+				}
 
-			// Replace own exec array with actual type of payload now we know what it is {{{
-			var overloadType = getOverload([self._context[currentExec.payload]]);
-			switch (overloadType) {
-				case 'collection':
-				case 'array':
-					currentExec.type = 'forEachArray';
-					break;
-				case 'object':
-					currentExec.type = 'forEachObject';
-					break;
-				default:
-					throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);
-			}
-			currentExec.payload = self._context[currentExec.payload];
-			self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
-			self._execute();
-			// }}}
-			break;
-		case 'seriesArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			self._run(currentExec.payload.map(function(task) {
-				return function(next) {
-					task.call(self._options.context, next);
-				};
-			}), 1, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'seriesObject':
-			var tasks = [];
-			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
-			keys.forEach(function(key) {
-				tasks.push(function(next) {
-					currentExec.payload[key].call(self._options.context, function(err, value) {
-						self._set(key, value); // Allocate returned value to context
-						next(err);
-					})
+				// Replace own exec array with actual type of payload now we know what it is {{{
+				var overloadType = getOverload([self._context[currentExec.payload]]);
+				switch (overloadType) {
+					case 'collection':
+					case 'array':
+						currentExec.type = 'forEachArray';
+						break;
+					case 'object':
+						currentExec.type = 'forEachObject';
+						break;
+					default:
+						throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);
+				}
+				currentExec.payload = self._context[currentExec.payload];
+				self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
+				redo = true;
+				// }}}
+				break;
+			case 'seriesArray':
+				self._run(currentExec.payload.map(function(task) {
+					return function(next) {
+						task.call(self._options.context, next);
+					};
+				}), 1, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
 				});
-			});
-			self._run(tasks, 1, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'seriesCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			var tasks = [];
-			currentExec.payload.forEach(function(task) {
-				Object.keys(task).forEach(function(key) {
-					tasks.push(function(next, err) {
-						if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
-						task[key].call(self._options.context, function(err, value) {
+				break;
+			case 'seriesObject':
+				var tasks = [];
+				Object.keys(currentExec.payload).forEach(function(key) {
+					tasks.push(function(next) {
+						currentExec.payload[key].call(self._options.context, function(err, value) {
 							self._set(key, value); // Allocate returned value to context
 							next(err);
 						})
 					});
 				});
-			});
-			self._run(tasks, 1, function(err) {
-				currentExec.completed = true;
-				self._execute(err);
-			});
-			break;
-		case 'deferArray':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			currentExec.payload.forEach(function(task) {
-				self._deferAdd(null, task, currentExec);
-			});
-			self._execute(); // Move on immediately
-			break;
-		case 'deferObject':
-			var tasks = [];
-			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
-			keys.forEach(function(key) {
-				self._deferAdd(key, currentExec.payload[key], currentExec);
-			});
-			self._execute(); // Move on immediately
-			break;
-		case 'deferCollection':
-			if (!currentExec.payload || !currentExec.payload.length) { currentExec.completed = true; return self._execute() };
-			var tasks = [];
-			currentExec.payload.forEach(function(task) {
-				Object.keys(task).forEach(function(key) {
-					self._deferAdd(key, task[key], currentExec);
+				self._run(tasks, 1, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
 				});
-			});
-			self._execute(); // Move on immediately
-			break;
-		case 'await': // Await can operate in two modes, either payload=[] (examine all) else (examine specific keys)
-			if (!currentExec.payload.length) { // Check all tasks are complete
-				if (self._struct.slice(0, self._structPointer - 1).every(function(stage) { // Examine all items UP TO self one and check they are complete
-					return stage.completed;
-				})) { // All tasks up to self point are marked as completed
+				break;
+			case 'seriesCollection':
+				var tasks = [];
+				currentExec.payload.forEach(function(task) {
+					Object.keys(task).forEach(function(key) {
+						tasks.push(function(next, err) {
+							if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
+							task[key].call(self._options.context, function(err, value) {
+								self._set(key, value); // Allocate returned value to context
+								next(err);
+							})
+						});
+					});
+				});
+				self._run(tasks, 1, function(err) {
 					currentExec.completed = true;
-					self._execute(); // Go onto next stage
-				} else {
-					self._structPointer--; // At least one task is outstanding - rewind to self stage so we repeat on next resolution
-				}
+					self._execute(err);
+				});
+				break;
+			case 'deferArray':
+				currentExec.payload.forEach(function(task) {
+					self._deferAdd(null, task, currentExec);
+				});
 
-			} else { // Check certain tasks are complete by key
-				var allOk = true;
-				if (currentExec.payload.every(function(dep) { // Examine all named dependencies
-					return !! self._context[dep];
-				})) { // All are present
-					currentExec.completed = true;
-					self._execute(); // Go onto next stage
-				} else {
-					self._structPointer--; // At least one dependency is outstanding - rewind to self stage so we repeat on next resolution
+				redo = true;
+				break;
+			case 'deferObject':
+				Object.keys(currentExec.payload).forEach(function(key) {
+					self._deferAdd(key, currentExec.payload[key], currentExec);
+				});
+
+				redo = true;
+				break;
+			case 'deferCollection':
+				currentExec.payload.forEach(function(task) {
+					Object.keys(task).forEach(function(key) {
+						self._deferAdd(key, task[key], currentExec);
+					});
+				});
+				redo = true;
+				break;
+			case 'await': // Await can operate in two modes, either payload=[] (examine all) else (examine specific keys)
+				if (!currentExec.payload.length) { // Check all tasks are complete
+					if (self._struct.slice(0, self._structPointer - 1).every(function(stage) { // Examine all items UP TO self one and check they are complete
+						return stage.completed;
+					})) { // All tasks up to self point are marked as completed
+						currentExec.completed = true;
+						redo = true;
+					} else {
+						self._structPointer--; // At least one task is outstanding - rewind to self stage so we repeat on next resolution
+					}
+				} else { // Check certain tasks are complete by key
+					if (currentExec.payload.every(function(dep) { // Examine all named dependencies
+						return !! self._context[dep];
+					})) { // All are present
+						currentExec.completed = true;
+						redo = true;
+					} else {
+						self._structPointer--; // At least one dependency is outstanding - rewind to self stage so we repeat on next resolution
+					}
 				}
-			}
-			break;
-		case 'limit': // Set the options.limit variable
-			self._options.limit = currentExec.payload;
-			currentExec.completed = true;
-			self._execute(); // Move on to next action
-			break;
-		case 'context': // Change the self._options.context object
-			self._options.context = currentExec.payload ? currentExec.payload : self._context; // Set context (if null use internal context)
-			currentExec.completed = true;
-			self._execute(); // Move on to next action
-			break;
-		case 'set': // Set a hash of variables within context
-			var keys = Object.keys(currentExec.payload);
-			if (!keys || !keys.length) { currentExec.completed = true; return self._execute() };
-			keys.forEach(function(key) {
-				self._set(key, currentExec.payload[key]);
-			});
-			currentExec.completed = true;
-			self._execute(); // Move on to next action
-			break;
-		case 'end': // self should ALWAYS be the last item in the structure and indicates the final function call
-			this._finalize();
-			break;
-		default:
-			if (this._plugins[currentExec.type]) { // Is there a plugin that should manage this?
-				this._plugins[currentExec.type].call(this, currentExec);
-			} else {
-				throw new Error('Unknown async-chainable exec type: ' + currentExec.type);
-			}
-			return;
-	}
-	// }}}
+				break;
+			case 'limit': // Set the options.limit variable
+				self._options.limit = currentExec.payload;
+				currentExec.completed = true;
+				redo = true; // Move on to next action
+				break;
+			case 'context': // Change the self._options.context object
+				self._options.context = currentExec.payload ? currentExec.payload : self._context; // Set context (if null use internal context)
+				currentExec.completed = true;
+				redo = true; // Move on to next action
+				break;
+			case 'set': // Set a hash of variables within context
+				Object.keys(currentExec.payload).forEach(function(key) {
+					self._set(key, currentExec.payload[key]);
+				});
+				currentExec.completed = true;
+				redo = true; // Move on to next action
+				break;
+			case 'end': // self should ALWAYS be the last item in the structure and indicates the final function call
+				this._finalize();
+				break;
+			default:
+				if (this._plugins[currentExec.type]) { // Is there a plugin that should manage this?
+					this._plugins[currentExec.type].call(this, currentExec);
+				} else {
+					throw new Error('Unknown async-chainable exec type: ' + currentExec.type);
+				}
+				return;
+		}
+	} while (redo);
 };
 
 
