@@ -488,11 +488,13 @@ function _execute(err) {
 
 		// Skip step when function supports skipping if the argument is empty {{{
 		if (
-			currentExec.type != 'forEachLateBound' &&
-			currentExec.type != 'await' &&
-			currentExec.type != 'limit' &&
-			currentExec.type != 'context' &&
-			currentExec.type != 'end' &&
+			[
+				'parallelArray', 'parallelObject', 'parallelCollection',
+				'forEachArray', 'forEachObject',
+				'seriesArray', 'seriesObject', 'seriesCollection',
+				'deferArray', 'deferObject', 'deferCollection',
+				'set'
+			].indexOf(currentExec.type) > -1 &&
 			(
 				!currentExec.payload || // Not set OR
 				(isArray(currentExec.payload) && !currentExec.payload.length) || // An empty array
