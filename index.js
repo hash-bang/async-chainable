@@ -726,6 +726,10 @@ function _execute(err) {
 };
 
 
+// _run() functionality - used to execute several functions in parallel and call a callback when completed {{{
+// NOTE: Since this function is the central bottle-neck of the application code here is designed to run as efficiently as possible
+//       This can make it rather messy and unpleasent to read in order to maximize thoughput
+
 /**
 * Internal function to run an array of functions (usually in parallel)
 * Series execution can be obtained by setting limit = 1
@@ -734,14 +738,59 @@ function _execute(err) {
 * @param function callback(err) The callback to fire on finish
 */
 function _run(tasks, limit, callback) {
-	if (limit == 1) {
-		async.series(tasks, callback);
-	} else if (limit > 0) {
-		async.parallelLimit(tasks, limit, callback);
-	} else {
-		async.parallel(tasks, callback);
+	var runTasks;
+
+	_runBucketLimit = limit;
+	_runBucketCallback = callback;
+	if (_runBucketLimit > 0) { // Start all processes within the limit
+		runTasks = tasks.slice(0, limit);
+		_runBucket = tasks.slice(limit);
+		_runBucketRunning = runTasks.length;
+	} else { // Run all processes
+		runTasks = tasks;
+		_runBucket = [];
+		_runBucketRunning = runTasks.length;
+	}
+
+	for (var i = 0; i < runTasks.length; i++)
+		runTasks[i].call(this, _runNextFinish);
+}
+
+
+var _runBucket = [];
+var _runBucketRunning = 0;
+var _runBucketLimit = 1;
+var _runBucketCallback = function() {};
+
+/**
+* Allocate the next task to a completing function
+*/
+function _runNext() {
+	if (_runBucketLimit > 0 && _runBucketRunning > _runBucketLimit) return;
+	if (_runBucket.length) {
+		var newFunc = _runBucket.shift();
+		_runBucketRunning++;
+		newFunc.call(this, _runNextFinish);
+	} else if (_runBucketRunning <= 0) { // Empting bucket
+		_runBucketCallback();
 	}
 }
+
+
+/**
+* Called when a task is finishing. This usually just passes on control to _runNext()
+* @see _runNext()
+*/
+function _runNextFinish(err) {
+	_runBucketRunning--;
+	if (err) {
+		_runBucket = [];
+		_runBucketCallback(err);
+	} else {
+		setImmediate(_runNext);
+	}
+}
+// }}}
 
 
 /**
