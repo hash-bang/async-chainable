@@ -275,7 +275,7 @@ function defer() {
 			this._struct.push({ type: 'deferCollection', payload: arguments[0] });
 			break;
 		case 'array,function': // Form: defer(Array <prereqs>, func)
-			this._struct.push({ type: 'deferObject', prereq: arguments[0], payload: {'': arguments[1]} });
+			this._struct.push({ type: 'deferArray', prereq: arguments[0], payload: [arguments[1]] });
 			break;
 		case 'string,string,function': // Form: defer(String <prereq>, String <name>, func)
 			var payload = {};
