@@ -741,41 +741,48 @@ function _execute(err) {
 * @param function callback(err) The callback to fire on finish
 */
 function _run(tasks, limit, callback) {
+	var self = this;
 	var runTasks;
 
-	_runBucketLimit = limit;
-	_runBucketCallback = callback;
-	if (_runBucketLimit > 0) { // Start all processes within the limit
+	this._runBucket = {
+		bucket: [],
+		running: 0,
+		limit: limit,
+		callback: callback,
+	};
+
+	if (this._runBucket.limit > 0) { // Start all processes within the limit
 		runTasks = tasks.slice(0, limit);
-		_runBucket = tasks.slice(limit);
-		_runBucketRunning = runTasks.length;
+		this._runBucket.bucket = tasks.slice(limit);
+		this._runBucket.running = runTasks.length;
 	} else { // Run all processes
 		runTasks = tasks;
-		_runBucket = [];
-		_runBucketRunning = runTasks.length;
+		this._runBucket.bucket = [];
+		this._runBucket.running = runTasks.length;
 	}
 
-	for (var i = 0; i < runTasks.length; i++)
-		runTasks[i].call(this, _runNextFinish);
+	for (var i = 0; i < runTasks.length; i++) {
+		runTasks[i].call(this, function(err) {
+			self._runNextFinish(err);
+		});
+	}
 }
 
-
-var _runBucket = [];
-var _runBucketRunning = 0;
-var _runBucketLimit = 1;
-var _runBucketCallback = function() {};
 
 /**
 * Allocate the next task to a completing function
 */
 function _runNext() {
-	if (_runBucketLimit > 0 && _runBucketRunning > _runBucketLimit) return;
-	if (_runBucket.length) {
-		var newFunc = _runBucket.shift();
-		_runBucketRunning++;
-		newFunc.call(this, _runNextFinish);
-	} else if (_runBucketRunning <= 0) { // Empting bucket
-		_runBucketCallback();
+	var self = this;
+	if (this._runBucket.limit > 0 && this._runBucket.running > this._runBucket.limit) return;
+	if (this._runBucket.bucket.length) {
+		var newFunc = this._runBucket.bucket.shift();
+		this._runBucket.running++;
+		newFunc.call(this, function(err) {
+			self._runNextFinish(err);
+		});
+	} else if (this._runBucket.running <= 0) { // Empting bucket
+		this._runBucket.callback();
 	}
 }
 
@@ -785,12 +792,14 @@ function _runNext() {
 * @see _runNext()
 */
 function _runNextFinish(err) {
-	_runBucketRunning--;
+	this._runBucket.running--;
 	if (err) {
-		_runBucket = [];
-		_runBucketCallback(err);
+		this._runBucket.bucket = [];
+		this._runBucket.running = 0;
+		this._runBucket.callback(err);
 	} else {
-		setImmediate(_runNext);
+		this._runNext();
+		// setImmediate(this._runNext);
 	}
 }
 // }}}
@@ -838,6 +847,18 @@ function end() {
 };
 
 var objectInstance = function() {
+	// Private core functionality {{{
+	this._run = _run;
+	this._runNext = _runNext;
+	this._runNextFinish = _runNextFinish;
+	this._runBucket = {
+		bucket: [],
+		running: 0,
+		limit: 0,
+		callback: function() {},
+	};
+	// }}}
+
 	// Variables {{{
 	this._struct = [];
 	this._structPointer = 0;
@@ -853,7 +874,6 @@ var objectInstance = function() {
 	// Async-Chainable functions {{{
 	// Private {{{
 	this._execute = _execute;
-	this._run = _run;
 	this._deferCheck = _deferCheck;
 	this._deferAdd = deferAdd;
 	this._deferred = [];
