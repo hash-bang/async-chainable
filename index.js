@@ -365,6 +365,7 @@ function set() {
 			break;
 		case 'string,string': // Form: set(String <key>, String <value>)
 		case 'string,number': // Form: set(String <key>, Number <value>)
+		case 'string,boolean': // Form: set(String <key>, Boolean <value>)
 		case 'string,array': // Form: set(String <key>, Array <value>)
 		case 'string,collection': // Form: set(String <key>, Collection <value>)
 		case 'string,object': // Form: set(String <key>, Object <value>)
@@ -409,6 +410,7 @@ function _set() {
 			break;
 		case 'string,string': // Form: set(String <key>, String <value>)
 		case 'string,number': // Form: set(String <key>, Number <value>)
+		case 'string,boolean': // Form: set(String <key>, Boolean <value>)
 		case 'string,array': // Form: set(String <key>, Array <value>)
 		case 'string,collection': // Form: set(String <key>, Collection <value>)
 		case 'string,object': // Form: set(String <key>, Object <value>)
