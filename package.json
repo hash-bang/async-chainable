@@ -13,9 +13,9 @@
     "chain",
     "chainable",
     "parallel",
+    "seq",
     "series",
-    "tasks",
-    "seq"
+    "tasks"
   ],
   "author": "Matt Carter <m@ttcarter.com>",
   "bugs": {
