@@ -744,26 +744,26 @@ function _run(tasks, limit, callback) {
 	var self = this;
 	var runTasks;
 
-	this._runBucket = {
+	var _runBucket = {
 		bucket: [],
 		running: 0,
 		limit: limit,
 		callback: callback,
 	};
 
-	if (this._runBucket.limit > 0) { // Start all processes within the limit
+	if (_runBucket.limit > 0) { // Start all processes within the limit
 		runTasks = tasks.slice(0, limit);
-		this._runBucket.bucket = tasks.slice(limit);
-		this._runBucket.running = runTasks.length;
+		_runBucket.bucket = tasks.slice(limit);
+		_runBucket.running = runTasks.length;
 	} else { // Run all processes
 		runTasks = tasks;
-		this._runBucket.bucket = [];
-		this._runBucket.running = runTasks.length;
+		_runBucket.bucket = [];
+		_runBucket.running = runTasks.length;
 	}
 
 	for (var i = 0; i < runTasks.length; i++) {
 		runTasks[i].call(this, function(err) {
-			self._runNextFinish(err);
+			self._runNextFinish(_runBucket, err);
 		});
 	}
 }
@@ -772,17 +772,18 @@ function _run(tasks, limit, callback) {
 /**
 * Allocate the next task to a completing function
 */
-function _runNext() {
+function _runNext(_runBucket) {
 	var self = this;
-	if (this._runBucket.limit > 0 && this._runBucket.running > this._runBucket.limit) return;
-	if (this._runBucket.bucket.length) {
-		var newFunc = this._runBucket.bucket.shift();
-		this._runBucket.running++;
+	if (_runBucket.limit > 0 && _runBucket.running > _runBucket.limit) return;
+	if (_runBucket.bucket.length) {
+		var newFunc = _runBucket.bucket.shift();
+		_runBucket.running++;
 		newFunc.call(this, function(err) {
-			self._runNextFinish(err);
+			self._runNextFinish(_runBucket, err);
 		});
-	} else if (this._runBucket.running <= 0) { // Empting bucket
-		this._runBucket.callback();
+	} else if (_runBucket.running <= 0) { // Empting bucket
+		_runBucket.callback.call(this);
+		// _runBucket.callback();
 	}
 }
 
@@ -791,14 +792,15 @@ function _runNext() {
 * Called when a task is finishing. This usually just passes on control to _runNext()
 * @see _runNext()
 */
-function _runNextFinish(err) {
-	this._runBucket.running--;
+function _runNextFinish(_runBucket, err) {
+	_runBucket.running--;
+	if (_runBucket.running < 0) throw new Error('Run bucket overflow!');
 	if (err) {
-		this._runBucket.bucket = [];
-		this._runBucket.running = 0;
-		this._runBucket.callback(err);
+		_runBucket.bucket = [];
+		_runBucket.running = 0;
+		_runBucket.callback(err);
 	} else {
-		this._runNext();
+		this._runNext(_runBucket);
 		// setImmediate(this._runNext);
 	}
 }
@@ -851,12 +853,6 @@ var objectInstance = function() {
 	this._run = _run;
 	this._runNext = _runNext;
 	this._runNextFinish = _runNextFinish;
-	this._runBucket = {
-		bucket: [],
-		running: 0,
-		limit: 0,
-		callback: function() {},
-	};
 	// }}}
 
 	// Variables {{{
