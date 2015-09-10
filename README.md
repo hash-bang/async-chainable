@@ -671,9 +671,9 @@ It can be used as a named single item key/value or as a setter object.
 
 ```javascript
 asyncChainable()
-	.set('foo', 'foo value'])
+	.set('foo', 'foo value')
 	.then(function(next) { console.log(this.foo); next() }) // this.foo is now 'foo value'
-	.set({bar: 'bar value']) 
+	.set({bar: 'bar value'}) 
 	.then(function(next) { console.log(this.foo); next() }) // this.bar is now 'bar value' (as well as .foo being also set)
 	.set(baz, function(next) { next(null, 'baz value') }) // this.baz is now 'baz value' (this is actually just an alias for .series())
 	.then(function(next) { console.log(this.foo); next() }) // this.baz is now 'baz value' (as well as .foo, .bar being also set)

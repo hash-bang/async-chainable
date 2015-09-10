@@ -22,6 +22,7 @@ describe('async-chainable.set() - simple setters', function(){
 			.set('mumble', undefined)
 			.set('bongo', null)
 			.set('bazola', /./)
+			.set('blinga', true)
 			.end(function(err) {
 				expect(err).to.be.not.ok;
 				context = this;
@@ -82,6 +83,11 @@ describe('async-chainable.set() - simple setters', function(){
 	it('set regexp', function() {
 		expect(context).to.have.property('bazola');
 		expect(context.bazola).to.be.regexp;
+	});
+
+	it('set boolean', function() {
+		expect(context).to.have.property('blinga');
+		expect(context.blinga).to.be.a.boolean;
 	});
 });
 
