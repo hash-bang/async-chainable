@@ -785,7 +785,6 @@ function _runNext(_runBucket) {
 		});
 	} else if (_runBucket.running <= 0) { // Empting bucket
 		_runBucket.callback.call(this);
-		// _runBucket.callback();
 	}
 }
 
@@ -802,8 +801,10 @@ function _runNextFinish(_runBucket, err) {
 		_runBucket.running = 0;
 		_runBucket.callback(err);
 	} else {
-		this._runNext(_runBucket);
-		// setImmediate(this._runNext);
+		var self = this;
+		setImmediate(function() {
+			self._runNext(_runBucket);
+		});
 	}
 }
 // }}}
