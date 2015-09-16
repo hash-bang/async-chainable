@@ -114,7 +114,7 @@ describe('async-chainable.forEach() - large objects (late bound)', function(){
 });
 
 
-describe.only('async-chainable.forEach() - very large arrays (late bound)', function(){
+describe.skip('async-chainable.forEach() - very large arrays (late bound)', function(){
 	var output;
 	var limit = 1000000;
 
