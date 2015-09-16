@@ -36,12 +36,12 @@ describe('async-chainable - mixed chain', function(){
 			.defer(function(next) { setTimeout(function(){ output.push('12-defer'); next() }, 10)})
 			.then(function(next) { outputSections.push('sec-05-series'); next() })
 			.series([
-				function(next) { setTimeout(function(){ output.push('13-series'); outputSeries.push('10-series'); next() }, 10)},
-				function(next) { setTimeout(function(){ output.push('14-series'); outputSeries.push('11-series'); next() }, 0)},
-				function(next) { setTimeout(function(){ output.push('15-series'); outputSeries.push('12-series'); next() }, 5)},
+				function(next) { setTimeout(function(){ output.push('13-series'); outputSeries.push('13-series'); next() }, 10)},
+				function(next) { setTimeout(function(){ output.push('14-series'); outputSeries.push('14-series'); next() }, 0)},
+				function(next) { setTimeout(function(){ output.push('15-series'); outputSeries.push('15-series'); next() }, 5)},
 			])
 			.then(function(next) { outputSections.push('sec-06-end'); next() })
-			.then(function(next) { setTimeout(function(){ output.push('16-then'); outputSeries.push('13-then'); next()}, 5) })
+			.then(function(next) { setTimeout(function(){ output.push('16-then'); outputSeries.push('16-then'); next()}, 5) })
 			.await() // Let defer items catch up
 			.end(function(err) {
 				output.push('17-end')
@@ -88,15 +88,15 @@ describe('async-chainable - mixed chain', function(){
 		expect(outputSeries[0]).to.contain('04-series');
 		expect(outputSeries[1]).to.contain('05-series');
 		expect(outputSeries[2]).to.contain('06-series');
-		expect(outputSeries[3]).to.contain('10-series');
-		expect(outputSeries[4]).to.contain('11-series');
-		expect(outputSeries[5]).to.contain('12-series');
-		expect(outputSeries[6]).to.contain('13-then');
+		expect(outputSeries[3]).to.contain('13-series');
+		expect(outputSeries[4]).to.contain('14-series');
+		expect(outputSeries[5]).to.contain('15-series');
+		expect(outputSeries[6]).to.contain('16-then');
 	});
 });
 
 
-describe('async-chainable - blocked parallel() chain', function(){
+describe('async-chainable - sectioned parallel() chain', function(){
 	var context;
 	var output, outputSections;
 
@@ -118,7 +118,6 @@ describe('async-chainable - blocked parallel() chain', function(){
 				step5: function(next) { setTimeout(function(){ output.push('step5'); next(null, 'step5Value'); }, 10)},
 				step6: function(next) { setTimeout(function(){ output.push('step6'); next(null, 'step6Value'); }, 10)},
 			})
-			// As an error was raised nothing until end() should now run
 			.then(function(next) { outputSections.push('sec-3'); next() })
 			.parallel({
 				step7: function(next) { setTimeout(function(){ output.push('step7'); next(null, 'step7Value'); }, 0)},
