@@ -1,7 +1,7 @@
 {
   "name": "async-chainable",
-  "version": "1.7.15",
-  "description": "An extension to Async adding better handling of mixed Series / Parallel tasks via object chaining",
+  "version": "2.0.0",
+  "description": "Flow control functions for NodeJS",
   "main": "index.js",
   "repository": {
     "type": "git",
