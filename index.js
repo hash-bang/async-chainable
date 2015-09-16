@@ -472,7 +472,7 @@ function _finalize(err) {
 
 /**
 * Internal function to execute the next pending queue item
-* This is usually called after the completion of every async.series() / async.parallel() / asyncChainable._run call
+* This is usually called after the completion of every asyncChainable._run call
 * @access private
 */
 function _execute(err) {
