@@ -764,8 +764,8 @@ function _run(tasks, limit, callback) {
 	}
 
 	for (var i = 0; i < runTasks.length; i++) {
-		runTasks[i].call(this, function(err) {
-			self._runNextFinish(_runBucket, err);
+		runTasks[i].call(self, function(err) {
+			self._runNextFinish.call(self, _runBucket, err);
 		});
 	}
 }
@@ -780,11 +780,11 @@ function _runNext(_runBucket) {
 	if (_runBucket.bucket.length) {
 		var newFunc = _runBucket.bucket.shift();
 		_runBucket.running++;
-		newFunc.call(this, function(err) {
-			self._runNextFinish(_runBucket, err);
+		newFunc.call(self, function(err) {
+			self._runNextFinish.call(self, _runBucket, err);
 		});
 	} else if (_runBucket.running <= 0) { // Empting bucket
-		_runBucket.callback.call(this);
+		_runBucket.callback.call(self);
 	}
 }
 
@@ -799,11 +799,11 @@ function _runNextFinish(_runBucket, err) {
 	if (err) {
 		_runBucket.bucket = [];
 		_runBucket.running = 0;
-		_runBucket.callback(err);
+		_runBucket.callback.call(self, err);
 	} else {
 		var self = this;
 		setImmediate(function() {
-			self._runNext(_runBucket);
+			self._runNext.call(self, _runBucket);
 		});
 	}
 }
