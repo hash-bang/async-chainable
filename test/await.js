@@ -7,7 +7,6 @@ describe('async-chainable.await() - stepped blocking', function(){
 	var contextStep, contextFinal;
 
 	before(function(done) {
-		output = [];
 		contextStep = {};
 		contextFinal = {};
 

@@ -34,9 +34,6 @@ describe('async-chainable.series() - compability mode', function(){
 
 	before(function(done) {
 		output = [];
-		outputSeries = [];
-		outputSections = [];
-		context = {};
 
 		asyncChainable().series([
 			function(next) { setTimeout(function(){ output.push('foo'); next() }, 10)},

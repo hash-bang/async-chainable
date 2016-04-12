@@ -6,8 +6,6 @@ describe('async-chainable.set() - simple setters', function(){
 	var context;
 
 	before(function(done) {
-		contexts = [];
-
 		asyncChainable()
 			.set('foo', 'fooValue')
 			.set('bar', ['hello!'])
@@ -95,7 +93,7 @@ describe('async-chainable.set() - simple setters', function(){
 describe('async-chainable.set() - context access', function(){
 	var contexts;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		contexts = [];
 
 		asyncChainable()
