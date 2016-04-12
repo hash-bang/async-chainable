@@ -5,7 +5,7 @@ describe('async-chainable.parallel() - collections style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -48,7 +48,7 @@ describe('async-chainable.parallel() - collections style', function(){
 describe('async-chainable.parallel() - array style', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -76,7 +76,7 @@ describe('async-chainable.parallel() - object style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -123,7 +123,7 @@ describe('async-chainable.parallel() - array pointer during change', function(){
 	var output;
 	var otherTasksCount = 20;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		var otherTasks = [];
@@ -168,7 +168,7 @@ describe('async-chainable.parallel() - array pointer during change', function(){
 describe('async-chainable.parallel() - empty calls', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()

@@ -5,7 +5,7 @@ describe('async-chainable.series() - single item style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 

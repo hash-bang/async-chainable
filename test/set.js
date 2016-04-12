@@ -5,7 +5,7 @@ var asyncChainable = require('../index');
 describe('async-chainable.set() - simple setters', function(){
 	var context;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		contexts = [];
 
 		asyncChainable()

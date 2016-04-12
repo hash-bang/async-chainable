@@ -5,7 +5,7 @@ describe('async-chainable.series() - collections style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -48,7 +48,7 @@ describe('async-chainable.series() - collections style', function(){
 describe('async-chainable.series() - array style', function(){
 	var output;
 
-	beforeEach(function(done){
+	before(function(done){
 		output = [];
 
 		asyncChainable()
@@ -82,7 +82,7 @@ describe('async-chainable.series() - object style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done){
+	before(function(done){
 		output = [];
 		context = {};
 
@@ -132,7 +132,7 @@ describe('async-chainable.series() - single call style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -169,7 +169,7 @@ describe('async-chainable.series() - named single call style', function(){
 	var context;
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		context = {};
 
@@ -221,7 +221,7 @@ describe('async-chainable.series() - array pointer during change', function(){
 	var output;
 	var otherTasksCount = 20;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		var otherTasks = [];
@@ -274,7 +274,7 @@ describe('async-chainable.series() - array pointer during change', function(){
 describe('async-chainable.series() - empty calls', function(){
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
