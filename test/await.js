@@ -3,10 +3,11 @@ var asyncChainable = require('../index');
 
 // Most of the global await functionality (i.e. `.await()` without args) is contained in test/defer
 
-describe('async-chainable.await() - stepped blocking', function() {
+describe('async-chainable.await() - stepped blocking', function(){
 	var contextStep, contextFinal;
 
 	before(function(done) {
+		output = [];
 		contextStep = {};
 		contextFinal = {};
 

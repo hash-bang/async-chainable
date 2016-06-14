@@ -1,11 +1,11 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.parallel() - collections style', function() {
+describe('async-chainable.parallel() - collections style', function(){
 	var context;
 	var output;
 
-	before(function(done) {
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -48,7 +48,7 @@ describe('async-chainable.parallel() - collections style', function() {
 describe('async-chainable.parallel() - array style', function(){
 	var output;
 
-	before(function(done) {
+	beforeEach(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -72,11 +72,11 @@ describe('async-chainable.parallel() - array style', function(){
 });
 
 
-describe('async-chainable.parallel() - object style', function() {
+describe('async-chainable.parallel() - object style', function(){
 	var context;
 	var output;
 
-	before(function(done) {
+	beforeEach(function(done) {
 		output = [];
 		context = {};
 
@@ -119,11 +119,11 @@ describe('async-chainable.parallel() - object style', function() {
 * This test checks that async-chainable can cope with an array of tasks changing in a preceeding tasks
 * Here the intial .then() condition rewrites the tasks that the next .parallel() call will actually execute
 */
-describe('async-chainable.parallel() - array pointer during change', function() {
+describe('async-chainable.parallel() - array pointer during change', function(){
 	var output;
 	var otherTasksCount = 20;
 
-	before(function(done) {
+	beforeEach(function(done) {
 		output = [];
 
 		var otherTasks = [];
@@ -165,10 +165,10 @@ describe('async-chainable.parallel() - array pointer during change', function() 
 });
 
 
-describe('async-chainable.parallel() - empty calls', function() {
+describe('async-chainable.parallel() - empty calls', function(){
 	var output;
 
-	before(function(done) {
+	beforeEach(function(done) {
 		output = [];
 
 		asyncChainable()

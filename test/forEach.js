@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.forEach() - array style', function() {
+describe('async-chainable.forEach() - array style', function(){
 	var output;
 
 	before(function(done) {
@@ -27,7 +27,7 @@ describe('async-chainable.forEach() - array style', function() {
 });
 
 
-describe('async-chainable.forEach() - bogosort array', function() {
+describe('async-chainable.forEach() - bogosort array', function(){
 	var output;
 
 	before(function(done) {
@@ -60,7 +60,7 @@ describe('async-chainable.forEach() - bogosort array', function() {
 });
 
 
-describe('async-chainable.forEach() - array style, unlimited', function() {
+describe('async-chainable.forEach() - array style, unlimited', function(){
 	var output, running = 0, maxRunning = 0;
 	this.timeout(5000);
 
@@ -107,7 +107,7 @@ describe('async-chainable.forEach() - array style, unlimited', function() {
 });
 
 
-describe('async-chainable.forEach() - array style, limited', function() {
+describe('async-chainable.forEach() - array style, limited', function(){
 	var output, running = 0, maxRunning = 0;
 	this.timeout(5000);
 
@@ -154,7 +154,7 @@ describe('async-chainable.forEach() - array style, limited', function() {
 });
 
 
-describe('async-chainable.forEach() - object style', function() {
+describe('async-chainable.forEach() - object style', function(){
 	var context;
 	var output;
 
@@ -197,7 +197,7 @@ describe('async-chainable.forEach() - object style', function() {
 });
 
 
-describe('async-chainable.forEach() - collection style', function() {
+describe('async-chainable.forEach() - collection style', function(){
 	var output;
 
 	before(function(done) {
@@ -228,7 +228,7 @@ describe('async-chainable.forEach() - collection style', function() {
 });
 
 
-describe('async-chainable.forEach() - bogosort collection', function() {
+describe('async-chainable.forEach() - bogosort collection', function(){
 	var output;
 
 	before(function(done) {
@@ -270,7 +270,7 @@ describe('async-chainable.forEach() - bogosort collection', function() {
 });
 
 
-describe('async-chainable.forEach() - this._key + this._item', function() {
+describe('async-chainable.forEach() - this._key + this._item', function(){
 	var output;
 
 	before(function(done) {
@@ -303,7 +303,7 @@ describe('async-chainable.forEach() - this._key + this._item', function() {
 });
 
 
-describe('async-chainable.forEach() - named set', function() {
+describe('async-chainable.forEach() - named set', function(){
 	var outputArray, outputObject, outputCollection;
 
 	before(function(done) {
@@ -377,34 +377,5 @@ describe('async-chainable.forEach() - named set', function() {
 		expect(outputCollection).to.contain({one: 'Number 1'});
 		expect(outputCollection).to.contain({two: 'Number 2'});
 		expect(outputCollection).to.contain({three: 'Number 3'});
-	});
-});
-
-describe('async-chainable.forEach() - named set via path', function() {
-	var seen = {};
-
-	before(function(done) {
-		asyncChainable()
-			.then('result', function(next) {
-				next(null, {
-					foo: 'fooStr',
-					bar: 'barStr',
-					baz: [700, 800, 900],
-				});
-			})
-			.forEach('result.baz', function(next, no) {
-				seen[no] = true;
-				next();
-			})
-			.end(function(err) {
-				expect(err).to.be.not.ok;
-				done();
-			});
-	});
-
-	it('should support forEach() over a nested path', function() {
-		expect(seen).to.have.property('700');
-		expect(seen).to.have.property('800');
-		expect(seen).to.have.property('900');
 	});
 });

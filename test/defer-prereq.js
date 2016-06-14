@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.defer() - isosceles', function() {
+describe('async-chainable.defer() - isosceles', function(){
 	var context;
 	var output;
 
@@ -48,7 +48,7 @@ describe('async-chainable.defer() - isosceles', function() {
 });
 
 
-describe('async-chainable.defer() - isosceles (contextless)', function() {
+describe('async-chainable.defer() - isosceles (contextless)', function(){
 	var context;
 	var output;
 
@@ -84,7 +84,7 @@ describe('async-chainable.defer() - isosceles (contextless)', function() {
 });
 
 
-describe('async-chainable.defer() - prereq labyrinth', function() {
+describe('async-chainable.defer() - prereq labyrinth', function(){
 	var context;
 	var output;
 

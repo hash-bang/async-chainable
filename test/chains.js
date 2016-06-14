@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable - mixed chain', function() {
+describe('async-chainable - mixed chain', function(){
 	var context;
 	var output, outputSeries, outputSections;
 
@@ -36,12 +36,12 @@ describe('async-chainable - mixed chain', function() {
 			.defer(function(next) { setTimeout(function(){ output.push('12-defer'); next() }, 10)})
 			.then(function(next) { outputSections.push('sec-05-series'); next() })
 			.series([
-				function(next) { setTimeout(function(){ output.push('13-series'); outputSeries.push('13-series'); next() }, 10)},
-				function(next) { setTimeout(function(){ output.push('14-series'); outputSeries.push('14-series'); next() }, 0)},
-				function(next) { setTimeout(function(){ output.push('15-series'); outputSeries.push('15-series'); next() }, 5)},
+				function(next) { setTimeout(function(){ output.push('13-series'); outputSeries.push('10-series'); next() }, 10)},
+				function(next) { setTimeout(function(){ output.push('14-series'); outputSeries.push('11-series'); next() }, 0)},
+				function(next) { setTimeout(function(){ output.push('15-series'); outputSeries.push('12-series'); next() }, 5)},
 			])
 			.then(function(next) { outputSections.push('sec-06-end'); next() })
-			.then(function(next) { setTimeout(function(){ output.push('16-then'); outputSeries.push('16-then'); next()}, 5) })
+			.then(function(next) { setTimeout(function(){ output.push('16-then'); outputSeries.push('13-then'); next()}, 5) })
 			.await() // Let defer items catch up
 			.end(function(err) {
 				output.push('17-end')
@@ -56,23 +56,23 @@ describe('async-chainable - mixed chain', function() {
 	});
 	
 	it('should have run everything', function() {
-		expect(output).to.include('01-parallel');
-		expect(output).to.include('02-parallel');
-		expect(output).to.include('03-parallel');
-		expect(output).to.include('04-series');
-		expect(output).to.include('05-series');
-		expect(output).to.include('06-series');
-		expect(output).to.include('07-parallel');
-		expect(output).to.include('08-parallel');
-		expect(output).to.include('09-parallel');
-		expect(output).to.include('10-defer');
-		expect(output).to.include('11-defer');
-		expect(output).to.include('12-defer');
-		expect(output).to.include('13-series');
-		expect(output).to.include('14-series');
-		expect(output).to.include('15-series');
-		expect(output).to.include('16-then');
-		expect(output).to.include('17-end');
+		expect(output).to.contain('01-parallel');
+		expect(output).to.contain('02-parallel');
+		expect(output).to.contain('03-parallel');
+		expect(output).to.contain('04-series');
+		expect(output).to.contain('05-series');
+		expect(output).to.contain('06-series');
+		expect(output).to.contain('07-parallel');
+		expect(output).to.contain('08-parallel');
+		expect(output).to.contain('09-parallel');
+		expect(output).to.contain('10-defer');
+		expect(output).to.contain('11-defer');
+		expect(output).to.contain('12-defer');
+		expect(output).to.contain('13-series');
+		expect(output).to.contain('14-series');
+		expect(output).to.contain('15-series');
+		expect(output).to.contain('16-then');
+		expect(output).to.contain('17-end');
 	});
 
 	it('should have run all sections in the right order', function() {
@@ -85,22 +85,22 @@ describe('async-chainable - mixed chain', function() {
 	});
 
 	it('should have run all series() calls in the right order', function() {
-		expect(outputSeries[0]).to.equal('04-series');
-		expect(outputSeries[1]).to.equal('05-series');
-		expect(outputSeries[2]).to.equal('06-series');
-		expect(outputSeries[3]).to.equal('13-series');
-		expect(outputSeries[4]).to.equal('14-series');
-		expect(outputSeries[5]).to.equal('15-series');
-		expect(outputSeries[6]).to.equal('16-then');
+		expect(outputSeries[0]).to.contain('04-series');
+		expect(outputSeries[1]).to.contain('05-series');
+		expect(outputSeries[2]).to.contain('06-series');
+		expect(outputSeries[3]).to.contain('10-series');
+		expect(outputSeries[4]).to.contain('11-series');
+		expect(outputSeries[5]).to.contain('12-series');
+		expect(outputSeries[6]).to.contain('13-then');
 	});
 });
 
 
-describe('async-chainable - sectioned parallel() chain', function() {
+describe('async-chainable - blocked parallel() chain', function(){
 	var context;
 	var output, outputSections;
 
-	before(function(done) {
+	beforeEach(function(done) {
 		output = [];
 		outputSections = [];
 		context = {};
@@ -118,9 +118,10 @@ describe('async-chainable - sectioned parallel() chain', function() {
 				step5: function(next) { setTimeout(function(){ output.push('step5'); next(null, 'step5Value'); }, 10)},
 				step6: function(next) { setTimeout(function(){ output.push('step6'); next(null, 'step6Value'); }, 10)},
 			})
+			// As an error was raised nothing until end() should now run
 			.then(function(next) { outputSections.push('sec-3'); next() })
 			.parallel({
-				step7: function(next) { console.log('QUEUE7'); setTimeout(function(){ console.log('RUN7'); output.push('step7'); next(null, 'step7Value'); }, 10000)},
+				step7: function(next) { setTimeout(function(){ output.push('step7'); next(null, 'step7Value'); }, 0)},
 				step8: function(next) { setTimeout(function(){ output.push('step8'); next(null, 'step8Value'); }, 10)},
 				step9: function(next) { setTimeout(function(){ output.push('step9'); next(null, 'step9Value'); }, 5)},
 			})
@@ -133,15 +134,15 @@ describe('async-chainable - sectioned parallel() chain', function() {
 	});
 
 	it('run all functions', function() {
-		expect(output).to.include('step1');
-		expect(output).to.include('step2');
-		expect(output).to.include('step3');
-		expect(output).to.include('step4');
-		expect(output).to.include('step5');
-		expect(output).to.include('step6');
-		expect(output).to.include('step7');
-		expect(output).to.include('step8');
-		expect(output).to.include('step9');
+		expect(output).to.contain('step1');
+		expect(output).to.contain('step2');
+		expect(output).to.contain('step3');
+		expect(output).to.contain('step4');
+		expect(output).to.contain('step5');
+		expect(output).to.contain('step6');
+		expect(output).to.contain('step7');
+		expect(output).to.contain('step8');
+		expect(output).to.contain('step9');
 	});
 
 	it('should run all sections in the right order', function() {
