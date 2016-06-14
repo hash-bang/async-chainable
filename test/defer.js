@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.defer() - collections style', function(){
+describe('async-chainable.defer() - collections style', function() {
 	var context;
 	var output;
 
@@ -46,7 +46,7 @@ describe('async-chainable.defer() - collections style', function(){
 });
 
 
-describe('async-chainable.defer() - array style', function(){
+describe('async-chainable.defer() - array style', function() {
 	var output;
 
 	before(function(done) {
@@ -73,7 +73,7 @@ describe('async-chainable.defer() - array style', function(){
 	});
 });
 
-describe('async-chainable.defer() - object style', function(){
+describe('async-chainable.defer() - object style', function() {
 	var context;
 	var output;
 
@@ -118,7 +118,7 @@ describe('async-chainable.defer() - object style', function(){
 });
 
 
-describe('async-chainable.defer() - function style', function(){
+describe('async-chainable.defer() - function style', function() {
 	var output;
 
 	before(function(done) {
@@ -147,7 +147,7 @@ describe('async-chainable.defer() - function style', function(){
 });
 
 
-describe('async-chainable.defer() - array pre-req anon style', function(){
+describe('async-chainable.defer() - array pre-req anon style', function() {
 	var output;
 
 	before(function(done) {
@@ -185,7 +185,7 @@ describe('async-chainable.defer() - array pre-req anon style', function(){
 });
 
 
-describe('async-chainable.defer() - named function style', function(){
+describe('async-chainable.defer() - named function style', function() {
 	var context;
 	var output;
 
@@ -228,7 +228,7 @@ describe('async-chainable.defer() - named function style', function(){
 });
 
 
-describe('async-chainable.defer() - named function style', function(){
+describe('async-chainable.defer() - named function style', function() {
 	var context;
 	var output;
 
@@ -271,7 +271,7 @@ describe('async-chainable.defer() - named function style', function(){
 });
 
 
-describe('async-chainable.defer() - empty calls', function(){
+describe('async-chainable.defer() - empty calls', function() {
 	var output;
 
 	before(function(done) {

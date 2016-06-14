@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable - mixed chain', function(){
+describe('async-chainable - mixed chain', function() {
 	var context;
 	var output, outputSeries, outputSections;
 
@@ -96,7 +96,7 @@ describe('async-chainable - mixed chain', function(){
 });
 
 
-describe('async-chainable - sectioned parallel() chain', function(){
+describe('async-chainable - sectioned parallel() chain', function() {
 	var context;
 	var output, outputSections;
 
