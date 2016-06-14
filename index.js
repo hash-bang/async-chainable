@@ -55,6 +55,28 @@ function isObject(thing) {
 		Object.prototype.toString.call(thing) != '[object Array]'
 	);
 }
+
+
+/**
+* Try and return a value from a deeply nested object by a dotted path
+* This is functionally the same as lodash's own _.get() function
+* @param {mixed} obj The array or object to traverse
+* @param {string} path The path to find
+* @param {mixed} [defaultValue=undefined] The value to return if nothing is found
+*/
+function getPath(obj, path, defaultValue) {
+	var pointer = obj;
+	path.split('.').every(function(slice) {
+		if (pointer[slice]) {
+			pointer = pointer[slice];
+			return true;
+		} else {
+			pointer = defaultValue;
+			return false;
+		}
+	});
+	return pointer;
+}
 // }}}
 
 // Plugin functionality - via `use()`
@@ -586,17 +608,23 @@ function _execute(err) {
 				});
 				break;
 			case 'forEachLateBound':
-				if (
-					(!currentExec.payload || !currentExec.payload.length) || // Payload is blank
-					(!self._context[currentExec.payload]) // Payload doesnt exist within context
-				) { // Goto next chain
+				if (!currentExec.payload || !currentExec.payload.length) { // Payload is blank
+					// Goto next chain
+					currentExec.completed = true;
+					redo = true;
+					break;
+				}
+
+				var resolvedPayload = self.getPath(self._context, currentExec.payload);
+				if (!resolvedPayload) { // Resolved payload is blank
+					// Goto next chain
 					currentExec.completed = true;
 					redo = true;
 					break;
 				}
 
 				// Replace own exec array with actual type of payload now we know what it is {{{
-				var overloadType = getOverload([self._context[currentExec.payload]]);
+				var overloadType = getOverload([resolvedPayload]);
 				switch (overloadType) {
 					case 'collection':
 					case 'array':
@@ -608,7 +636,7 @@ function _execute(err) {
 					default:
 						throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);
 				}
-				currentExec.payload = self._context[currentExec.payload];
+				currentExec.payload = resolvedPayload;
 				self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
 				redo = true;
 				// }}}
@@ -891,6 +919,7 @@ var objectInstance = function() {
 	this.parallel = parallel;
 	this.reset = reset;
 	this.series = series;
+	this.getPath = getPath;
 	this.set = set;
 	this._set = _set;
 	this._setRaw = _setRaw;
