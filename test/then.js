@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.series() - single item style', function(){
+describe('async-chainable.series() - single item style', function() {
 	var context;
 	var output;
 

@@ -2,7 +2,7 @@ var _ = require('lodash');
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.set() - simple setters', function(){
+describe('async-chainable.set() - simple setters', function() {
 	var context;
 
 	beforeEach(function(done) {
@@ -92,7 +92,7 @@ describe('async-chainable.set() - simple setters', function(){
 });
 
 
-describe('async-chainable.set() - context access', function(){
+describe('async-chainable.set() - context access', function() {
 	var contexts;
 
 	beforeEach(function(done) {

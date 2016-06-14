@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.defer() - generated maze', function(){
+describe('async-chainable.defer() - generated maze', function() {
 	var created = [];
 	var context;
 	var output;

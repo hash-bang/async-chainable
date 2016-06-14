@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable - parallel() chain with errors', function(){
+describe('async-chainable - parallel() chain with errors', function() {
 	var context;
 	var output, outputSections;
 	var error;
@@ -62,7 +62,7 @@ describe('async-chainable - parallel() chain with errors', function(){
 	});
 });
 
-describe('async-chainable - series() chain with errors', function(){
+describe('async-chainable - series() chain with errors', function() {
 	var context;
 	var output, outputSections;
 	var error;
@@ -122,7 +122,7 @@ describe('async-chainable - series() chain with errors', function(){
 });
 
 
-describe('async-chainable - then() chain with errors', function(){
+describe('async-chainable - then() chain with errors', function() {
 	var context;
 	var outputSections;
 	var error;

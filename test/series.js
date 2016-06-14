@@ -1,7 +1,7 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable.series() - collections style', function(){
+describe('async-chainable.series() - collections style', function() {
 	var context;
 	var output;
 
@@ -45,7 +45,7 @@ describe('async-chainable.series() - collections style', function(){
 });
 
 
-describe('async-chainable.series() - array style', function(){
+describe('async-chainable.series() - array style', function() {
 	var output;
 
 	beforeEach(function(done){
@@ -78,7 +78,7 @@ describe('async-chainable.series() - array style', function(){
 });
 
 
-describe('async-chainable.series() - object style', function(){
+describe('async-chainable.series() - object style', function() {
 	var context;
 	var output;
 
@@ -128,7 +128,7 @@ describe('async-chainable.series() - object style', function(){
 });
 
 
-describe('async-chainable.series() - single call style', function(){
+describe('async-chainable.series() - single call style', function() {
 	var context;
 	var output;
 
@@ -165,7 +165,7 @@ describe('async-chainable.series() - single call style', function(){
 });
 
 
-describe('async-chainable.series() - named single call style', function(){
+describe('async-chainable.series() - named single call style', function() {
 	var context;
 	var output;
 
@@ -217,7 +217,7 @@ describe('async-chainable.series() - named single call style', function(){
 * This test checks that async-chainable can cope with an array of tasks changing in a preceeding tasks
 * Here the intial .then() condition rewrites the tasks that the next .series() call will actually execute
 */
-describe('async-chainable.series() - array pointer during change', function(){
+describe('async-chainable.series() - array pointer during change', function() {
 	var output;
 	var otherTasksCount = 20;
 
@@ -271,7 +271,7 @@ describe('async-chainable.series() - array pointer during change', function(){
 });
 
 
-describe('async-chainable.series() - empty calls', function(){
+describe('async-chainable.series() - empty calls', function() {
 	var output;
 
 	beforeEach(function(done) {
