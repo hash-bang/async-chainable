@@ -1,10 +1,10 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
-describe('async-chainable - nesting (2 level)', function(){
+describe('async-chainable - nesting (2 level)', function() {
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -64,10 +64,10 @@ describe('async-chainable - nesting (2 level)', function(){
 });
 
 
-describe('async-chainable - nesting (3 level)', function(){
+describe('async-chainable - nesting (3 level)', function() {
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()
@@ -149,11 +149,11 @@ describe('async-chainable - nesting (3 level)', function(){
 });
 
 
-describe('async-chainable - nesting (3 level with error)', function(){
+describe('async-chainable - nesting (3 level with error)', function() {
 	var output;
 	var finalError;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 		finalError = null;
 
@@ -231,10 +231,10 @@ describe('async-chainable - nesting (3 level with error)', function(){
 });
 
 
-describe('async-chainable - nesting via require()', function(){
+describe('async-chainable - nesting via require()', function() {
 	var output;
 
-	beforeEach(function(done) {
+	before(function(done) {
 		output = [];
 
 		asyncChainable()

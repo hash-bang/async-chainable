@@ -542,7 +542,7 @@ asyncChainable()
 
 In the above example the simple array is passed to the function with each payload item as a parameter and the iteration key (an offset if its an array or collection, a key if its an object).
 
-`forEach()` has one additional piece of behaviour where if the first argument is a string the context will be examined for a value to iterate over.
+`forEach()` has one additional piece of behaviour where if the first argument is a string the context will be examined for a value to iterate over. The string can be a simple key to use within the passed object or a deeply nested path using dotted notation (e.g. `key1.key2.key3`).
 
 ```javascript
 asyncChainable()
@@ -679,6 +679,12 @@ asyncChainable()
 	.then(function(next) { console.log(this.foo); next() }) // this.baz is now 'baz value' (as well as .foo, .bar being also set)
 	.end()
 ```
+
+
+.getPath()
+----------
+GetPath is the utility function used by `forEach()` to lookup deeply nested objects or arrays to iterate over.
+It is functionally similar to the Lodash `get()` function.
 
 
 Context

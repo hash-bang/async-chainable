@@ -55,6 +55,28 @@ function isObject(thing) {
 		Object.prototype.toString.call(thing) != '[object Array]'
 	);
 }
+
+
+/**
+* Try and return a value from a deeply nested object by a dotted path
+* This is functionally the same as lodash's own _.get() function
+* @param {mixed} obj The array or object to traverse
+* @param {string} path The path to find
+* @param {mixed} [defaultValue=undefined] The value to return if nothing is found
+*/
+function getPath(obj, path, defaultValue) {
+	var pointer = obj;
+	path.split('.').every(function(slice) {
+		if (pointer[slice]) {
+			pointer = pointer[slice];
+			return true;
+		} else {
+			pointer = defaultValue;
+			return false;
+		}
+	});
+	return pointer;
+}
 // }}}
 
 // Plugin functionality - via `use()`
@@ -586,17 +608,23 @@ function _execute(err) {
 				});
 				break;
 			case 'forEachLateBound':
-				if (
-					(!currentExec.payload || !currentExec.payload.length) || // Payload is blank
-					(!self._context[currentExec.payload]) // Payload doesnt exist within context
-				) { // Goto next chain
+				if (!currentExec.payload || !currentExec.payload.length) { // Payload is blank
+					// Goto next chain
+					currentExec.completed = true;
+					redo = true;
+					break;
+				}
+
+				var resolvedPayload = self.getPath(self._context, currentExec.payload);
+				if (!resolvedPayload) { // Resolved payload is blank
+					// Goto next chain
 					currentExec.completed = true;
 					redo = true;
 					break;
 				}
 
 				// Replace own exec array with actual type of payload now we know what it is {{{
-				var overloadType = getOverload([self._context[currentExec.payload]]);
+				var overloadType = getOverload([resolvedPayload]);
 				switch (overloadType) {
 					case 'collection':
 					case 'array':
@@ -608,7 +636,7 @@ function _execute(err) {
 					default:
 						throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);
 				}
-				currentExec.payload = self._context[currentExec.payload];
+				currentExec.payload = resolvedPayload;
 				self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
 				redo = true;
 				// }}}
@@ -731,6 +759,10 @@ function _execute(err) {
 };
 
 
+// _run() functionality - used to execute several functions in parallel and call a callback when completed {{{
+// NOTE: Since this function is the central bottle-neck of the application code here is designed to run as efficiently as possible
+//       This can make it rather messy and unpleasent to read in order to maximize thoughput
+
 /**
 * Internal function to run an array of functions (usually in parallel)
 * Series execution can be obtained by setting limit = 1
@@ -739,14 +771,71 @@ function _execute(err) {
 * @param function callback(err) The callback to fire on finish
 */
 function _run(tasks, limit, callback) {
-	if (limit == 1) {
-		async.series(tasks, callback);
-	} else if (limit > 0) {
-		async.parallelLimit(tasks, limit, callback);
-	} else {
-		async.parallel(tasks, callback);
+	var self = this;
+	var runTasks;
+
+	var _runBucket = {
+		bucket: [],
+		running: 0,
+		limit: limit,
+		callback: callback,
+	};
+
+	if (_runBucket.limit > 0) { // Start all processes within the limit
+		runTasks = tasks.slice(0, limit);
+		_runBucket.bucket = tasks.slice(limit);
+		_runBucket.running = runTasks.length;
+	} else { // Run all processes
+		runTasks = tasks;
+		_runBucket.bucket = [];
+		_runBucket.running = runTasks.length;
+	}
+
+	for (var i = 0; i < runTasks.length; i++) {
+		runTasks[i].call(self, function(err) {
+			self._runNextFinish.call(self, _runBucket, err);
+		});
 	}
 }
+
+
+/**
+* Allocate the next task to a completing function
+*/
+function _runNext(_runBucket) {
+	var self = this;
+	if (_runBucket.limit > 0 && _runBucket.running > _runBucket.limit) return;
+	if (_runBucket.bucket.length) {
+		var newFunc = _runBucket.bucket.shift();
+		_runBucket.running++;
+		newFunc.call(self, function(err) {
+			self._runNextFinish.call(self, _runBucket, err);
+		});
+	} else if (_runBucket.running <= 0) { // Empting bucket
+		_runBucket.callback.call(self);
+	}
+}
+
+
+/**
+* Called when a task is finishing. This usually just passes on control to _runNext()
+* @see _runNext()
+*/
+function _runNextFinish(_runBucket, err) {
+	_runBucket.running--;
+	if (_runBucket.running < 0) throw new Error('Run bucket overflow!');
+	if (err) {
+		_runBucket.bucket = [];
+		_runBucket.running = 0;
+		_runBucket.callback.call(self, err);
+	} else {
+		var self = this;
+		setImmediate(function() {
+			self._runNext.call(self, _runBucket);
+		});
+	}
+}
+// }}}
 
 
 /**
@@ -791,6 +880,12 @@ function end() {
 };
 
 var objectInstance = function() {
+	// Private core functionality {{{
+	this._run = _run;
+	this._runNext = _runNext;
+	this._runNextFinish = _runNextFinish;
+	// }}}
+
 	// Variables {{{
 	this._struct = [];
 	this._structPointer = 0;
@@ -806,7 +901,6 @@ var objectInstance = function() {
 	// Async-Chainable functions {{{
 	// Private {{{
 	this._execute = _execute;
-	this._run = _run;
 	this._deferCheck = _deferCheck;
 	this._deferAdd = deferAdd;
 	this._deferred = [];
@@ -825,6 +919,7 @@ var objectInstance = function() {
 	this.parallel = parallel;
 	this.reset = reset;
 	this.series = series;
+	this.getPath = getPath;
 	this.set = set;
 	this._set = _set;
 	this._setRaw = _setRaw;
