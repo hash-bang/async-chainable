@@ -85,13 +85,13 @@ describe('async-chainable - mixed chain', function() {
 	});
 
 	it('should have run all series() calls in the right order', function() {
-		expect(outputSeries[0]).to.equal('04-series');
-		expect(outputSeries[1]).to.equal('05-series');
-		expect(outputSeries[2]).to.equal('06-series');
-		expect(outputSeries[3]).to.equal('13-series');
-		expect(outputSeries[4]).to.equal('14-series');
-		expect(outputSeries[5]).to.equal('15-series');
-		expect(outputSeries[6]).to.equal('16-then');
+		expect(outputSeries[0]).to.contain('04-series');
+		expect(outputSeries[1]).to.contain('05-series');
+		expect(outputSeries[2]).to.contain('06-series');
+		expect(outputSeries[3]).to.contain('13-series');
+		expect(outputSeries[4]).to.contain('14-series');
+		expect(outputSeries[5]).to.contain('16-then');
+		expect(outputSeries[6]).to.contain('15-series');
 	});
 });
 
@@ -120,7 +120,7 @@ describe('async-chainable - sectioned parallel() chain', function() {
 			})
 			.then(function(next) { outputSections.push('sec-3'); next() })
 			.parallel({
-				step7: function(next) { console.log('QUEUE7'); setTimeout(function(){ console.log('RUN7'); output.push('step7'); next(null, 'step7Value'); }, 10000)},
+				step7: function(next) { setTimeout(function(){ output.push('step7'); next(null, 'step7Value'); }, 0)},
 				step8: function(next) { setTimeout(function(){ output.push('step8'); next(null, 'step8Value'); }, 10)},
 				step9: function(next) { setTimeout(function(){ output.push('step9'); next(null, 'step9Value'); }, 5)},
 			})
@@ -133,15 +133,15 @@ describe('async-chainable - sectioned parallel() chain', function() {
 	});
 
 	it('run all functions', function() {
-		expect(output).to.include('step1');
-		expect(output).to.include('step2');
-		expect(output).to.include('step3');
-		expect(output).to.include('step4');
-		expect(output).to.include('step5');
-		expect(output).to.include('step6');
-		expect(output).to.include('step7');
-		expect(output).to.include('step8');
-		expect(output).to.include('step9');
+		expect(output).to.contain('step1');
+		expect(output).to.contain('step2');
+		expect(output).to.contain('step3');
+		expect(output).to.contain('step4');
+		expect(output).to.contain('step5');
+		expect(output).to.contain('step6');
+		expect(output).to.contain('step7');
+		expect(output).to.contain('step8');
+		expect(output).to.contain('step9');
 	});
 
 	it('should run all sections in the right order', function() {
