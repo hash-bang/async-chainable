@@ -741,68 +741,13 @@ function _execute(err) {
 * @param function callback(err) The callback to fire on finish
 */
 function _run(tasks, limit, callback) {
-	var self = this;
-	var runTasks;
-
-	var _runBucket = {
-		bucket: [],
-		running: 0,
-		limit: limit,
-		callback: callback,
-	};
-
-	if (_runBucket.limit > 0) { // Start all processes within the limit
-		runTasks = tasks.slice(0, limit);
-		_runBucket.bucket = tasks.slice(limit);
-		_runBucket.running = runTasks.length;
-	} else { // Run all processes
-		runTasks = tasks;
-		_runBucket.bucket = [];
-		_runBucket.running = runTasks.length;
-	}
-
-	for (var i = 0; i < runTasks.length; i++) {
-		runTasks[i].call(self, function(err) {
-			self._runNextFinish.call(self, _runBucket, err);
-		});
-	}
-}
-
-
-/**
-* Allocate the next task to a completing function
-*/
-function _runNext(_runBucket) {
-	var self = this;
-	if (_runBucket.limit > 0 && _runBucket.running > _runBucket.limit) return;
-	if (_runBucket.bucket.length) {
-		var newFunc = _runBucket.bucket.shift();
-		_runBucket.running++;
-		newFunc.call(self, function(err) {
-			self._runNextFinish.call(self, _runBucket, err);
-		});
-	} else if (_runBucket.running <= 0) { // Empting bucket
-		_runBucket.callback.call(self);
-	}
-}
-
-
-/**
-* Called when a task is finishing. This usually just passes on control to _runNext()
-* @see _runNext()
-*/
-function _runNextFinish(_runBucket, err) {
-	_runBucket.running--;
-	if (_runBucket.running < 0) throw new Error('Run bucket overflow!');
-	if (err) {
-		_runBucket.bucket = [];
-		_runBucket.running = 0;
-		_runBucket.callback.call(self, err);
+	var async = require('async');
+	if (limit == 1) {
+		async.series(tasks, callback);
+	} else if (limit > 0) {
+		async.parallelLimit(tasks, limit, callback);
 	} else {
-		var self = this;
-		setImmediate(function() {
-			self._runNext.call(self, _runBucket);
-		});
+		async.parallel(tasks, callback);
 	}
 }
 // }}}
@@ -852,8 +797,6 @@ function end() {
 var objectInstance = function() {
 	// Private core functionality {{{
 	this._run = _run;
-	this._runNext = _runNext;
-	this._runNextFinish = _runNextFinish;
 	// }}}
 
 	// Variables {{{
