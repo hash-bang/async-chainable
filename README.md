@@ -1,6 +1,8 @@
 async-chainable
 ===============
-An extension to the otherwise excellent [Async](https://www.npmjs.com/package/async) library adding better handling of mixed Series / Parallel tasks via object chaining.
+Flow control for NodeJS applications.
+
+This builds on the foundations of the [Async](https://www.npmjs.com/package/async) library while adding better handling of mixed Series / Parallel tasks via object chaining.
 
 ```javascript
 var asyncChainable = require('async-chainable');
@@ -141,7 +143,7 @@ Project Goals
 =============
 This project has the following goals:
 
-* Be compatible with the [Async](https://www.npmjs.com/package/async) library so existing applications are portable over time
+* Be semi-compatible with the [Async](https://www.npmjs.com/package/async) library so existing applications are portable over time
 * Provide a readable and dependable model for asynchronous tasks
 * Have a 'sane' ([YMMV](http://tvtropes.org/pmwiki/pmwiki.php/Main/YMMV)) syntax that will fit most use cases
 * Have an extendible plugin system to allow [additional components](#plugins) to be easily brought into the project
@@ -303,60 +305,6 @@ asyncChainable()
 		function(next) { next(null, 'foo') };
 		function(next, fooResult) { console.log(fooResult); next(); } // Output = 'foo'
 	]);
-
-
-
-// Regular asyncChainable functionality is all there but is now chainable
-
-asyncChainable()
-	.each()
-	.eachSeries()
-	.map()
-	.mapSeries()
-	.mapLimit()
-	.filter()
-	.filterSeries()
-	.reject()
-	.rejectSeries()
-	.reduce()
-	.reduceRight()
-	.detect()
-	.detectSeries()
-	.sortBy()
-	.some()
-	.every()
-	.concat()
-	.concatSeries()
-
-asyncChainable()
-	.parallelLimit()
-	.whilst()
-	.doWhilst()
-	.until()
-	.doUntil()
-	.forever()
-	.waterfall()
-	.compose()
-	.seq()
-	.applyEach()
-	.applyEachSeries()
-	.queue()
-	.priorityQueue()
-	.cargo()
-	.auto()
-	.retry()
-	.iterator()
-	.apply()
-	.nextTick()
-	.times()
-	.timesSeries()
-
-asyncChainable()
-	.memoize()
-	.unmemoize()
-	.log()
-	.dir()
-	.noConflict()
 ```
 
 API
@@ -593,33 +541,6 @@ asyncChainable()
 	.then('bar', barFunc) // Assuming this calls next('Error in bar')
 	.then('baz', bazFunc) // Gets skipped as we have an error
 	.end(console.log) // Output: 'Error in bar', {foo: 'foo value'}
-```
-
-.new()
-------
-Async-chainable operates as an instantiated object. In order to get a new instance (e.g. for nesting invocations) call `.new()` to get a fresh object which wont interfere with any currently live versions.
-
-The below example uses two versions of async-chainable. The default outer item wraps a new instance of the inner one.
-
-```
-asyncChainable()
-	.series([
-		fooFunc,
-		function(outerNext) { 
-			asyncChainable() // Make new instance of async-chainable so we can nest
-				.series([
-					barFunc,
-					bazFunc,
-					quzFunc,
-				])
-				.end(function(err) {
-					outerNext(err);
-				});
-		},
-	])
-	.end(function(err) {
-		done();
-	});
 ```
 
 .reset()
