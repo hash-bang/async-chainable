@@ -2,7 +2,7 @@ var expect = require('chai').expect;
 var asyncChainable = require('../index');
 var mlog = require('mocha-logger');
 
-describe('async-chainable.forEach() - large arrays (run time bound)', function(){
+describe.skip('async-chainable.forEach() - large arrays (run time bound)', function(){
 	var output;
 	var limit = 99999;
 
@@ -29,7 +29,7 @@ describe('async-chainable.forEach() - large arrays (run time bound)', function()
 });
 
 
-describe('async-chainable.forEach() - large arrays (late bound)', function(){
+describe.skip('async-chainable.forEach() - large arrays (late bound)', function(){
 	var output;
 	var limit = 99999;
 
@@ -58,7 +58,7 @@ describe('async-chainable.forEach() - large arrays (late bound)', function(){
 });
 
 
-describe('async-chainable.forEach() - large objects (run time bound)', function(){
+describe.skip('async-chainable.forEach() - large objects (run time bound)', function(){
 	var output;
 	var limit = 99999;
 
@@ -85,7 +85,7 @@ describe('async-chainable.forEach() - large objects (run time bound)', function(
 });
 
 
-describe('async-chainable.forEach() - large objects (late bound)', function(){
+describe.skip('async-chainable.forEach() - large objects (late bound)', function(){
 	var output;
 	var limit = 99999;
 
@@ -151,5 +151,3 @@ describe.skip('async-chainable.forEach() - very large arrays (late bound)', func
 		expect(output).to.have.length(limit);
 	});
 });
-
-
