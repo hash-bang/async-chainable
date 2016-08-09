@@ -32,5 +32,6 @@
     "mocha": "^2.1.0",
     "mocha-istanbul": "^0.2.0",
     "mocha-logger": "^1.0.1"
-  }
+  },
+  "dependencies": {}
 }
