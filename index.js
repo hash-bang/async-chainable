@@ -748,23 +748,16 @@ function _run(tasks, limit, callback) {
 	// Empty
 	if (!tasks) return callback();
 
-	console.log('TASKS', tasks.length, 'LIMT', limit);
-	console.log('TASKS DUMP', tasks);
-
 	var taskFinish = function(taskErr, taskResult) {
 		if (taskErr) err = taskErr;
 		--running;
-		console.log('FINISH TASK', 'err=', taskErr, 'result=', taskResult, 'running=', running);
 		if (err && !running) {
-			console.log('FINALIZE (ERR) WITH', 'err=', err, 'running=', running);
 			return callback(err);
 		} else if (err) { // Has an err - stop allocating until we empty
 			// Pass
 		} else if (!running && nextTaskOffset > tasks.length - 1) { // Finished everything
-			console.log('FINALIZE (EMPTY) WITH', 'err=', err, 'running=', running);
 			return callback(err);
 		} else if (nextTaskOffset < tasks.length) { // Still more to alloc
-			console.log('ALLOC FROM', tasks.length);
 			running++;
 			tasks[nextTaskOffset++](taskFinish);
 		}
@@ -772,10 +765,14 @@ function _run(tasks, limit, callback) {
 
 	var maxTasks = limit && limit <= tasks.length ? limit : tasks.length;
 	for (var i = 0; i < maxTasks; i++) {
-		console.log('Alloc task', i, typeof task);
 		running++;
-		tasks[nextTaskOffset++](taskFinish);
+		var runner = function(task) {
+			setTimeout(function() {
+				task(taskFinish);
+			});
+		}(tasks[i]);
 	}
+	nextTaskOffset = maxTasks;
 }
 // }}}
 
