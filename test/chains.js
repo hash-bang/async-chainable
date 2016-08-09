@@ -90,8 +90,8 @@ describe('async-chainable - mixed chain', function(){
 		expect(outputSeries[2]).to.contain('06-series');
 		expect(outputSeries[3]).to.contain('13-series');
 		expect(outputSeries[4]).to.contain('14-series');
-		expect(outputSeries[5]).to.contain('15-series');
-		expect(outputSeries[6]).to.contain('16-then');
+		expect(outputSeries[5]).to.contain('16-then');
+		expect(outputSeries[6]).to.contain('15-series');
 	});
 });
 

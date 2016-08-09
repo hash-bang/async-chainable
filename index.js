@@ -741,13 +741,41 @@ function _execute(err) {
 * @param function callback(err) The callback to fire on finish
 */
 function _run(tasks, limit, callback) {
-	var async = require('async');
-	if (limit == 1) {
-		async.series(tasks, callback);
-	} else if (limit > 0) {
-		async.parallelLimit(tasks, limit, callback);
-	} else {
-		async.parallel(tasks, callback);
+	var running = 0;
+	var err;
+
+	// Empty
+	if (!tasks) return callback();
+
+	console.log('TASKS', tasks.length, 'LIMT', limit);
+	console.log('TASKS DUMP', tasks);
+
+	var taskFinish = function(taskErr, taskResult) {
+		if (taskErr) err = taskErr;
+		--running;
+		console.log('FINISH TASK', 'err=', taskErr, 'result=', taskResult, 'running=', running);
+		if (err && !running) {
+			console.log('FINALIZE (ERR) WITH', 'err=', err, 'running=', running);
+			return callback(err);
+		} else if (err) { // Has an err - stop allocating until we empty
+			// Pass
+		} else if (!running && !tasks.length) { // Finished everything
+			console.log('FINALIZE (EMPTY) WITH', 'err=', err, 'running=', running);
+			return callback(err);
+		} else if (tasks.length) { // Still more to alloc
+			console.log('ALLOC FROM', tasks.length);
+			var task = tasks.shift();
+			running++;
+			task(taskFinish);
+		}
+	};
+
+	var maxTasks = limit && limit <= tasks.length ? limit : tasks.length;
+	for (var i = 0; i < maxTasks; i++) {
+		var task = tasks.shift();
+		console.log('Alloc task', i, typeof task);
+		running++;
+		task(taskFinish);
 	}
 }
 // }}}
