@@ -27,11 +27,10 @@
     "test": "mocha test"
   },
   "devDependencies": {
-    "chai": "^1.10.0",
-    "istanbul": "^0.3.5",
-    "mocha": "^2.1.0",
-    "mocha-istanbul": "^0.2.0",
-    "mocha-logger": "^1.0.1"
-  },
-  "dependencies": {}
+    "chai": "^3.5.0",
+    "istanbul": "^0.4.4",
+    "mocha": "^3.0.2",
+    "mocha-istanbul": "^0.3.0",
+    "mocha-logger": "^1.0.4"
+  }
 }
