@@ -7,13 +7,13 @@ describe('async-chainable.defer() - generated maze', function() {
 	var output;
 
 	before(function(done) {
-		this.timeout(10000);
+		this.timeout(10 * 1000);
 		output = [];
 		context = {};
 
 		var maze = asyncChainable();
 
-		for (var i = 0; i < 100; i++) {
+		for (var i = 0; i < 1000; i++) {
 			var id = 'xxxxx'.replace(/./g, function() { return '0123456789abcdef'.substr(Math.random() * 16, 1) });
 			var defered = [];
 			for (var d = 0; d < Math.min(created.length, 10); d++) {
@@ -38,7 +38,7 @@ describe('async-chainable.defer() - generated maze', function() {
 	});
 
 	it('should have the correct number of output elements', function() {
-		expect(output).to.have.length(100);
+		expect(output).to.have.length(1000);
 	});
 
 	it('should have called each task once', function() {
