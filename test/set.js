@@ -71,7 +71,7 @@ describe('async-chainable.set() - simple setters', function() {
 	});
 
 	it('set undefined', function() {
-		expect(context).to.not.have.property('mumble');
+		expect(context).to.have.property('mumble');
 		expect(context.mumble).to.be.undefined;
 	});
 
