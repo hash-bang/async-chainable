@@ -350,6 +350,40 @@ function await() {
 
 
 /**
+* Queue up a timeout setter
+* @param int|function|false Either a number (time in ms) of the timeout, a function to set the timeout handler to or falsy to disable
+* @return object This chainable object
+*/
+function timeout(newTimeout) {
+	var calledAs = getOverload(arguments);
+	switch(calledAs) {
+		case '':
+			this._struct.push({ type: 'timeout', payload: false });
+			break;
+		case 'boolean': // Form: timeout(Boolean) - Set whether the timeout is enabled (only false is accepted)
+			if (newTimeout) throw new Error('When calling .timeout(Boolean) only False is accepted to disable the timeout');
+			break;
+		case 'function': // Form: timeout(Function)
+		case 'number': // Form: timeout(Number)
+			this._struct.push({ type: 'timeout', payload: newTimeout });
+			break;
+		default:
+			throw new Error('Unknown call style for .timeout():' + calledAs);
+	}
+	return this;
+}
+
+
+/**
+* The default timeout handler
+*/
+function _timeoutHandler() {
+	// FIXME: Improve this
+	console.log('TIMEOUT!');
+}
+
+
+/**
 * Queue up a limit setter
 * @param int|null|false Either the number of defer processes that are allowed to execute simultaniously or falsy values to disable
 * @return object This chainable object
@@ -730,6 +764,17 @@ function _execute(err) {
 				currentExec.completed = true;
 				redo = true; // Move on to next action
 				break;
+			case 'timeout': // Set the timeout function or its timeout value
+				if (typeof currentExec.payload == 'function') { // Set the timeout handler
+					self._options.timeoutHandler = currentExec.payload;
+				} else if (! currentExec.payload) { // Clear the timeout
+					self._options.timeout = false;
+				} else {
+					self._options.timeout = currentExec.payload;
+				}
+				currentExec.completed = true;
+				redo = true; // Move to next action
+				break;
 			case 'context': // Change the self._options.context object
 				self._options.context = currentExec.payload ? currentExec.payload : self._context; // Set context (if null use internal context)
 				currentExec.completed = true;
@@ -769,6 +814,7 @@ function _execute(err) {
 * @param function callback(err) The callback to fire on finish
 */
 function _run(tasks, limit, callback) {
+	var self = this;
 	var nextTaskOffset = 0;
 	var running = 0;
 	var err;
@@ -776,17 +822,29 @@ function _run(tasks, limit, callback) {
 	// Empty
 	if (!tasks) return callback();
 
+	// Timeout functionality {{{
+	var _timeoutTimer;
+	var resetTimeout = function(setAgain) {
+		if (_timeoutTimer) clearTimeout(_timeoutTimer);
+		if (setAgain) _timeoutTimer = self._options.timeout ? setTimeout(self._options.timeoutHandler, self._options.timeout) : null;
+	};
+	// }}}
+
 	var taskFinish = function(taskErr, taskResult) {
 		if (taskErr) err = taskErr;
 		--running;
 		if (err && !running) {
-			return callback(err);
+			resetTimeout(false);
+			callback(err);
 		} else if (err) { // Has an err - stop allocating until we empty
+			resetTimeout(false);
 			// Pass
 		} else if (!running && nextTaskOffset > tasks.length - 1) { // Finished everything
-			return callback(err);
+			resetTimeout(false);
+			callback(err);
 		} else if (nextTaskOffset < tasks.length) { // Still more to alloc
 			running++;
+			resetTimeout(true);
 			tasks[nextTaskOffset++](taskFinish);
 		}
 	};
@@ -794,12 +852,15 @@ function _run(tasks, limit, callback) {
 	var maxTasks = limit && limit <= tasks.length ? limit : tasks.length;
 	for (var i = 0; i < maxTasks; i++) {
 		running++;
+
 		var runner = function(task) {
 			setTimeout(function() {
 				task(taskFinish);
 			});
 		}(tasks[i]);
 	}
+	resetTimeout(true); // Start initial timeout
+
 	nextTaskOffset = maxTasks;
 }
 // }}}
@@ -856,6 +917,8 @@ var objectInstance = function() {
 		autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
 		limit: 10, // Number of defer functions that are allowed to execute at once
 		context: this._context, // The context item passed to the functions (can be changed with .context())
+		timeout: false, // Whether we should support timeouts (any number >0 will trigger after domant for that number of ms)
+		timeoutHandler: _timeoutHandler, // The timeout function to run if timeout expires
 	};
 	// }}}
 
@@ -885,6 +948,8 @@ var objectInstance = function() {
 	this.set = set;
 	this._set = _set;
 	this._setRaw = _setRaw;
+	this.timeout = timeout;
+	this._timeoutHandler = _timeoutHandler;
 	this.then = series;
 	this.new = function() { return new objectInstance };
 	this.use = use;
