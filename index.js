@@ -378,8 +378,14 @@ function timeout(newTimeout) {
 * The default timeout handler
 */
 function _timeoutHandler() {
-	// FIXME: Improve this
-	console.log('TIMEOUT!');
+	var currentTaskIndex = this._struct.findIndex(function(task) { return ! task.completed });
+
+	if (!currentTaskIndex < 0) {
+		console.log('Async-Chainable timeout on unknown task');
+		console.log('Full structure:', this._struct);
+	} else {
+		console.log('Async-Chainable timeout: Task #', currentTaskIndex + 1, '(' + this._struct[currentTaskIndex].type + ')', 'elapsed timeout of', this._options.timeout + 'ms');
+	}
 }
 
 
