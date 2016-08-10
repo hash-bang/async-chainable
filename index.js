@@ -1,3 +1,5 @@
+var debug = require('debug')('async-chainable');
+
 /**
 * Examines an argument stack and returns all passed arguments as a CSV
 * e.g.
@@ -959,6 +961,13 @@ var objectInstance = function() {
 	this.then = series;
 	this.new = function() { return new objectInstance };
 	this.use = use;
+	// }}}
+
+	// Detect and act on debug mode {{{
+	if (debug.enabled) {
+		this._options.timeout = 5000;
+		this._options.timeoutHandler = _timeoutHandler;
+	}
 	// }}}
 
 	this.reset();

@@ -727,6 +727,17 @@ Its annoying we have to do this but without hacking around how Nodes module syst
 Useful techniques
 =================
 
+Debugging
+---------
+If you find that async-chainable is hanging try setting a `.timeout()` on the object to be notified when something is taking a while.
+
+For one off operations async-chainable will also respond to the `DEBUG=async-chainable` environment variable. For example running your script as:
+
+	DEBUG=async-chainable node myscript.js
+
+... will automatically set a `.timeout(5000)` call on **all** async-chainable objects with the default timeout handler (which should give some useful information on anything that is hanging).
+
+
 Make a variable number of tasks then execute them
 -------------------------------------------------
 Since JavaScript passes everything via pointers you can pass in an array or object to a .parallel() or .series() call which will get evaluated only when that chain item gets executed. This means that preceding items can rewrite the actual tasks conducted during that call.
