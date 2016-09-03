@@ -154,7 +154,7 @@ Plugins
 There are a number of async-chainable plugins available which can extend the default functionality of the module:
 
 * [async-chainable-exec](https://github.com/hash-bang/async-chainable-exec) - External program support
-* [async-chainable-cluster](https://github.com/hash-bang/async-chainable-cluster) - Clustering support allowing tasks to be run over multiple cores rather than just via threads
+* [async-chainable-flush](https://github.com/hash-bang/async-chainable-flush) - Wait for streams to flush before continuing
 * [async-chainable-log](https://github.com/hash-bang/async-chainable-log) - Simple logging extension
 * [async-chainable-nightmare](https://github.com/hash-bang/async-chainable-nighmare) - Wrapper around [Nightmare](https://github.com/segmentio/nightmare) to automate a scriptable browser
 * [async-chainable-progress](https://github.com/hash-bang/async-chainable-progress) - Adds progress bars, spinners, tick lists and other widgets for long running task chains
