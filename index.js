@@ -309,6 +309,11 @@ function defer() {
 			payload[arguments[1]] = arguments[2];
 			this._struct.push({ type: 'deferObject', prereq: arguments[0], payload: payload });
 			break;
+		case 'string,array,function': //Form: defer(String <id>, Array <prereqs>, func) - gulp varient of above
+			var payload = {};
+			payload[arguments[0]] = arguments[2];
+			this._struct.push({ type: 'deferObject', prereq: arguments[1], payload: payload });
+			break;
 		default:
 			throw new Error('Unknown call style for .defer():' + calledAs);
 	}

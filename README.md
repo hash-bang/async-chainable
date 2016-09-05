@@ -361,6 +361,7 @@ Execute a function and continue down the asyncChainable chain.
 	defer(string, string, function) // Named function (name is second arg) with prereq (first arg)
 	defer(array, function) // Run an anonymous function with the specified pre-reqs
 	defer(array, string, function) // Named function (name is second arg) with prereq array (first arg)
+	defer(string, array, function) // Name function (name is first, prereqs second) this is a varient of the above which matches the `gulp.task(id, prereq)` syntax
 	defer(array)
 	defer(object) // Named function object (each object key gets assigned to this with the value passed to `next()`)
 	defer(collection) // See 'object' definition

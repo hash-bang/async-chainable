@@ -185,6 +185,44 @@ describe('async-chainable.defer() - array pre-req anon style', function() {
 });
 
 
+describe('async-chainable.defer() - gulp style (id, array)', function() {
+	var output;
+
+	before(function(done) {
+		output = [];
+
+		asyncChainable()
+			.defer('foo', ['quz'], function(next) { setTimeout(function(){ output.push('foo'); next(null) }, 10)})
+			.defer('bar', ['quuz'], function(next) { setTimeout(function(){ output.push('bar'); next(null) }, 0)})
+			.defer('baz', ['quz', 'quuz'], function(next) { setTimeout(function(){ output.push('baz'); next(null) }, 5)})
+			.defer('quz', [], function(next) { setTimeout(function(){ output.push('quz'); next(null) }, 15)})
+			.defer('quuz', ['quz'], function(next) { setTimeout(function(){ output.push('quuz'); next(null) }, 5)})
+			.await()
+			.end(function(err) {
+				expect(err).to.be.not.ok;
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(5);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.contain('foo');
+		expect(output).to.contain('bar');
+		expect(output).to.contain('baz');
+		expect(output).to.contain('quz');
+		expect(output).to.contain('quuz');
+	});
+
+	it('should run defereds in the right order', function() {
+		expect(output[0]).to.equal('quz');
+		expect(output[1]).to.equal('quuz');
+	});
+});
+
+
 describe('async-chainable.defer() - named function style', function() {
 	var context;
 	var output;
