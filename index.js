@@ -901,7 +901,8 @@ function reset() {
 /**
 * Queue up an optional single function for execution on completion
 * This function also starts the queue executing
-* @return object This chainable object
+* @param {function} [final] Optional final function to run. This is passed the optional error state of the chain
+* @return {Object} This chainable object
 */
 function end() { 
 	var calledAs = getOverload(arguments);
@@ -919,6 +920,27 @@ function end() {
 	this._execute();
 	return this;
 };
+
+/**
+* Alternative to end() which returns a JS standard Promise
+* @return {Promise} A promise representing the async chain
+*/
+function promise() {
+	var defer = Promise.defer();
+
+	this._struct.push({type: 'end', payload: function(err) {
+		if (err) {
+			defer.reject(err);
+		} else {
+			defer.resolve();
+		}
+	}});
+
+	this._execute();
+
+	return defer.promise;
+};
+
 
 var objectInstance = function() {
 	// Variables {{{
@@ -952,6 +974,7 @@ var objectInstance = function() {
 	this.context = setContext;
 	this.defer = defer;
 	this.end = end;
+	this.promise = promise;
 	this.forEach = forEach;
 	this.limit = setLimit;
 	this.parallel = parallel;

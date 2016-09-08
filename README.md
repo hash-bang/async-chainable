@@ -38,7 +38,7 @@ asyncChainable()
 		'When do we want them?',
 		'Whenever!',
 	], function(next, item) {
-		// Prints the above array items to the console in parallel (i.e. whichever resolve first - no gurenteeed order)
+		// Prints the above array items to the console in parallel (i.e. whichever resolve first - no gurenteed order)
 		console.log(item);
 		next();
 	})
@@ -542,6 +542,21 @@ asyncChainable()
 	.then('bar', barFunc) // Assuming this calls next('Error in bar')
 	.then('baz', bazFunc) // Gets skipped as we have an error
 	.end(console.log) // Output: 'Error in bar', {foo: 'foo value'}
+```
+
+
+.promise()
+----------
+Alternative to `end()` which returns a JS standard promise instead of using the `.end(callback)` system.
+
+```javascript
+asyncChainable()
+	.then(doSomethingOne)
+	.then(doSomethingTwo)
+	.then(doSomethingThree)
+	.promise()
+	.then(function() { // Everything went well })
+	.catch(function(err) { // Something went wrong })
 ```
 
 .reset()
