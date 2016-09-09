@@ -876,11 +876,8 @@ function _run(tasks, limit, callback) {
 	for (var i = 0; i < maxTasks; i++) {
 		running++;
 
-		var runner = function(task) {
-			setTimeout(function() {
-				task(taskFinish);
-			});
-		}(tasks[i]);
+		setTimeout(tasks[i].bind(this, taskFinish));
+
 	}
 	resetTimeout(true); // Start initial timeout
 

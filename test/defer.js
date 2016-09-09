@@ -147,7 +147,7 @@ describe('async-chainable.defer() - function style', function() {
 });
 
 
-describe.only('async-chainable.defer() - array pre-req anon style', function() {
+describe('async-chainable.defer() - array pre-req anon style', function() {
 	var output;
 
 	before(function(done) {
