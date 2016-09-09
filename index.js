@@ -228,17 +228,27 @@ function deferAdd(id, task, parentChain) {
 		prereq: parentChain.prereq || [],
 		payload: function(next) {
 			self._context._id = id;
-			task.call(self._options.context, function(err, value) {
-				if (id)
-					self._context[id] = value;
+
+			// Work out what arguments to pass to the defer function by taking the return value of each preReq
+			var args = (parentChain.prereq || []).map(function(pre) {
+				return self._context[pre];
+			});
+
+			args.unshift(function(err, value) { // Glue callback function to first arg
+				if (id) self._context[id] = value;
+
 				self._deferredRunning--;
+
 				if (--parentChain.waitingOn == 0) {
 					parentChain.completed = true;
-					if (self._struct.length && self._struct[self._structPointer].type == 'await')
-						self._execute(err);
+
+					if (self._struct.length && self._struct[self._structPointer].type == 'await') self._execute(err);
 				}
+
 				self._execute(err);
 			});
+
+			task.apply(self._options.context, args);
 		}
 	});
 };

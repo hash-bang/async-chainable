@@ -147,18 +147,38 @@ describe('async-chainable.defer() - function style', function() {
 });
 
 
-describe('async-chainable.defer() - array pre-req anon style', function() {
+describe.only('async-chainable.defer() - array pre-req anon style', function() {
 	var output;
 
 	before(function(done) {
 		output = [];
 
 		asyncChainable()
-			.defer(['quz'], function(next) { setTimeout(function(){ output.push('foo'); next(null) }, 10)})
-			.defer(['quuz'], function(next) { setTimeout(function(){ output.push('bar'); next(null) }, 0)})
-			.defer(['quz', 'quuz'], function(next) { setTimeout(function(){ output.push('baz'); next(null) }, 5)})
-			.defer('quz', function(next) { setTimeout(function(){ output.push('quz'); next(null) }, 15)})
-			.defer('quz', 'quuz', function(next) { setTimeout(function(){ output.push('quuz'); next(null) }, 5)})
+			.defer(['quz'], function(next, a, b) {
+				expect(a).to.be.equal('quzValue');
+				expect(b).to.be.undefined;
+				setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10);
+			})
+			.defer(['quuz'], function(next, a, b) {
+				expect(a).to.be.equal('quuzValue');
+				expect(b).to.be.undefined;
+				setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0);
+			})
+			.defer(['quz', 'quuz'], function(next, a, b) {
+				expect(a).to.be.equal('quzValue');
+				expect(b).to.be.equal('quuzValue');
+				setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5);
+			})
+			.defer('quz', function(next, a, b) {
+				expect(a).to.be.undefined;
+				expect(b).to.be.undefined;
+				setTimeout(function(){ output.push('quz'); next(null, 'quzValue') }, 15);
+			})
+			.defer('quz', 'quuz', function(next, a, b) {
+				expect(a).to.be.equal('quzValue');
+				expect(b).to.be.undefined;
+				setTimeout(function(){ output.push('quuz'); next(null, 'quuzValue') }, 5);
+			})
 			.await()
 			.end(function(err) {
 				expect(err).to.be.not.ok;

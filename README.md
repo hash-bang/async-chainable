@@ -382,6 +382,10 @@ asyncChainable()
 	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
 ```
 
+
+**NOTE**: All defers take their 'next' handler as the first argument. All subsequent arguments are the resolved value of the prerequisites. In the above example `barFunc` would be called as `barFunc(next, resultOfFoo)` and `bazFunc` would be called as `bazFunc(next, resultOfBaz)`.
+
+
 .await()
 --------
 Wait for one or more fired defer functions to complete before containing down the asyncChainable chain.
