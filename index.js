@@ -857,7 +857,7 @@ function _run(tasks, limit, callback) {
 	var _timeoutTimer;
 	var resetTimeout = function(setAgain) {
 		if (_timeoutTimer) clearTimeout(_timeoutTimer);
-		if (setAgain) _timeoutTimer = self._options.timeout ? setTimeout(self._options.timeoutHandler, self._options.timeout) : null;
+		if (setAgain) _timeoutTimer = self._options.timeout ? setTimeout(self._options.timeoutHandler.bind(self), self._options.timeout) : null;
 	};
 	// }}}
 
