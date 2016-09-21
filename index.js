@@ -542,8 +542,8 @@ function _finalize(err) {
 	}
 	// }}}
 	var self = this;
-	this.fire('end', function(err) {
-		self._struct[self._struct.length-1].payload.call(self._options.context, err);
+	this.fire('end', function(hookErr) {
+		self._struct[self._struct.length-1].payload.call(self._options.context, err || hookErr);
 		if (self._options.autoReset) self.reset();
 	});
 };
@@ -966,6 +966,7 @@ function fire() {
 			throw new Error('Unknown call style for .fire(): ' + calledAs);
 	}
 
+	var fireAs = arguments[0];
 	this._run(callbacks, 1, finish);
 
 	return this;
