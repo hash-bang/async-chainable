@@ -851,7 +851,7 @@ function _run(tasks, limit, callback) {
 	var err;
 
 	// Empty
-	if (!tasks) return callback();
+	if (!tasks || !tasks.length) return callback();
 
 	// Timeout functionality {{{
 	var _timeoutTimer;
