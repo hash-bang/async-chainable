@@ -541,9 +541,11 @@ function _finalize(err) {
 		return;
 	}
 	// }}}
-	this._struct[this._struct.length-1].payload.call(this._options.context, err);
-	if (this._options.autoReset)
-		this.reset();
+	var self = this;
+	this.fire('end', function(err) {
+		self._struct[self._struct.length-1].payload.call(self._options.context, err);
+		if (self._options.autoReset) self.reset();
+	});
 };
 
 
@@ -555,6 +557,12 @@ function _finalize(err) {
 function _execute(err) {
 	var self = this;
 	if (err) return this._finalize(err); // An error has been raised - stop exec and call finalize now
+
+	if (!self._executing) { // Never before run this object - run fire('start') and defer until it finishes
+		self._executing = true;
+		return self.fire.call(self, 'start', self._execute.bind(self));
+	}
+
 	do {
 		var redo = false;
 		if (self._structPointer >= self._struct.length) return this._finalize(err); // Nothing more to execute in struct
@@ -906,6 +914,65 @@ function reset() {
 };
 
 /**
+* Set up a hook
+* @param {string} hook The hook name
+* @param {function} callback Callback to run when hook fires (each callback takes a next paramter which must be called)
+* @return {Object} This chainable object
+*/
+function hook() {
+	var calledAs = getOverload(arguments);
+	switch (calledAs) {
+		case '': // No functions passed - do nothing
+			break;
+		case 'string,function': // Form: hook(string, func) -> Attach a function to a named hook
+			if (!this._hooks[arguments[0]]) this._hooks[arguments[0]] = [];
+			this._hooks[arguments[0]].push(arguments[1]);
+			break;
+		case 'array,function': // Form: hook(array, func) -> Attach to many hooks
+			var self = this;
+			var callback = arguments[1];
+			arguments[0].forEach(function(hook) {
+				if (!self._hooks[hook]) self._hooks[hook] = [];
+				self._hooks[hook].push(callback);
+			});
+			break;
+		default:
+			throw new Error('Unknown call style for .on(): ' + calledAs);
+	}
+
+	return this;
+};
+
+/**
+* Fire a hook and run all callbacks in _series_
+* NOTE: The calback will fire even if there are no entities matching that hook
+* @param {string} hook The hook name to run
+* @param {function} [callback] Optional callback to execute on completion
+* @return {Object} this chainable object
+*/
+function fire() {
+	var calledAs = getOverload(arguments);
+	var callbacks = [];
+	var finish;
+	switch (calledAs) {
+		case '': // No functions passed - do nothing
+			break;
+		case 'string': // Form: on(string) -> run hook (no callback)
+		case 'string,function': // Form: on(string, func) -> run hook and fire callback
+			if (this._hooks[arguments[0]]) callbacks = this._hooks[arguments[0]];
+			finish = arguments[1];
+			break;
+		default:
+			throw new Error('Unknown call style for .fire(): ' + calledAs);
+	}
+
+	this._run(callbacks, 1, finish);
+
+	return this;
+};
+
+
+/**
 * Queue up an optional single function for execution on completion
 * This function also starts the queue executing
 * @param {function} [final] Optional final function to run. This is passed the optional error state of the chain
@@ -954,6 +1021,7 @@ var objectInstance = function() {
 	this._struct = [];
 	this._structPointer = 0;
 	this._context = {};
+	this._hooks = {};
 
 	this._options = {
 		autoReset: true, // Run asyncChainable.reset() after finalize. Disable this if you want to see a post-mortem on what did run
@@ -982,7 +1050,9 @@ var objectInstance = function() {
 	this.defer = defer;
 	this.end = end;
 	this.promise = promise;
+	this.fire = fire;
 	this.forEach = forEach;
+	this.hook = hook;
 	this.limit = setLimit;
 	this.parallel = parallel;
 	this.reset = reset;

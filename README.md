@@ -511,6 +511,39 @@ asyncChainable()
 This allows *late binding* of variables who's content will only be examined when the chain item is executed.
 
 
+.hook()
+-------
+Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can (unlike normal chains) fire out of sequence.
+Defined hooks can be `start`, `end` as well as any user-defined hooks.
+
+
+```javascript
+asyncChainable()
+	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.hook('start', function(next) { console.log('Start!'); next()  })
+	.hook('end', function(next) { console.log('End!'); next()  })
+	.hook(['start', 'end'], function(next) { console.log('Start OR End!'); next()  })
+	.end();
+```
+
+
+.fire()
+-------
+Trigger a hook. This function will run a callback on completion whether or not any hooks executed.
+
+
+```javascript
+asyncChainable()
+	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.hook('hello', function(next) { console.log('Hello world!'); next() })
+	.then(function(next) {
+		// Trigger a hook then continue on
+		this.fire('hello, next);
+	})
+	.end();
+```
+
+
 .end()
 ------
 The final stage in the chain, `.end()` must be called to execute the queue of actions.
