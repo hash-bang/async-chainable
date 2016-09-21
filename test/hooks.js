@@ -3,7 +3,7 @@ var asyncChainable = require('../index');
 
 describe('async-chainable.hooks() - start and end', function() {
 
-	it('should execute simple start, end and start+end hooks ', function() {
+	it('should execute simple start, end and start+end hooks ', function(done) {
 		var output = [];
 
 		asyncChainable()
@@ -64,7 +64,7 @@ describe('async-chainable.hooks() - start and end', function() {
 	});
 
 
-	it.only('should throw an error before a chain ends', function(done) {
+	it('should throw an error before a chain ends', function(done) {
 		var output = [];
 		asyncChainable()
 			.forEach(['foo', 'bar', 'baz'], function(next, item) { output.push(item); next(); })
