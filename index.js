@@ -907,6 +907,8 @@ function reset() {
 		_structPointer: this._structPointer,
 		_options: this._options,
 		_deferredRunning: this._deferredRunning,
+		hook: this.hook.bind(this),
+		fire: this.fire.bind(this),
 	};
 
 	if (reAttachContext) this._options.context = this._context;

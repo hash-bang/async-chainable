@@ -27,13 +27,16 @@ describe('async-chainable.hooks() - start and end', function() {
 			.end(function(err) {
 				expect(err).to.be.not.ok;
 
-				expect(output).to.contain('on(start)');
-				expect(output).to.contain('on(start,end)');
-				expect(output).to.contain('foo');
-				expect(output).to.contain('bar');
-				expect(output).to.contain('baz');
-				expect(output).to.contain('on(end)');
-				expect(output).to.contain('on(end2)');
+				expect(output).to.deep.equal([
+					'on(start)',
+					'on(start,end)',
+					'foo',
+					'bar',
+					'baz',
+					'on(end)',
+					'on(end2)',
+					'on(start,end)',
+				]);
 
 				done();
 			});
@@ -55,9 +58,10 @@ describe('async-chainable.hooks() - start and end', function() {
 			.end(function(err) {
 				expect(err).to.be.equal('FAIL!');
 
-				expect(output).to.have.length(2);
-				expect(output).to.contain('on(start)');
-				expect(output).to.contain('on(end)');
+				expect(output).to.deep.equal([
+					'on(start)',
+					'on(end)',
+				]);
 
 				done();
 			});
@@ -79,12 +83,51 @@ describe('async-chainable.hooks() - start and end', function() {
 			.end(function(err) {
 				expect(err).to.be.equal('FAIL2!');
 
-				expect(output).to.have.length(5);
-				expect(output).to.contain('on(start)');
-				expect(output).to.contain('foo');
-				expect(output).to.contain('bar');
-				expect(output).to.contain('baz');
-				expect(output).to.contain('on(end)');
+				expect(output).to.deep.equal([
+					'on(start)',
+					'foo',
+					'bar',
+					'baz',
+					'on(end)',
+				]);
+
+				done();
+			});
+	});
+
+
+	it('should fire user defined hooks', function(done) {
+		var output = [];
+		asyncChainable()
+			.forEach(['foo', 'bar', 'baz'], function(next, item) {
+				output.push(item);
+				this.fire('flarp', next);
+			})
+			.hook('start', function(next) {
+				output.push('on(start)');
+				next();
+			})
+			.hook('end', function(next, err) {
+				output.push('on(end)');
+				next();
+			})
+			.hook('flarp', function(next, err) {
+				output.push('on(flarp)');
+				next();
+			})
+			.end(function(err) {
+				expect(err).to.be.not.ok;
+
+				expect(output).to.deep.equal([
+					'on(start)',
+					'foo',
+					'bar',
+					'baz',
+					'on(flarp)',
+					'on(flarp)',
+					'on(flarp)',
+					'on(end)',
+				]);
 
 				done();
 			});

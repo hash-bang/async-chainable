@@ -520,8 +520,14 @@ Internal callback resolver. Run is used to execute an array of callbacks then ru
 
 .hook()
 -------
-Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can (unlike normal chains) fire out of sequence.
+Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can fire out of sequence, unlike normal chains.
+Hooks can be defined multiple times - if multiple callbacks are registered they are fired in allocation order in *series*. If any hook raises an error the chain is terminated as though a callback raised an error.
 Defined hooks can be `start`, `end` as well as any user-defined hooks.
+Hooks can also be registered within a callback via `this.hook(hook, callback)` unless context is reset.
+
+	hook(string, function) // Register a callback against a hook
+	hook(array, function) // Register a callback against a number of hooks, if any fire the callback is called
+	this.hook(...) // Same as above invocations but accessible within a chain
 
 
 ```javascript
@@ -537,6 +543,9 @@ asyncChainable()
 .fire()
 -------
 Trigger a hook. This function will run a callback on completion whether or not any hooks executed.
+
+	fire(string, function) // Fire a hook and run the callback on completion
+	this.fire(...) // Same as above invocations but accessible within a chain
 
 
 ```javascript
