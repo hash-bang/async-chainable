@@ -121,24 +121,6 @@ app.get('/order/:id', function(req, res) {
 });
 ```
 
-This module extends the existing async object so you can use it as a drop in replacement for Async:
-
-```javascript
-var async = require('async-chainable');
-
-async().waterfall([fooFunc, barFunc, bazFunc], console.log); // Async goodness
-
-// With new async-chainable flexibility
-async() // <- Note unfortunately you still have to add '()' to the main invoker
-	.parallel([fooFunc, barFunc, bazFunc]) // Do these operations in parallel THEN
-	.series([fooFunc, barFunc, bazFunc]) // Do these in series (note these only run when the above has resolved)
-	.end(console.log)
-
-// Or just like async
-// NOTE: This style cannot be chained in order to maintain compability with async
-async.parallel([fooFunc, barFunc, bazFunc], console.log);
-```
-
 Project Goals
 =============
 This project has the following goals:
@@ -310,6 +292,297 @@ asyncChainable()
 API
 ===
 
+.await()
+--------
+Wait for one or more fired defer functions to complete before containing down the asyncChainable chain.
+
+	await() // Wait for all defered functions to finish
+	await(string) // Wait for at least the named defer to finish
+	await(string,...) // Wait for the specified named defers to finish
+	await(array) // Wait for the specified named defers to finish
+
+
+Some examples:
+
+```javascript
+// Wait for everything
+asyncChainable()
+	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
+	.defer('bar', barFunc)
+	.defer('baz', bazFunc)
+	.await() // Wait for all defers to finish
+	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
+
+
+// Wait for certain defers
+asyncChainable()
+	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
+	.defer('bar', barFunc)
+	.defer('baz', bazFunc)
+	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
+	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
+
+
+// Wait for certain defers - array syntax
+asyncChainable()
+	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
+	.defer('bar', barFunc)
+	.defer('baz', bazFunc)
+	.await(['foo', 'bar']) // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
+	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
+```
+
+
+.context()
+----------
+Set the context used by async-chainable during subsequent function calls.
+In effect this sets what `this` is for each call.
+Omitting an argument or supplying a 'falsy' value will instruct async-chainable to use its own default context object.
+
+```javascript
+asyncChainable()
+	.then({foo: fooFunc}) // `this` is async-chainables own context object
+	.context({hello: 'world'})
+	.then({bar: barFunc}) // `this` is now {hello: 'world'}
+	.context()
+	.then({baz: bazFunc}) // `this` is now async-chainables own context object again
+	.end(this) // Output: null, {foo: 'foo value', bar: 'bar value', quz: 'quz value'}
+```
+
+Note that even if the context is switched async-chainable still stores any named values in its own context for later retrieval (in the above example this is `barFunc()` returning a value even though the context has been changed to a custom object).
+
+See the [Context Section](#context) for further details on what the async-chainable context object contains.
+
+
+.defer()
+--------
+Execute a function and continue down the asyncChainable chain.
+
+	defer(function)
+	defer(string, function) // Named function (`this.name` gets set to whatever gets passed to `next()`)
+	defer(string, string, function) // Named function (name is second arg) with prereq (first arg)
+	defer(array, function) // Run an anonymous function with the specified pre-reqs
+	defer(array, string, function) // Named function (name is second arg) with prereq array (first arg)
+	defer(string, array, function) // Name function (name is first, prereqs second) this is a varient of the above which matches the `gulp.task(id, prereq)` syntax
+	defer(array)
+	defer(object) // Named function object (each object key gets assigned to this with the value passed to `next()`)
+	defer(collection) // See 'object' definition
+	defer(null) // Gets skipped automatically
+
+
+Use `await()` to gather the parallel functions.
+This can be considered the parallel process twin to `series()` / `then()`.
+
+```javascript
+asyncChainable()
+	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
+	.defer('bar', barFunc)
+	.defer('baz', bazFunc)
+	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
+	.then(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
+	.await() // Wait for everything else
+	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
+```
+
+
+**NOTE**: All defers take their 'next' handler as the first argument. All subsequent arguments are the resolved value of the prerequisites. In the above example `barFunc` would be called as `barFunc(next, resultOfFoo)` and `bazFunc` would be called as `bazFunc(next, resultOfBaz)`.
+
+
+.end()
+------
+The final stage in the chain, `.end()` must be called to execute the queue of actions.
+
+	end(function) // Final function to execute as `function(err)`
+
+
+While similar to `series()` / `then()` this function will always be executed *last* and be given the error if any occurred in the form `function(err)`.
+
+```javascript
+asyncChainable()
+	.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
+	.then('bar', barFunc) // Likewise barFunc()
+	.then('baz', bazFunc) // Likewise bazFunc()
+	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
+```
+
+In the above if fooFunc, barFunc or bazFunc call next with a first parameter that is true execution will stop and continue on passing the error to `end()`:
+
+```javascript
+asyncChainable()
+	.then('foo', fooFunc) // Assuming fooFunc calls next('This is an error')
+	.then('bar', barFunc) // Gets skipped as we have an error
+	.then('baz', bazFunc) // Gets skipped as we have an error
+	.end(console.log) // Output: 'This is an error'
+```
+
+If an error is caused in the middle of execution the result object is still available:
+
+```javascript
+asyncChainable()
+	.then('foo', fooFunc) // Assuming this calls `next()` with next(null, 'foo value')
+	.then('bar', barFunc) // Assuming this calls next('Error in bar')
+	.then('baz', bazFunc) // Gets skipped as we have an error
+	.end(console.log) // Output: 'Error in bar', {foo: 'foo value'}
+```
+
+
+.fire()
+-------
+Trigger a hook. This function will run a callback on completion whether or not any hooks executed.
+
+	fire(string, function) // Fire a hook and run the callback on completion
+	this.fire(...) // Same as above invocations but accessible within a chain
+
+
+```javascript
+asyncChainable()
+	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.hook('hello', function(next) { console.log('Hello world!'); next() })
+	.then(function(next) {
+		// Trigger a hook then continue on
+		this.fire('hello, next);
+	})
+	.end();
+```
+
+
+.forEach()
+----------
+The `forEach()` function is a slight variation on the `parallel()` function but with some additional behaviour.
+
+
+	forEach(array, function) // Run each item in the array though `function(next, value)`
+	forEach(object, function) // Run each item in the object though `function(next, value, key)`
+	forEach(collection,function) // see 'array, function' definition (collections are just treated like an array of objects with 'forEach')
+	forEach(string, function) // Lookup `this[string]` then process according to its type (see above type styles) - This is used for late binding
+	forEach(null) // Gets skipped automatically (also empty arrays, objects)
+
+
+It can be given an array, object or collection as the first argument and a function as the second. All items in the array will be iterated over *in parallel* and passed to the function which is expected to execute a next condition returning an error if the forEach iteration should stop.
+
+```javascript
+asyncChainable()
+	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.end();
+```
+
+In the above example the simple array is passed to the function with each payload item as a parameter and the iteration key (an offset if its an array or collection, a key if its an object).
+
+`forEach()` has one additional piece of behaviour where if the first argument is a string the context will be examined for a value to iterate over. The string can be a simple key to use within the passed object or a deeply nested path using dotted notation (e.g. `key1.key2.key3`).
+
+```javascript
+asyncChainable()
+	.set({
+		items: ['foo', 'bar', 'baz'],
+	})
+	.forEach('items', function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.end();
+```
+
+This allows *late binding* of variables who's content will only be examined when the chain item is executed.
+
+
+.getPath()
+----------
+GetPath is the utility function used by `forEach()` to lookup deeply nested objects or arrays to iterate over.
+It is functionally similar to the Lodash `get()` function.
+
+
+.hook()
+-------
+Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can fire out of sequence, unlike normal chains.
+Hooks can be defined multiple times - if multiple callbacks are registered they are fired in allocation order in *series*. If any hook raises an error the chain is terminated as though a callback raised an error.
+Defined hooks can be `start`, `end` as well as any user-defined hooks.
+Hooks can also be registered within a callback via `this.hook(hook, callback)` unless context is reset.
+
+	hook(string, function) // Register a callback against a hook
+	hook(array, function) // Register a callback against a number of hooks, if any fire the callback is called
+	this.hook(...) // Same as above invocations but accessible within a chain
+
+
+```javascript
+asyncChainable()
+	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.hook('start', function(next) { console.log('Start!'); next()  })
+	.hook('end', function(next) { console.log('End!'); next()  })
+	.hook(['start', 'end'], function(next) { console.log('Start OR End!'); next()  })
+	.end();
+```
+
+
+.limit()
+--------
+Restrict the number of defer operations that can run at any one time.
+
+	limit() // Allow unlimited parallel / defer functions to execute at once after this chain item
+	limit(Number) // Restrict the number of parallel / defer functions after this chain item
+
+
+This function can be used in the pipeline as many times as needed to change the limit as we work down the execution chain.
+
+```javascript
+asyncChainable()
+	.limit(2) // Allow only 2 defer operations to run at once from this point onward
+	.defer(fooFunc)
+	.defer(barFunc)
+	.defer(bazFunc)
+	.defer(quzFunc)
+	.await()
+	.limit(3) // Allow 3 defer operations to run at once from this point onward
+	.defer(fooFunc)
+	.defer(barFunc)
+	.defer(bazFunc)
+	.defer(quzFunc)
+	.await()
+	.limit() // Allow unlimited operations to run at once from this point onward (0 / false / null is also permissable as 'unlimited')
+	.defer(fooFunc)
+	.defer(barFunc)
+	.defer(bazFunc)
+	.defer(quzFunc)
+	.await()
+	.end(console.log)
+```
+
+
+.promise()
+----------
+Alternative to `end()` which returns a JS standard promise instead of using the `.end(callback)` system.
+
+```javascript
+asyncChainable()
+	.then(doSomethingOne)
+	.then(doSomethingTwo)
+	.then(doSomethingThree)
+	.promise()
+	.then(function() { // Everything went well })
+	.catch(function(err) { // Something went wrong })
+```
+
+
+.reset()
+---------
+Clear the result buffer, releasing all results held in memory.
+
+```javascript
+asyncChainable()
+	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
+	.defer('bar', barFunc)
+	.defer('baz', bazFunc)
+	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
+	.then(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
+	.reset()
+	.defer('quz', quzFunc)
+	.end(console.log) // Output: null, {quz: 'quz value'}
+```
+
+
+.run()
+------
+Internal callback resolver. Run is used to execute an array of callbacks then run a final callback. This function is NOT chainable, will execute immediately and is documented here as it is useful when writing plugins.
+
+	run(array, limit, callback)
+
+
 .series() / .parallel()
 -----------------------
 Execute an array or object of functions either in series or parallel.
@@ -352,302 +625,6 @@ asyncChainable()
 	.end()
 ```
 
-.defer()
---------
-Execute a function and continue down the asyncChainable chain.
-
-	defer(function)
-	defer(string, function) // Named function (`this.name` gets set to whatever gets passed to `next()`)
-	defer(string, string, function) // Named function (name is second arg) with prereq (first arg)
-	defer(array, function) // Run an anonymous function with the specified pre-reqs
-	defer(array, string, function) // Named function (name is second arg) with prereq array (first arg)
-	defer(string, array, function) // Name function (name is first, prereqs second) this is a varient of the above which matches the `gulp.task(id, prereq)` syntax
-	defer(array)
-	defer(object) // Named function object (each object key gets assigned to this with the value passed to `next()`)
-	defer(collection) // See 'object' definition
-	defer(null) // Gets skipped automatically
-
-
-Use `await()` to gather the parallel functions.
-This can be considered the parallel process twin to `series()` / `then()`.
-
-```javascript
-asyncChainable()
-	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
-	.defer('bar', barFunc)
-	.defer('baz', bazFunc)
-	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
-	.then(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
-	.await() // Wait for everything else
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
-```
-
-
-**NOTE**: All defers take their 'next' handler as the first argument. All subsequent arguments are the resolved value of the prerequisites. In the above example `barFunc` would be called as `barFunc(next, resultOfFoo)` and `bazFunc` would be called as `bazFunc(next, resultOfBaz)`.
-
-
-.await()
---------
-Wait for one or more fired defer functions to complete before containing down the asyncChainable chain.
-
-	await() // Wait for all defered functions to finish
-	await(string) // Wait for at least the named defer to finish
-	await(string,...) // Wait for the specified named defers to finish
-	await(array) // Wait for the specified named defers to finish
-
-
-Some examples:
-
-```javascript
-// Wait for everything
-asyncChainable()
-	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
-	.defer('bar', barFunc)
-	.defer('baz', bazFunc)
-	.await() // Wait for all defers to finish
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
-
-
-// Wait for certain defers
-asyncChainable()
-	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
-	.defer('bar', barFunc)
-	.defer('baz', bazFunc)
-	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
-
-
-// Wait for certain defers - array syntax
-asyncChainable()
-	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
-	.defer('bar', barFunc)
-	.defer('baz', bazFunc)
-	.await(['foo', 'bar']) // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
-```
-
-.limit()
---------
-Restrict the number of defer operations that can run at any one time.
-
-	limit() // Allow unlimited parallel / defer functions to execute at once after this chain item
-	limit(Number) // Restrict the number of parallel / defer functions after this chain item
-
-
-This function can be used in the pipeline as many times as needed to change the limit as we work down the execution chain.
-
-```javascript
-asyncChainable()
-	.limit(2) // Allow only 2 defer operations to run at once from this point onward
-	.defer(fooFunc)
-	.defer(barFunc)
-	.defer(bazFunc)
-	.defer(quzFunc)
-	.await()
-	.limit(3) // Allow 3 defer operations to run at once from this point onward
-	.defer(fooFunc)
-	.defer(barFunc)
-	.defer(bazFunc)
-	.defer(quzFunc)
-	.await()
-	.limit() // Allow unlimited operations to run at once from this point onward (0 / false / null is also permissable as 'unlimited')
-	.defer(fooFunc)
-	.defer(barFunc)
-	.defer(bazFunc)
-	.defer(quzFunc)
-	.await()
-	.end(console.log)
-```
-
-.then()
--------
-Execute a function, wait for it to complete and continue down the asyncChainable chain.
-
-This function is an alias for `series()`.
-
-This can be considered the series process twin to `then()`.
-
-```javascript
-asyncChainable()
-	.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
-	.then('bar', barFunc) // Likewise barFunc()
-	.then('baz', bazFunc) // Likewise bazFunc()
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
-```
-
-.forEach()
-----------
-The `forEach()` function is a slight variation on the `parallel()` function but with some additional behaviour.
-
-
-	forEach(array, function) // Run each item in the array though `function(next, value)`
-	forEach(object, function) // Run each item in the object though `function(next, value, key)`
-	forEach(collection,function) // see 'array, function' definition (collections are just treated like an array of objects with 'forEach')
-	forEach(string, function) // Lookup `this[string]` then process according to its type (see above type styles) - This is used for late binding
-	forEach(null) // Gets skipped automatically (also empty arrays, objects)
-
-
-It can be given an array, object or collection as the first argument and a function as the second. All items in the array will be iterated over *in parallel* and passed to the function which is expected to execute a next condition returning an error if the forEach iteration should stop.
-
-```javascript
-asyncChainable()
-	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
-	.end();
-```
-
-In the above example the simple array is passed to the function with each payload item as a parameter and the iteration key (an offset if its an array or collection, a key if its an object).
-
-`forEach()` has one additional piece of behaviour where if the first argument is a string the context will be examined for a value to iterate over. The string can be a simple key to use within the passed object or a deeply nested path using dotted notation (e.g. `key1.key2.key3`).
-
-```javascript
-asyncChainable()
-	.set({
-		items: ['foo', 'bar', 'baz'],
-	})
-	.forEach('items', function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
-	.end();
-```
-
-This allows *late binding* of variables who's content will only be examined when the chain item is executed.
-
-
-.run()
-------
-Internal callback resolver. Run is used to execute an array of callbacks then run a final callback. This function is NOT chainable, will execute immediately and is documented here as it is useful when writing plugins.
-
-	run(array, limit, callback)
-
-
-.hook()
--------
-Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can fire out of sequence, unlike normal chains.
-Hooks can be defined multiple times - if multiple callbacks are registered they are fired in allocation order in *series*. If any hook raises an error the chain is terminated as though a callback raised an error.
-Defined hooks can be `start`, `end` as well as any user-defined hooks.
-Hooks can also be registered within a callback via `this.hook(hook, callback)` unless context is reset.
-
-	hook(string, function) // Register a callback against a hook
-	hook(array, function) // Register a callback against a number of hooks, if any fire the callback is called
-	this.hook(...) // Same as above invocations but accessible within a chain
-
-
-```javascript
-asyncChainable()
-	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
-	.hook('start', function(next) { console.log('Start!'); next()  })
-	.hook('end', function(next) { console.log('End!'); next()  })
-	.hook(['start', 'end'], function(next) { console.log('Start OR End!'); next()  })
-	.end();
-```
-
-
-.fire()
--------
-Trigger a hook. This function will run a callback on completion whether or not any hooks executed.
-
-	fire(string, function) // Fire a hook and run the callback on completion
-	this.fire(...) // Same as above invocations but accessible within a chain
-
-
-```javascript
-asyncChainable()
-	.forEach(['foo', 'bar', 'baz'], function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
-	.hook('hello', function(next) { console.log('Hello world!'); next() })
-	.then(function(next) {
-		// Trigger a hook then continue on
-		this.fire('hello, next);
-	})
-	.end();
-```
-
-
-.end()
-------
-The final stage in the chain, `.end()` must be called to execute the queue of actions.
-
-	end(function) // Final function to execute as `function(err)`
-
-
-While similar to `series()` / `then()` this function will always be executed *last* and be given the error if any occurred in the form `function(err)`.
-
-```javascript
-asyncChainable()
-	.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
-	.then('bar', barFunc) // Likewise barFunc()
-	.then('baz', bazFunc) // Likewise bazFunc()
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
-```
-
-In the above if fooFunc, barFunc or bazFunc call next with a first parameter that is true execution will stop and continue on passing the error to `end()`:
-
-```javascript
-asyncChainable()
-	.then('foo', fooFunc) // Assuming fooFunc calls next('This is an error')
-	.then('bar', barFunc) // Gets skipped as we have an error
-	.then('baz', bazFunc) // Gets skipped as we have an error
-	.end(console.log) // Output: 'This is an error'
-```
-
-If an error is caused in the middle of execution the result object is still available:
-
-```javascript
-asyncChainable()
-	.then('foo', fooFunc) // Assuming this calls `next()` with next(null, 'foo value')
-	.then('bar', barFunc) // Assuming this calls next('Error in bar')
-	.then('baz', bazFunc) // Gets skipped as we have an error
-	.end(console.log) // Output: 'Error in bar', {foo: 'foo value'}
-```
-
-
-.promise()
-----------
-Alternative to `end()` which returns a JS standard promise instead of using the `.end(callback)` system.
-
-```javascript
-asyncChainable()
-	.then(doSomethingOne)
-	.then(doSomethingTwo)
-	.then(doSomethingThree)
-	.promise()
-	.then(function() { // Everything went well })
-	.catch(function(err) { // Something went wrong })
-```
-
-.reset()
----------
-Clear the result buffer, releasing all results held in memory.
-
-```javascript
-asyncChainable()
-	.defer('foo', fooFunc) // Execute fooFunc() and immediately move on
-	.defer('bar', barFunc)
-	.defer('baz', bazFunc)
-	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we dont care about 'baz' yet
-	.then(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
-	.reset()
-	.defer('quz', quzFunc)
-	.end(console.log) // Output: null, {quz: 'quz value'}
-```
-
-.context()
-----------
-Set the context used by async-chainable during subsequent function calls.
-In effect this sets what `this` is for each call.
-Omitting an argument or supplying a 'falsy' value will instruct async-chainable to use its own default context object.
-
-```javascript
-asyncChainable()
-	.then({foo: fooFunc}) // `this` is async-chainables own context object
-	.context({hello: 'world'})
-	.then({bar: barFunc}) // `this` is now {hello: 'world'}
-	.context()
-	.then({baz: bazFunc}) // `this` is now async-chainables own context object again
-	.end(this) // Output: null, {foo: 'foo value', bar: 'bar value', quz: 'quz value'}
-```
-
-Note that even if the context is switched async-chainable still stores any named values in its own context for later retrieval (in the above example this is `barFunc()` returning a value even though the context has been changed to a custom object).
-
-See the [Context Section](#context) for further details on what the async-chainable context object contains.
-
 
 .set()
 ------
@@ -673,10 +650,21 @@ asyncChainable()
 ```
 
 
-.getPath()
-----------
-GetPath is the utility function used by `forEach()` to lookup deeply nested objects or arrays to iterate over.
-It is functionally similar to the Lodash `get()` function.
+.then()
+-------
+Execute a function, wait for it to complete and continue down the asyncChainable chain.
+
+This function is an alias for `series()`.
+
+This can be considered the series process twin to `then()`.
+
+```javascript
+asyncChainable()
+	.then('foo', fooFunc) // Execute and wait for fooFunc() to complete
+	.then('bar', barFunc) // Likewise barFunc()
+	.then('baz', bazFunc) // Likewise bazFunc()
+	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
+```
 
 
 Context
@@ -714,6 +702,8 @@ In addition to storing all named values the context object also provides the fol
 | `this._item`                         | Mixed          | During a forEach loop `_item` gets set to the currently iterating item value |
 | `this._key`                          | Mixed          | During a forEach loop `_key` gets set to the currently iterating array offset or object key |
 | `this._id`                           | Mixed          | During a defer call `_id` gets set to the currently defered task id      |
+| `this.fire`                          | Function       | Utility function used to manually fire hooks                             |
+| `this.hook`                          | Function       | Utility function used to manually register a hook                        |
 
 
 Each item in the `this._struct` object is composed of the following keys:
@@ -856,8 +846,3 @@ asyncChainable()
 	})
 	.end();
 ```
-
-TODO
-====
-* README: Example of .set() / .then() with something like downloading a stream of data
-* `this.next()` as a possible way to call the next handler?
