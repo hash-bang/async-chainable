@@ -551,7 +551,7 @@ function _finalize(err) {
 
 /**
 * Internal function to execute the next pending queue item
-* This is usually called after the completion of every asyncChainable._run call
+* This is usually called after the completion of every asyncChainable.run call
 * @access private
 */
 function _execute(err) {
@@ -599,7 +599,7 @@ function _execute(err) {
 
 		switch (currentExec.type) {
 			case 'parallelArray':
-				self._run(currentExec.payload.map(function(task) {
+				self.run(currentExec.payload.map(function(task) {
 					return function(next) {
 						task.call(self._options.context, next);
 					};
@@ -618,7 +618,7 @@ function _execute(err) {
 						})
 					});
 				});
-				self._run(tasks, self._options.limit, function(err) {
+				self.run(tasks, self._options.limit, function(err) {
 					currentExec.completed = true;
 					self._execute(err);
 				});
@@ -636,13 +636,13 @@ function _execute(err) {
 						});
 					});
 				});
-				self._run(tasks, self._options.limit, function(err) {
+				self.run(tasks, self._options.limit, function(err) {
 					currentExec.completed = true;
 					self._execute(err);
 				});
 				break;
 			case 'forEachArray':
-				self._run(currentExec.payload.map(function(item, iter) {
+				self.run(currentExec.payload.map(function(item, iter) {
 					self._context._item = item;
 					self._context._key = iter;
 					return function(next) {
@@ -665,7 +665,7 @@ function _execute(err) {
 						}, currentExec.payload[key], key);
 					});
 				});
-				self._run(tasks, self._options.limit, function(err) {
+				self.run(tasks, self._options.limit, function(err) {
 					currentExec.completed = true;
 					self._execute(err);
 				});
@@ -705,7 +705,7 @@ function _execute(err) {
 				// }}}
 				break;
 			case 'seriesArray':
-				self._run(currentExec.payload.map(function(task) {
+				self.run(currentExec.payload.map(function(task) {
 					return function(next) {
 						task.call(self._options.context, next);
 					};
@@ -724,7 +724,7 @@ function _execute(err) {
 						})
 					});
 				});
-				self._run(tasks, 1, function(err) {
+				self.run(tasks, 1, function(err) {
 					currentExec.completed = true;
 					self._execute(err);
 				});
@@ -742,7 +742,7 @@ function _execute(err) {
 						});
 					});
 				});
-				self._run(tasks, 1, function(err) {
+				self.run(tasks, 1, function(err) {
 					currentExec.completed = true;
 					self._execute(err);
 				});
@@ -833,18 +833,17 @@ function _execute(err) {
 };
 
 
-// _run() functionality - used to execute several functions in parallel and call a callback when completed {{{
-// NOTE: Since this function is the central bottle-neck of the application code here is designed to run as efficiently as possible
-//       This can make it rather messy and unpleasent to read in order to maximize thoughput
-
+// run() - central task runner {{{
 /**
 * Internal function to run an array of functions (usually in parallel)
+* Functions can be run in series by passing limit=1
+* NOTE: Since this function is the central bottle-neck of the application code here is designed to run as efficiently as possible. This can make it rather messy and unpleasent to read in order to maximize thoughput.
 * Series execution can be obtained by setting limit = 1
 * @param array tasks The array of tasks to execute
 * @param int limit The limiter of tasks (if limit==1 tasks are run in series, if limit>1 tasks are run in limited parallel, else tasks are run in parallel)
 * @param function callback(err) The callback to fire on finish
 */
-function _run(tasks, limit, callback) {
+function run(tasks, limit, callback) {
 	var self = this;
 	var nextTaskOffset = 0;
 	var running = 0;
@@ -967,7 +966,7 @@ function fire() {
 	}
 
 	var fireAs = arguments[0];
-	this._run(callbacks, 1, finish);
+	this.run(callbacks, 1, finish);
 
 	return this;
 };
@@ -1036,7 +1035,6 @@ var objectInstance = function() {
 	// Async-Chainable functions {{{
 	// Private {{{
 	this._execute = _execute;
-	this._run = _run;
 	this._deferCheck = _deferCheck;
 	this._deferAdd = deferAdd;
 	this._deferred = [];
@@ -1057,6 +1055,7 @@ var objectInstance = function() {
 	this.limit = setLimit;
 	this.parallel = parallel;
 	this.reset = reset;
+	this.run = run;
 	this.series = series;
 	this.getPath = getPath;
 	this.set = set;

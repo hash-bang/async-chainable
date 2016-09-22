@@ -511,6 +511,13 @@ asyncChainable()
 This allows *late binding* of variables who's content will only be examined when the chain item is executed.
 
 
+.run()
+------
+Internal callback resolver. Run is used to execute an array of callbacks then run a final callback. This function is NOT chainable, will execute immediately and is documented here as it is useful when writing plugins.
+
+	run(array, limit, callback)
+
+
 .hook()
 -------
 Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can (unlike normal chains) fire out of sequence.
