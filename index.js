@@ -16,13 +16,16 @@ function getOverload(args) {
 	var out = [];
 	while(1) {
 		var argType = typeof args[i];
-		if (argType == 'undefined') break;
-		if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Array]') { // Special case for arrays being classed as objects
+		if (argType == 'undefined') {
+			break;
+		} else if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Array]') { // Special case for arrays being classed as objects
 			argType = 'array';
 			if (args[i].length && args[i].every(function(item) {
 				return (typeof item == 'object' && Object.prototype.toString.call(item) == '[object Object]');
 			}))
 				argType = 'collection';
+		} else if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Date]') {
+			argType = 'date';
 		}
 		out.push(argType);
 		i++;
@@ -1053,6 +1056,8 @@ var objectInstance = function() {
 	this.promise = promise;
 	this.fire = fire;
 	this.forEach = forEach;
+	this.getOverload = getOverload;
+	this.getPath = getPath;
 	this.hook = hook;
 	this.limit = setLimit;
 	this.parallel = parallel;
