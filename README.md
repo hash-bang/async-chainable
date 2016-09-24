@@ -572,6 +572,24 @@ asyncChainable()
 ```
 
 
+.race()
+-------
+Run multiple functions setting the named key to the first function to return with a non-null, non-undefined value.
+If an error is thrown *before or after* the result is achived it will be returned instead.
+
+```javascript
+asyncChainable()
+	.race('myKey', [
+		fooFunc,
+		barFunc,
+		bazFunc,
+	])
+	.end(function(err) {
+		console.log('myKey =', this.myKey);
+	});
+```
+
+
 .reset()
 ---------
 Clear the result buffer, releasing all results held in memory.

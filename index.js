@@ -187,6 +187,32 @@ function parallel() {
 
 
 /**
+* Like parallel but only return the first, non-undefined, non-null result
+* @param {string} The ID to set when the first function returns a non-undefined, non-null result
+* @param {array} The functions to execute
+* @return {Object} This chainable object
+*/
+function race() {
+	var calledAs = getOverload(arguments)
+	switch (calledAs) {
+		case '':
+			// Pass
+			break;
+		case 'array': // Form: race(array) - run an array of functions anonymously
+			this._struct.push({ type: 'race', payload: arguments[0] });
+			break;
+		case 'string,array': // Form: race(string,array) - run an array of functions setting the ID to the first returned value
+			this._struct.push({ type: 'race', id: arguments[0], payload: arguments[1] });
+			break;
+		default:
+			throw new Error('Unknown call style for .parallel(): ' + calledAs);
+	}
+
+	return this;
+};
+
+
+/**
 * Run an array/object/collection though a function
 * This is similar to the async native .each() function but chainable
 */
@@ -752,6 +778,33 @@ function _execute(err) {
 					self._execute(err);
 				});
 				break;
+			case 'race':
+				var hasResult = false;
+				var hasError = false;
+				self.run(currentExec.payload.map(function(task) {
+					return function(next) {
+						task.call(self._options.context, function(err, taskResult) {
+							if (err) {
+								hasError = true
+								next(err, taskResult);
+							} else if (!hasResult && !hasError && taskResult !== null && typeof taskResult !== 'undefined') {
+								self._set(currentExec.id, taskResult); // Allocate returned value to context
+								hasResult = true;
+								next('!RACEDONE!', taskResult); // Force an error to stop the run() function
+							} else {
+								next(err, taskResult);
+							}
+						});
+					};
+				}), self._options.limit, function(err, val) {
+					currentExec.completed = true;
+
+					// Override race finish error as it was just to stop the race and not a real one
+					if (err == '!RACEDONE!') return self._execute();
+
+					self._execute(err);
+				});
+				break;
 			case 'deferArray':
 				currentExec.payload.forEach(function(task) {
 					self._deferAdd(null, task, currentExec);
@@ -1055,25 +1108,25 @@ var objectInstance = function() {
 	this.context = setContext;
 	this.defer = defer;
 	this.end = end;
-	this.promise = promise;
 	this.fire = fire;
 	this.forEach = forEach;
 	this.getOverload = getOverload;
 	this.getPath = getPath;
 	this.hook = hook;
 	this.limit = setLimit;
+	this.new = function() { return new objectInstance };
 	this.parallel = parallel;
+	this.promise = promise;
+	this.race = race;
 	this.reset = reset;
 	this.run = run;
 	this.series = series;
-	this.getPath = getPath;
-	this.set = set;
-	this._set = _set;
 	this._setRaw = _setRaw;
-	this.timeout = timeout;
-	this._timeoutHandler = _timeoutHandler;
+	this._set = _set;
+	this.set = set;
 	this.then = series;
-	this.new = function() { return new objectInstance };
+	this._timeoutHandler = _timeoutHandler;
+	this.timeout = timeout;
 	this.use = use;
 	// }}}
 
