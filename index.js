@@ -26,6 +26,8 @@ function getOverload(args) {
 				argType = 'collection';
 		} else if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Date]') {
 			argType = 'date';
+		} else if (args[i] === null) {
+			argType = 'null';
 		}
 		out.push(argType);
 		i++;
