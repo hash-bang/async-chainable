@@ -476,6 +476,8 @@ function set() {
 		case 'string,boolean': // Form: set(String <key>, Boolean <value>)
 		case 'string,array': // Form: set(String <key>, Array <value>)
 		case 'string,collection': // Form: set(String <key>, Collection <value>)
+		case 'string,date': // Form: set(String <key>, Date)
+		case 'string,null': // Form: set(String <key>, Null)
 		case 'string,object': // Form: set(String <key>, Object <value>)
 			var payload = {};
 			payload[arguments[0]] = arguments[1];
@@ -521,6 +523,8 @@ function _set() {
 		case 'string,boolean': // Form: set(String <key>, Boolean <value>)
 		case 'string,array': // Form: set(String <key>, Array <value>)
 		case 'string,collection': // Form: set(String <key>, Collection <value>)
+		case 'string,date': // Form: set(String <key>, Date)
+		case 'string,null': // Form: set(String <key>, Null)
 		case 'string,object': // Form: set(String <key>, Object <value>)
 			this._setRaw(arguments[0], arguments[1]);
 			break;
