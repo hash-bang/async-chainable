@@ -32,5 +32,8 @@
     "mocha": "^3.0.2",
     "mocha-istanbul": "^0.3.0",
     "mocha-logger": "^1.0.4"
+  },
+  "dependencies": {
+    "debug": "^2.2.0"
   }
 }
