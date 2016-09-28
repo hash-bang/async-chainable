@@ -98,44 +98,38 @@ function use(module) {
 * @return object This chainable object
 */
 function series() {
-	var calledAs = getOverload(arguments);
-	switch(calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'function': // Form: series(func)
-			this._struct.push({ type: 'seriesArray', payload: [arguments[0]] });
-			break;
-		case  'string,function': // Form: series(String <id>, func)
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('function', function(callback) {
+			self._struct.push({ type: 'seriesArray', payload: [callback] });
+		})
+		.ifForm('string function', function(id, callback) { 
 			var payload = {};
-			payload[arguments[0]] = arguments[1];
-			this._struct.push({ type: 'seriesObject', payload: payload});
-			break;
-		case 'array': // Form: series(Array <funcs>)
-			this._struct.push({ type: 'seriesArray', payload: arguments[0] });
-			break;
-		case 'object': // Form: series(Object <funcs>)
-			this._struct.push({ type: 'seriesObject', payload: arguments[0] });
-			break;
-		case 'collection': // Form: series(Collection <funcs>)
-			this._struct.push({ type: 'seriesCollection', payload: arguments[0] });
-			break;
-
+			payload[id] = callback;
+			self._struct.push({ type: 'seriesObject', payload: payload});
+		})
+		.ifForm('array', function(tasks) {
+			self._struct.push({ type: 'seriesArray', payload: tasks });
+		})
+		.ifForm('object', function(tasks) {
+			self._struct.push({ type: 'seriesObject', payload: tasks });
+		})
 		// Async library compatibility {{{
-		case 'array,function':
-			this._struct.push({ type: 'seriesArray', payload: arguments[0] });
-			this.end(arguments[1]);
-			break;
-		case 'object,function':
-			this._struct.push({ type: 'seriesObject', payload: arguments[0] });
-			this.end(arguments[1]);
-			break;
+		.ifForm('array function', function(tasks, callback) {
+			self._struct.push({ type: 'seriesArray', payload: tasks });
+			self.end(callback);
+		})
+		.ifForm('object function', function(tasks, callback) {
+			self._struct.push({ type: 'seriesObject', payload: tasks });
+			self.end(callback);
+		})
 		// }}}
-		default:
-			throw new Error('Unknown call style for .series(): ' + calledAs);
-	}
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .series(): ' + form);
+		});
 
-	return this;
+	return self;
 };
 
 
@@ -145,44 +139,38 @@ function series() {
 * @return object This chainable object
 */
 function parallel() {
-	var calledAs = getOverload(arguments)
-	switch (calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'function': // Form: parallel(func)
-			this._struct.push({ type: 'parallelArray', payload: [arguments[0]] });
-			break;
-		case 'string,function': // Form: parallel(String <id>, func)
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('function', function(callback) {
+			self._struct.push({ type: 'parallelArray', payload: [callback] });
+		})
+		.ifForm('string function', function(id, callback) {
 			var payload = {};
-			payload[arguments[0]] = arguments[1];
-			this._struct.push({ type: 'parallelArray', payload: payload });
-			break;
-		case 'array': // Form: parallel(Array <funcs>)
-			this._struct.push({ type: 'parallelArray', payload: arguments[0] });
-			break;
-		case 'object': // Form: parallel(Object <funcs>)
-			this._struct.push({ type: 'parallelObject', payload: arguments[0] });
-			break;
-		case 'collection': // Form: parallel(Collection <funcs>)
-			this._struct.push({ type: 'parallelCollection', payload: arguments[0] });
-			break;
-
+			payload[id] = callback;
+			self._struct.push({ type: 'parallelArray', payload: payload });
+		})
+		.ifForm('array', function(tasks) {
+			self._struct.push({ type: 'parallelArray', payload: tasks });
+		})
+		.ifForm('object', function(tasks) {
+			self._struct.push({ type: 'parallelObject', payload: tasks });
+		})
 		// Async library compatibility {{{
-		case 'array,function':
-			this._struct.push({ type: 'parallelArray', payload: arguments[0] });
-			this.end(arguments[1]);
-			break;
-		case 'object,function':
-			this._struct.push({ type: 'parallelObject', payload: arguments[0] });
-			this.end(arguments[1]);
-			break;
+		.ifForm('array function', function(tasks, callback) {
+			self._struct.push({ type: 'parallelArray', payload: tasks });
+			this.end(callback);
+		})
+		.ifForm('object function', function(tasks, callback) {
+			self._struct.push({ type: 'parallelObject', payload: tasks });
+			self.end(callback);
+		})
 		// }}}
-		default:
-			throw new Error('Unknown call style for .parallel(): ' + calledAs);
-	}
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .parallel(): ' + form);
+		})
 
-	return this;
+	return self;
 };
 
 
@@ -193,22 +181,21 @@ function parallel() {
 * @return {Object} This chainable object
 */
 function race() {
-	var calledAs = getOverload(arguments)
-	switch (calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'array': // Form: race(array) - run an array of functions anonymously
-			this._struct.push({ type: 'race', payload: arguments[0] });
-			break;
-		case 'string,array': // Form: race(string,array) - run an array of functions setting the ID to the first returned value
-			this._struct.push({ type: 'race', id: arguments[0], payload: arguments[1] });
-			break;
-		default:
-			throw new Error('Unknown call style for .parallel(): ' + calledAs);
-	}
+	var self = this;
 
-	return this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('array', function(tasks) {
+			self._struct.push({ type: 'race', payload: tasks });
+		})
+		.ifForm('string array', function(id, tasks) {
+			self._struct.push({ type: 'race', id: arguments[0], payload: arguments[1] });
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .parallel(): ' + form);
+		})
+
+	return self;
 };
 
 
@@ -217,26 +204,24 @@ function race() {
 * This is similar to the async native .each() function but chainable
 */
 function forEach() {
-	var calledAs = getOverload(arguments)
-	switch (calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'collection,function': // Form: forEach(Collection func)
-		case 'array,function': // Form: forEach(Array, func)
-			this._struct.push({ type: 'forEachArray', payload: arguments[0], callback: arguments[1] });
-			break;
-		case 'object,function': // Form: forEach(Object, func)
-			this._struct.push({ type: 'forEachObject', payload: arguments[0], callback: arguments[1] });
-			break;
-		case 'string,function': // Form: forEach(String <set lookup>, func)
-			this._struct.push({ type: 'forEachLateBound', payload: arguments[0], callback: arguments[1] });
-			break;
-		default:
-			throw new Error('Unknown call style for .forEach(): ' + calledAs);
-	}
+	var self = this;
 
-	return this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('array function', function(tasks, callback) {
+			self._struct.push({ type: 'forEachArray', payload: tasks, callback: callback });
+		})
+		.ifForm('object function', function(tasks, callback) {
+			self._struct.push({ type: 'forEachObject', payload: tasks, callback: callback });
+		})
+		.ifForm('string function', function(tasks, callback) {
+			self._struct.push({ type: 'forEachLateBound', payload: tasks, callback: callback });
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .forEach(): ' + calledAs);
+		});
+
+	return self;
 }
 
 
@@ -315,51 +300,46 @@ function _deferCheck() {
 * @return object This chainable object
 */
 function defer() {
-	var calledAs = getOverload(arguments);
-	switch (calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'function': // Form: defer(func)
-			this._struct.push({ type: 'deferArray', payload: [arguments[0]] });
-			break;
-		case 'string,function': // Form: defer(String <id>, func)
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('function', function(callback) {
+			self._struct.push({ type: 'deferArray', payload: [callback] });
+		})
+		.ifForm('string function', function(id, callback) {
 			var payload = {};
-			payload[arguments[0]] = arguments[1];
-			this._struct.push({ type: 'deferObject', payload: payload });
-			break;
-		case 'array': // Form: defer(Array <funcs>)
-			this._struct.push({ type: 'deferArray', payload: arguments[0] });
-			break;
-		case 'object': // Form: defer(Object <funcs>)
-			this._struct.push({ type: 'deferObject', payload: arguments[0] });
-			break;
-		case 'collection': // Form defer(Collection <funcs>)
-			this._struct.push({ type: 'deferCollection', payload: arguments[0] });
-			break;
-		case 'array,function': // Form: defer(Array <prereqs>, func)
-			this._struct.push({ type: 'deferArray', prereq: arguments[0], payload: [arguments[1]] });
-			break;
-		case 'string,string,function': // Form: defer(String <prereq>, String <name>, func)
+			payload[id] = callback;
+			self._struct.push({ type: 'deferObject', payload: payload });
+		})
+		.ifForm('array', function(tasks) {
+			self._struct.push({ type: 'deferArray', payload: tasks });
+		})
+		.ifForm('object', function(tasks) {
+			self._struct.push({ type: 'deferObject', payload: tasks });
+		})
+		.ifForm('array function', function(preReqs, callback) {
+			self._struct.push({ type: 'deferArray', prereq: preReqs, payload: [callback] });
+		})
+		.ifForm('string string function', function(preReq, id, callback) {
 			var payload = {};
-			payload[arguments[1]] = arguments[2];
-			this._struct.push({ type: 'deferObject', prereq: [arguments[0]], payload: payload });
-			break;
-		case 'array,string,function': //Form: defer(Array <prereqs>, String <id>, func)
+			payload[id] = callback;
+			self._struct.push({ type: 'deferObject', prereq: [preReq], payload: payload });
+		})
+		.ifForm('array string function', function(preReqs, id, callback) {
 			var payload = {};
-			payload[arguments[1]] = arguments[2];
-			this._struct.push({ type: 'deferObject', prereq: arguments[0], payload: payload });
-			break;
-		case 'string,array,function': //Form: defer(String <id>, Array <prereqs>, func) - gulp varient of above
+			payload[id] = callback;
+			self._struct.push({ type: 'deferObject', prereq: preReqs, payload: payload });
+		})
+		.ifForm('string array function', function(id, preReqs, callback) {
 			var payload = {};
-			payload[arguments[0]] = arguments[2];
-			this._struct.push({ type: 'deferObject', prereq: arguments[1], payload: payload });
-			break;
-		default:
-			throw new Error('Unknown call style for .defer():' + calledAs);
-	}
+			payload[id] = callback;
+			self._struct.push({ type: 'deferObject', prereq: preReqs, payload: payload });
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .defer():' + form);
+		});
 
-	return this;
+	return self;
 };
 
 
@@ -372,24 +352,25 @@ function defer() {
 function await() {
 	var payload = [];
 
-	// Slurp all args into payload {{{
-	var args = arguments;
-	getOverload(arguments).split(',').forEach(function(type, offset) {
-		switch (type) {
-			case '': // Blank arguments - do nothing
-				// Pass
-				break;
-			case 'string':
-				payload.push(args[offset]);
-				break;
-			case 'array':
-				payload.concat(args[offset]);
-				break;
-			default:
-				throw new Error('Unknown argument type passed to .await(): ' + type);
-		}
-	});
-	// }}}
+	// Slurp all args into payload
+	argy(arguments)
+		.getForm()
+		.split(',')
+		.forEach(function(type, offset) {
+			switch (type) {
+				case '': // Blank arguments - do nothing
+					// Pass
+					break;
+				case 'string':
+					payload.push(args[offset]);
+					break;
+				case 'array':
+					payload.concat(args[offset]);
+					break;
+				default:
+					throw new Error('Unknown argument type passed to .await(): ' + type);
+			}
+		});
 
 	this._struct.push({ type: 'await', payload: payload });
 
@@ -399,26 +380,27 @@ function await() {
 
 /**
 * Queue up a timeout setter
-* @param int|function|false Either a number (time in ms) of the timeout, a function to set the timeout handler to or falsy to disable
-* @return object This chainable object
+* @param {number|function|false} Either a number (time in ms) of the timeout, a function to set the timeout handler to or falsy to disable
+* @return {Object} This chainable object
 */
 function timeout(newTimeout) {
-	var calledAs = getOverload(arguments);
-	switch(calledAs) {
-		case '':
-			this._struct.push({ type: 'timeout', payload: false });
-			break;
-		case 'boolean': // Form: timeout(Boolean) - Set whether the timeout is enabled (only false is accepted)
-			if (newTimeout) throw new Error('When calling .timeout(Boolean) only False is accepted to disable the timeout');
-			break;
-		case 'function': // Form: timeout(Function)
-		case 'number': // Form: timeout(Number)
-			this._struct.push({ type: 'timeout', payload: newTimeout });
-			break;
-		default:
-			throw new Error('Unknown call style for .timeout():' + calledAs);
-	}
-	return this;
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {
+			self._struct.push({ type: 'timeout', payload: false });
+		})
+		.ifForm('boolean', function(setTimeout) {
+			if (setTimeout) throw new Error('When calling .timeout(Boolean) only False is accepted to disable the timeout');
+			self._struct.push({ type: 'timeout', payload: false });
+		})
+		.ifForm(['function', 'number'], function(value) {
+			self._struct.push({ type: 'timeout', payload: newTimeout });
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .timeout():' + form);
+		});
+
+	return self;
 }
 
 
@@ -466,42 +448,35 @@ function setContext(newContext) {
 * @return object This chainable object
 */
 function set() {
-	var calledAs = getOverload(arguments);
-	switch(calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'string,string': // Form: set(String <key>, String <value>)
-		case 'string,number': // Form: set(String <key>, Number <value>)
-		case 'string,boolean': // Form: set(String <key>, Boolean <value>)
-		case 'string,array': // Form: set(String <key>, Array <value>)
-		case 'string,collection': // Form: set(String <key>, Collection <value>)
-		case 'string,date': // Form: set(String <key>, Date)
-		case 'string,null': // Form: set(String <key>, Null)
-		case 'string,object': // Form: set(String <key>, Object <value>)
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('string scalar|array|object|date', function(id, value) {
 			var payload = {};
-			payload[arguments[0]] = arguments[1];
-			this._struct.push({ type: 'set', payload: payload });
-			break;
-		case 'object': // Form: set(Object)
-			this._struct.push({ type: 'set', payload: arguments[0] });
-			break;
-		case 'function': // Form: set(func) -> series(func)
-			this._struct.push({ type: 'seriesArray', payload: [arguments[0]] });
-			break;
-		case  'string,function': // Form: set(String, func) -> series(String <id>, func)
+			payload[id] = value;
+			self._struct.push({ type: 'set', payload: payload });
+		})
+		.ifForm('object', function(obj) {
+			self._struct.push({ type: 'set', payload: obj });
+		})
+		.ifForm('function', function(callback) {
+			self._struct.push({ type: 'seriesArray', payload: [callback] });
+		})
+		.ifForm('string function', function(id, callback) {
 			var payload = {};
-			payload[arguments[0]] = arguments[1];
-			this._struct.push({ type: 'seriesObject', payload: payload});
-			break;
-		case 'string': // Set to undefined
-			this._setRaw(arguments[0], undefined);
-			break;
-		default:
-			throw new Error('Unknown call style for .set():' + calledAs);
-	}
+			payload[id] = callback;
+			self._struct.push({ type: 'seriesObject', payload: payload});
+		})
+		.ifForm('string', function(id) {
+			var payload = {};
+			payload[id] = undefined;
+			self._struct.push({ type: 'set', payload: payload });
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .set():' + form);
+		});
 
-	return this;
+	return self;
 };
 
 
