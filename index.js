@@ -1,4 +1,4 @@
-var argy = require('/home/mc/Dropbox/Projects/Node/argy');
+var argy = require('argy');
 var debug = require('debug')('async-chainable');
 
 // Utility functions {{{

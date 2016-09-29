@@ -34,7 +34,7 @@
     "mocha-logger": "^1.0.4"
   },
   "dependencies": {
-    "argy": "^1.0.0",
+    "argy": "^1.1.0",
     "debug": "^2.2.0"
   }
 }
