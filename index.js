@@ -99,7 +99,7 @@ function parallel() {
 		// Async library compatibility {{{
 		.ifForm('array function', function(tasks, callback) {
 			self._struct.push({ type: 'parallelArray', payload: tasks });
-			this.end(callback);
+			self.end(callback);
 		})
 		.ifForm('object function', function(tasks, callback) {
 			self._struct.push({ type: 'parallelObject', payload: tasks });
@@ -520,10 +520,10 @@ function _execute(err) {
 		// Skip step when function supports skipping if the argument is empty {{{
 		if (
 			[
-				'parallelArray', 'parallelObject', 'parallelCollection',
+				'parallelArray', 'parallelObject',
 				'forEachArray', 'forEachObject',
-				'seriesArray', 'seriesObject', 'seriesCollection',
-				'deferArray', 'deferObject', 'deferCollection',
+				'seriesArray', 'seriesObject',
+				'deferArray', 'deferObject',
 				'set'
 			].indexOf(currentExec.type) > -1 &&
 			(
@@ -557,24 +557,6 @@ function _execute(err) {
 							self._set(key, value); // Allocate returned value to context
 							next(err);
 						})
-					});
-				});
-				self.run(tasks, self._options.limit, function(err) {
-					currentExec.completed = true;
-					self._execute(err);
-				});
-				break;
-			case 'parallelCollection':
-				var tasks = [];
-				currentExec.payload.forEach(function(task) {
-					Object.keys(task).forEach(function(key) {
-						tasks.push(function(next, err) {
-							if (typeof task[key] != 'function') throw new Error('Collection item for parallel exec is not a function', currentExec.payload);
-							task[key].call(self._options.context, function(err, value) {
-								self._set(key, value); // Allocate returned value to context
-								next(err);
-							})
-						});
 					});
 				});
 				self.run(tasks, self._options.limit, function(err) {
@@ -665,24 +647,6 @@ function _execute(err) {
 					self._execute(err);
 				});
 				break;
-			case 'seriesCollection':
-				var tasks = [];
-				currentExec.payload.forEach(function(task) {
-					Object.keys(task).forEach(function(key) {
-						tasks.push(function(next, err) {
-							if (typeof task[key] != 'function') throw new Error('Collection item for series exec is not a function', currentExec.payload);
-							task[key].call(self._options.context, function(err, value) {
-								self._set(key, value); // Allocate returned value to context
-								next(err);
-							})
-						});
-					});
-				});
-				self.run(tasks, 1, function(err) {
-					currentExec.completed = true;
-					self._execute(err);
-				});
-				break;
 			case 'race':
 				var hasResult = false;
 				var hasError = false;
@@ -722,14 +686,6 @@ function _execute(err) {
 					self._deferAdd(key, currentExec.payload[key], currentExec);
 				});
 
-				redo = true;
-				break;
-			case 'deferCollection':
-				currentExec.payload.forEach(function(task) {
-					Object.keys(task).forEach(function(key) {
-						self._deferAdd(key, task[key], currentExec);
-					});
-				});
 				redo = true;
 				break;
 			case 'await': // Await can operate in two modes, either payload=[] (examine all) else (examine specific keys)
