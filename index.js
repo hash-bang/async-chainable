@@ -218,7 +218,7 @@ function forEach() {
 			self._struct.push({ type: 'forEachLateBound', payload: tasks, callback: callback });
 		})
 		.ifFormElse(function(form) {
-			throw new Error('Unknown call style for .forEach(): ' + calledAs);
+			throw new Error('Unknown call style for .forEach(): ' + form);
 		});
 
 	return self;
@@ -451,7 +451,7 @@ function set() {
 	var self = this;
 	argy(arguments)
 		.ifForm('', function() {})
-		.ifForm('string scalar|array|object|date', function(id, value) {
+		.ifForm('string scalar|array|object|date|null', function(id, value) {
 			var payload = {};
 			payload[id] = value;
 			self._struct.push({ type: 'set', payload: payload });
@@ -467,7 +467,7 @@ function set() {
 			payload[id] = callback;
 			self._struct.push({ type: 'seriesObject', payload: payload});
 		})
-		.ifForm('string', function(id) {
+		.ifForm(['string', 'string undefined'], function(id) {
 			var payload = {};
 			payload[id] = undefined;
 			self._struct.push({ type: 'set', payload: payload });
@@ -488,39 +488,30 @@ function set() {
 * @see _setRaw()
 */
 function _set() {
-	var calledAs = getOverload(arguments);
-	switch(calledAs) {
-		case '':
-			// Pass
-			break;
-		case 'string,string': // Form: set(String <key>, String <value>)
-		case 'string,number': // Form: set(String <key>, Number <value>)
-		case 'string,boolean': // Form: set(String <key>, Boolean <value>)
-		case 'string,array': // Form: set(String <key>, Array <value>)
-		case 'string,collection': // Form: set(String <key>, Collection <value>)
-		case 'string,date': // Form: set(String <key>, Date)
-		case 'string,null': // Form: set(String <key>, Null)
-		case 'string,object': // Form: set(String <key>, Object <value>)
-			this._setRaw(arguments[0], arguments[1]);
-			break;
-		case 'object': // Form: set(Object)
-			for (var key in arguments[0])
-				this._setRaw(key, arguments[0][key]);
-			break;
-		case  'string,function': // Form: set(String, func) -> series(String <id>, func)
-			this._setRaw(arguments[0], arguments[1].call(this));
-			break;
-		case 'function': // Form: _set(func) // Expect func to return something which is then processed to _set
-			this._set(arguments[1].call(this));
-			break;
-		case 'string': // Set to undefined
-			this._setRaw(arguments[0], undefined);
-			break;
-		default:
-			throw new Error('Unknown call style for .set():' + calledAs);
-	}
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('string scalar|array|object|date|null', function(id, value) {
+			self._setRaw(id, value);
+		})
+		.ifForm('object', function(obj) {
+			for (var key in obj)
+				self._setRaw(key, obj[key]);
+		})
+		.ifForm('string function', function(id, callback) {
+			self._setRaw(id, callback.call(this));
+		})
+		.ifForm('function', function(callback) { // Expect func to return something which is then processed via _set
+			self._set(callback.call(this));
+		})
+		.ifForm(['string', 'string undefined'], function(id) {
+			self._setRaw(id, undefined);
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .set():' + form);
+		});
 
-	return this;
+	return self;
 }
 
 
@@ -697,17 +688,12 @@ function _execute(err) {
 				}
 
 				// Replace own exec array with actual type of payload now we know what it is {{{
-				var overloadType = getOverload([resolvedPayload]);
-				switch (overloadType) {
-					case 'collection':
-					case 'array':
-						currentExec.type = 'forEachArray';
-						break;
-					case 'object':
-						currentExec.type = 'forEachObject';
-						break;
-					default:
-						throw new Error('Cannot perform forEach over unknown object type: ' + overloadType);
+				if (argy.isType(resolvedPayload, 'array')) {
+					currentExec.type = 'forEachArray';
+				} else if (argy.isType(resolvedPayload, 'object')) {
+					currentExec.type = 'forEachObject';
+				} else {
+					throw new Error('Cannot perform forEach over unknown object type: ' + argy.getType(resolvedPayload));
 				}
 				currentExec.payload = resolvedPayload;
 				self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
@@ -958,27 +944,24 @@ function reset() {
 * @return {Object} This chainable object
 */
 function hook() {
-	var calledAs = getOverload(arguments);
-	switch (calledAs) {
-		case '': // No functions passed - do nothing
-			break;
-		case 'string,function': // Form: hook(string, func) -> Attach a function to a named hook
-			if (!this._hooks[arguments[0]]) this._hooks[arguments[0]] = [];
-			this._hooks[arguments[0]].push(arguments[1]);
-			break;
-		case 'array,function': // Form: hook(array, func) -> Attach to many hooks
-			var self = this;
-			var callback = arguments[1];
-			arguments[0].forEach(function(hook) {
+	var self = this;
+	argy(arguments)
+		.ifForm('', function() {})
+		.ifForm('string function', function(id, callback) { // Attach to one hook
+			if (!self._hooks[id]) self._hooks[id] = [];
+			self._hooks[id].push(callback);
+		})
+		.ifForm('array function', function(ids, callback) { // Attach to many hooks
+			ids.forEach(function(hook) {
 				if (!self._hooks[hook]) self._hooks[hook] = [];
 				self._hooks[hook].push(callback);
 			});
-			break;
-		default:
-			throw new Error('Unknown call style for .on(): ' + calledAs);
-	}
+		})
+		.ifFormElse(function(form) {
+			throw new Error('Unknown call style for .on(): ' + form);
+		});
 
-	return this;
+	return self;
 };
 
 /**
@@ -988,27 +971,11 @@ function hook() {
 * @param {function} [callback] Optional callback to execute on completion
 * @return {Object} this chainable object
 */
-function fire() {
-	var calledAs = getOverload(arguments);
-	var callbacks = [];
-	var finish;
-	switch (calledAs) {
-		case '': // No functions passed - do nothing
-			break;
-		case 'string': // Form: on(string) -> run hook (no callback)
-		case 'string,function': // Form: on(string, func) -> run hook and fire callback
-			if (this._hooks[arguments[0]]) callbacks = this._hooks[arguments[0]];
-			finish = arguments[1];
-			break;
-		default:
-			throw new Error('Unknown call style for .fire(): ' + calledAs);
-	}
-
-	var fireAs = arguments[0];
-	this.run(callbacks, 1, finish);
+var fire = argy('string [function]', function fire(hook, callback) {
+	this.run(this._hooks[hook] || [], 1, callback);
 
 	return this;
-};
+});
 
 
 /**
@@ -1017,22 +984,16 @@ function fire() {
 * @param {function} [final] Optional final function to run. This is passed the optional error state of the chain
 * @return {Object} This chainable object
 */
-function end() { 
-	var calledAs = getOverload(arguments);
-	switch (calledAs) {
-		case '': // No functions passed - do nothing
-			this._struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
-			break;
-		case 'function': // Form: end(func) -> redirect as if called with series(func)
-			this._struct.push({ type: 'end', payload: arguments[0] });
-			break;
-		default:
-			throw new Error('Unknown call style for .end(): ' + calledAs);
+var end = argy('[function]', function end(callback) { 
+	if (!callback) {
+		this._struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
+	} else {
+		this._struct.push({ type: 'end', payload: callback });
 	}
 
 	this._execute();
 	return this;
-};
+});
 
 /**
 * Alternative to end() which returns a JS standard Promise
