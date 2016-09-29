@@ -1,67 +1,7 @@
+var argy = require('/home/mc/Dropbox/Projects/Node/argy');
 var debug = require('debug')('async-chainable');
 
-/**
-* Examines an argument stack and returns all passed arguments as a CSV
-* e.g.
-*	function test () { getOverload(arguments) };
-*	test('hello', 'world') // 'string,string'
-*	test(function() {}, 1) // 'function,number'
-*	test('hello', 123, {foo: 'bar'}, ['baz'], [{quz: 'quzValue'}, {quuz: 'quuzValue'}]) // 'string,number,object,array,collection'
-*
-* @param object args The special JavaScript 'arguments' object
-* @return string CSV of all passed arguments
-*/
-function getOverload(args) {
-	var i = 0;
-	var out = [];
-	while(1) {
-		var argType = typeof args[i];
-		if (argType == 'undefined') {
-			break;
-		} else if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Array]') { // Special case for arrays being classed as objects
-			argType = 'array';
-			if (args[i].length && args[i].every(function(item) {
-				return (typeof item == 'object' && Object.prototype.toString.call(item) == '[object Object]');
-			}))
-				argType = 'collection';
-		} else if (argType == 'object' && Object.prototype.toString.call(args[i]) == '[object Date]') {
-			argType = 'date';
-		} else if (args[i] === null) {
-			argType = 'null';
-		}
-		out.push(argType);
-		i++;
-	}
-	return out.toString();
-};
-
 // Utility functions {{{
-/**
-* Return true if a variable is an array
-* @param mixed thing The varable to examine
-* @return bool True if the item is a classic JS array and not an object
-*/
-function isArray(thing) {
-	return (
-		typeof thing == 'object' &&
-		Object.prototype.toString.call(thing) == '[object Array]'
-	);
-}
-
-
-/**
-* Return true if a variable is an object
-* @param mixed thing The varable to examine
-* @return bool True if the item is a classic JS array and not an object
-*/
-function isObject(thing) {
-	return (
-		typeof thing == 'object' &&
-		Object.prototype.toString.call(thing) != '[object Array]'
-	);
-}
-
-
 /**
 * Try and return a value from a deeply nested object by a dotted path
 * This is functionally the same as lodash's own _.get() function
@@ -588,8 +528,8 @@ function _execute(err) {
 			].indexOf(currentExec.type) > -1 &&
 			(
 				!currentExec.payload || // Not set OR
-				(isArray(currentExec.payload) && !currentExec.payload.length) || // An empty array
-				(isObject(currentExec.payload) && !Object.keys(currentExec.payload).length) // An empty object
+				(argy.isType(currentExec.payload, 'array') && !currentExec.payload.length) || // An empty array
+				(argy.isType(currentExec.payload, 'object') && !Object.keys(currentExec.payload).length) // An empty object
 			)
 		) {
 			currentExec.completed = true;
@@ -1040,7 +980,6 @@ var objectInstance = function() {
 	this._deferred = [];
 	this._deferredRunning = 0;
 	this._finalize = _finalize;
-	this._getOverload = getOverload; // So this function is accessible by plugins
 	this._plugins = _plugins;
 	// }}}
 
@@ -1050,7 +989,6 @@ var objectInstance = function() {
 	this.end = end;
 	this.fire = fire;
 	this.forEach = forEach;
-	this.getOverload = getOverload;
 	this.getPath = getPath;
 	this.hook = hook;
 	this.limit = setLimit;
