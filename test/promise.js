@@ -8,13 +8,13 @@ describe('async-chainable.promise()', function() {
 		output = [];
 
 		asyncChainable()
-			.parallel([
-				{fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)}},
-				{barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)}},
-				{bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)}},
-			])
+			.parallel({
+				fooKey: function(next) { setTimeout(function(){ output.push('foo'); next(null, 'fooValue') }, 10)},
+				barKey: function(next) { setTimeout(function(){ output.push('bar'); next(null, 'barValue') }, 0)},
+				bazKey: function(next) { setTimeout(function(){ output.push('baz'); next(null, 'bazValue') }, 5)},
+			})
 			.promise()
-			.then(function() {
+			.then(function() { // <- NOTE: This is a Promise.then() not an asyncChainable.then()
 				done();
 			})
 			.catch(function(err) {
