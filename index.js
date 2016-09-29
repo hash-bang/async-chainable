@@ -5,9 +5,9 @@ var debug = require('debug')('async-chainable');
 /**
 * Try and return a value from a deeply nested object by a dotted path
 * This is functionally the same as lodash's own _.get() function
-* @param {mixed} obj The array or object to traverse
+* @param {*} obj The array or object to traverse
 * @param {string} path The path to find
-* @param {mixed} [defaultValue=undefined] The value to return if nothing is found
+* @param {*} [defaultValue=undefined] The value to return if nothing is found
 */
 function getPath(obj, path, defaultValue) {
 	var pointer = obj;
@@ -34,8 +34,8 @@ function use(module) {
 
 /**
 * Queue up a function(s) to execute in series
-* @param array,object,function The function(s) to execute
-* @return object This chainable object
+* @param {array|Object|function} The function(s) to execute
+* @return {Object} This chainable object
 */
 function series() {
 	var self = this;
@@ -75,8 +75,8 @@ function series() {
 
 /**
 * Queue up a function(s) to execute in parallel
-* @param array,object,function The function(s) to execute
-* @return object This chainable object
+* @param {array|Object|function} The function(s) to execute
+* @return {Object} This chainable object
 */
 function parallel() {
 	var self = this;
@@ -140,7 +140,7 @@ function race() {
 
 
 /**
-* Run an array/object/collection though a function
+* Run an array/object though a function
 * This is similar to the async native .each() function but chainable
 */
 function forEach() {
@@ -168,7 +168,7 @@ function forEach() {
 // Defer functionality - Here be dragons! {{{
 /**
 * Collection of items that have been deferred
-* @type collection {payload: function, id: null|String, prereq: [dep1, dep2...]}
+* @type {array} {payload: function, id: null|String, prereq: [dep1, dep2...]}
 * @access private
 */
 function deferAdd(id, task, parentChain) {
@@ -236,8 +236,8 @@ function _deferCheck() {
 
 /**
 * Queue up a function(s) to execute as deferred - i.e. dont stop to wait for it
-* @param array,object,function The function(s) to execute as a defer
-* @return object This chainable object
+* @param {array|Object|function} The function(s) to execute as a defer
+* @return {Object} This chainable object
 */
 function defer() {
 	var self = this;
@@ -286,8 +286,8 @@ function defer() {
 /**
 * Queue up an await point
 * This stops the execution queue until its satisfied that dependencies have been resolved
-* @param array,... The dependencies to check resolution of. If omitted all are checked
-* @return object This chainable object
+* @param {array,...} The dependencies to check resolution of. If omitted all are checked
+* @return {Object} This chainable object
 */
 function await() {
 	var payload = [];
@@ -361,8 +361,8 @@ function _timeoutHandler() {
 
 /**
 * Queue up a limit setter
-* @param int|null|false Either the number of defer processes that are allowed to execute simultaniously or falsy values to disable
-* @return object This chainable object
+* @param {number|null|false} Either the number of defer processes that are allowed to execute simultaniously or falsy values to disable
+* @return {Object} This chainable object
 */
 function setLimit(setLimit) {
 	this._struct.push({ type: 'limit', payload: setLimit });
@@ -372,8 +372,8 @@ function setLimit(setLimit) {
 
 /**
 * Queue up a context setter
-* @param object newContext The new context to pass to all subsequent functions via `this`
-* @return object This chainable object
+* @param {Object} newContext The new context to pass to all subsequent functions via `this`
+* @return {Object} This chainable object
 */
 function setContext(newContext) {
 	this._struct.push({ type: 'context', payload: newContext });
@@ -383,9 +383,9 @@ function setContext(newContext) {
 
 /**
 * Queue up a varable setter (i.e. set a hash of variables in context)
-* @param string The named key to set
-* @param mixed The value to set
-* @return object This chainable object
+* @param {string} The named key to set
+* @param {*} The value to set
+* @return {Object} This chainable object
 */
 function set() {
 	var self = this;
@@ -459,8 +459,8 @@ function _set() {
 * Actual raw value setter
 * This function is the internal version of _set which takes exactly two values, the key and the value to set
 * Override this function if some alternative _context platform is required
-* @param string key The key within _context to set the value of
-* @param mixed value The value within _context[key] to set the value of
+* @param {string} key The key within _context to set the value of
+* @param {*} value The value within _context[key] to set the value of
 * @access private
 */
 function _setRaw(key, value) {
@@ -802,9 +802,9 @@ function _execute(err) {
 * Functions can be run in series by passing limit=1
 * NOTE: Since this function is the central bottle-neck of the application code here is designed to run as efficiently as possible. This can make it rather messy and unpleasent to read in order to maximize thoughput.
 * Series execution can be obtained by setting limit = 1
-* @param array tasks The array of tasks to execute
-* @param int limit The limiter of tasks (if limit==1 tasks are run in series, if limit>1 tasks are run in limited parallel, else tasks are run in parallel)
-* @param function callback(err) The callback to fire on finish
+* @param {array} tasks The array of tasks to execute
+* @param {number} limit The limiter of tasks (if limit==1 tasks are run in series, if limit>1 tasks are run in limited parallel, else tasks are run in parallel)
+* @param {function} callback(err) The callback to fire on finish
 */
 function run(tasks, limit, callback) {
 	var self = this;
@@ -858,7 +858,7 @@ function run(tasks, limit, callback) {
 
 /**
 * Reset all state variables and return the object into a pristine condition
-* @return object This chainable object
+* @return {Object} This chainable object
 */
 function reset() {
 	this._struct = [];
