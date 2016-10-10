@@ -135,6 +135,7 @@ Plugins
 =======
 There are a number of async-chainable plugins available which can extend the default functionality of the module:
 
+* [async-chainable-cartesian](https://github.com/hash-bang/async-chainable-cartesian) - Compare large numbers of records against one another
 * [async-chainable-compat](https://github.com/hash-bang/async-chainable-compat) - [Async](https://www.npmjs.com/package/async) compatibility layer
 * [async-chainable-exec](https://github.com/hash-bang/async-chainable-exec) - External program support
 * [async-chainable-flush](https://github.com/hash-bang/async-chainable-flush) - Wait for streams to flush before continuing
