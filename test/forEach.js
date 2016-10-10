@@ -1,6 +1,53 @@
 var expect = require('chai').expect;
 var asyncChainable = require('../index');
 
+describe('async-chainable.forEach() - range style (0 => max)', function() {
+	var output;
+
+	before(function(done) {
+		output = [];
+
+		asyncChainable()
+			.forEach(2, function(next, item) { output.push(item); next(); })
+			.end(function(err) {
+				expect(err).to.be.not.ok;
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(3);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.be.deep.equal([0,1,2]);
+	});
+});
+
+describe('async-chainable.forEach() - range style (min => max)', function() {
+	var output;
+
+	before(function(done) {
+		output = [];
+
+		asyncChainable()
+			.forEach(1, 5, function(next, item) { output.push(item); next(); })
+			.end(function(err) {
+				expect(err).to.be.not.ok;
+				done();
+			});
+	});
+
+	it('should have the correct number of output elements', function() {
+		expect(output).to.have.length(5);
+	});
+	
+	it('contain the expected output', function() {
+		expect(output).to.be.deep.equal([1,2,3,4,5]);
+	});
+});
+
+
 describe('async-chainable.forEach() - array style', function() {
 	var output;
 

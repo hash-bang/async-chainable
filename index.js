@@ -157,6 +157,12 @@ function forEach() {
 		.ifForm('string function', function(tasks, callback) {
 			self._struct.push({ type: 'forEachLateBound', payload: tasks, callback: callback });
 		})
+		.ifForm('number function', function(max, callback) {
+			self._struct.push({ type: 'forEachRange', min: 0, max: max, callback: callback });
+		})
+		.ifForm('number number function', function(min, max, callback) {
+			self._struct.push({ type: 'forEachRange', min: min, max: max, callback: callback });
+		})
 		.ifFormElse(function(form) {
 			throw new Error('Unknown call style for .forEach(): ' + form);
 		});
@@ -560,6 +566,18 @@ function _execute(err) {
 					});
 				});
 				self.run(tasks, self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._execute(err);
+				});
+				break;
+			case 'forEachRange':
+				self.run(Array(currentExec.max - currentExec.min + 1).fill(false).map(function(val, index) {
+					var item = self._context._item = currentExec.min + index;
+					self._context._key = index;
+					return function(next) {
+						currentExec.callback.call(self._options.context, next, item, self._context._key);
+					};
+				}), self._options.limit, function(err) {
 					currentExec.completed = true;
 					self._execute(err);
 				});
