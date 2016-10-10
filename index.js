@@ -571,11 +571,12 @@ function _execute(err) {
 				});
 				break;
 			case 'forEachRange':
-				self.run(Array(currentExec.max - currentExec.min + 1).fill(false).map(function(val, index) {
-					var item = self._context._item = currentExec.min + index;
-					self._context._key = index;
+				var iterArray = Array(currentExec.max - currentExec.min + 1).fill(false);
+				self.run(iterArray.map(function(v, i) {
+					var val = self._context._item = currentExec.min + i;
+					var index = self._context._key = i;
 					return function(next) {
-						currentExec.callback.call(self._options.context, next, item, self._context._key);
+						currentExec.callback.call(self._options.context, next, val, index, iterArray.length);
 					};
 				}), self._options.limit, function(err) {
 					currentExec.completed = true;

@@ -8,7 +8,7 @@ describe('async-chainable.forEach() - range style (0 => max)', function() {
 		output = [];
 
 		asyncChainable()
-			.forEach(2, function(next, item) { output.push(item); next(); })
+			.forEach(2, function(next, value, index, max) { output.push({v: value, i: index, m: max}); next(); })
 			.end(function(err) {
 				expect(err).to.be.not.ok;
 				done();
@@ -20,7 +20,11 @@ describe('async-chainable.forEach() - range style (0 => max)', function() {
 	});
 	
 	it('contain the expected output', function() {
-		expect(output).to.be.deep.equal([0,1,2]);
+		expect(output).to.be.deep.equal([
+			{v: 0, i: 0, m: 3},
+			{v: 1, i: 1, m: 3},
+			{v: 2, i: 2, m: 3},
+		]);
 	});
 });
 
@@ -31,7 +35,7 @@ describe('async-chainable.forEach() - range style (min => max)', function() {
 		output = [];
 
 		asyncChainable()
-			.forEach(1, 5, function(next, item) { output.push(item); next(); })
+			.forEach(1, 5, function(next, value, index, max) { output.push({v: value, i: index, m: max}); next(); })
 			.end(function(err) {
 				expect(err).to.be.not.ok;
 				done();
@@ -43,7 +47,13 @@ describe('async-chainable.forEach() - range style (min => max)', function() {
 	});
 	
 	it('contain the expected output', function() {
-		expect(output).to.be.deep.equal([1,2,3,4,5]);
+		expect(output).to.be.deep.equal([
+			{v: 1, i: 0, m: 5},
+			{v: 2, i: 1, m: 5},
+			{v: 3, i: 2, m: 5},
+			{v: 4, i: 3, m: 5},
+			{v: 5, i: 4, m: 5},
+		]);
 	});
 });
 
