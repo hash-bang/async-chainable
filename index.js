@@ -576,6 +576,7 @@ function _execute(err) {
 					var val = self._context._item = currentExec.min + i;
 					var index = self._context._key = i;
 					return function(next) {
+						if (currentExec.translate) val = currentExec.translate(val, index, iterArray.length);
 						currentExec.callback.call(self._options.context, next, val, index, iterArray.length);
 					};
 				}), self._options.limit, function(err) {
