@@ -781,6 +781,7 @@ function _execute(err) {
 * @param {array} tasks The array of tasks to execute
 * @param {number} limit The limiter of tasks (if limit==1 tasks are run in series, if limit>1 tasks are run in limited parallel, else tasks are run in parallel)
 * @param {function} callback(err) The callback to fire on finish
+* @return {Object} This chainable object
 */
 function run(tasks, limit, callback) {
 	var self = this;
@@ -828,7 +829,35 @@ function run(tasks, limit, callback) {
 	resetTimeout(true); // Start initial timeout
 
 	nextTaskOffset = maxTasks;
+
+	return this;
 }
+
+
+/**
+* Internal function to run a callback until it returns a falsy value
+* @param {function} iter The function to invoke on each call with the arguments (next, index)
+* @param {function} callback The function to invoke when iter finally returns a falsy value
+* @return {Object} This chainable object
+*/
+function runWhile(iter, callback) {
+	var index = 0;
+
+	var invoke = function() {
+		iter.call(this._context, function(err, res) {
+			if (err) {
+				return callback(err, res);
+			} else if (res) {
+				setTimeout(invoke);
+			} else {
+				callback();
+			}
+		}, index++);
+	};
+
+	setTimeout(invoke);
+	return this;
+};
 // }}}
 
 
@@ -974,6 +1003,7 @@ var objectInstance = function() {
 	this.race = race;
 	this.reset = reset;
 	this.run = run;
+	this.runWhile = runWhile;
 	this.series = series;
 	this._setRaw = _setRaw;
 	this._set = _set;
