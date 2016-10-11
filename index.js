@@ -814,7 +814,7 @@ function run(tasks, limit, callback) {
 		} else if (nextTaskOffset < tasks.length) { // Still more to alloc
 			running++;
 			resetTimeout(true);
-			tasks[nextTaskOffset++](taskFinish);
+			setTimeout(tasks[nextTaskOffset++].bind(this._context, taskFinish));
 		}
 	};
 
