@@ -622,7 +622,7 @@ Internal callback resolver. Run is used to execute an array of callbacks then ru
 Internal callback resolver until a function returns falsy. This function is NOT chainable, will execute immediately and is documented here as it is useful when writing plugins.
 Unlike `run()` this function does not require a precomputed array of items to iterate over which makes it a kind of generator function useful for potencially large data set iterations.
 
-	runWhile(function(next, index) {}, callback)
+	runWhile(function(next, index) {}, limit, callback)
 
 
 .series() / .parallel()

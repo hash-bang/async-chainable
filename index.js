@@ -837,25 +837,38 @@ function run(tasks, limit, callback) {
 /**
 * Internal function to run a callback until it returns a falsy value
 * @param {function} iter The function to invoke on each call with the arguments (next, index)
+* @param {number} limit The number of parallel threads to execute. This must be a finite number (defaults to 10 if not)
 * @param {function} callback The function to invoke when iter finally returns a falsy value
 * @return {Object} This chainable object
 */
-function runWhile(iter, callback) {
+function runWhile(iter, limit, callback) {
 	var index = 0;
+	var hasExited = false;
+	var err;
+	var running = 0;
+	if (!Number.isFinite(limit)) limit = 10;
 
 	var invoke = function() {
-		iter.call(this._context, function(err, res) {
-			if (err) {
-				return callback(err, res);
-			} else if (res) {
+		iter.call(this._context, function(taskErr, taskResult) {
+			if (taskErr) err = taskErr;
+			if (taskErr || !taskResult) hasExited = true;
+			--running;
+			if (err && !running) {
+				callback(err, res);
+			} else if (running <= 0 && hasExited) {
+				callback(err);
+			} else if (!hasExited) {
 				setTimeout(invoke);
-			} else {
-				callback();
 			}
 		}, index++);
 	};
 
-	setTimeout(invoke);
+	for (var i = 0; i < limit; i++) {
+		running++;
+
+		setTimeout(invoke);
+	}
+
 	return this;
 };
 // }}}

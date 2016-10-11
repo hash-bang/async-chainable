@@ -12,7 +12,7 @@ describe('async-chainable.runWhile() - execution until function returns false', 
 				if (output.length >= 10) return next(null, false);
 				output.push('cb' + index);
 				next(null, true);
-			}, function(err) {
+			}, 1, function(err) {
 				expect(err).to.be.not.ok;
 				expect(output).to.be.deep.equal(['cb0', 'cb1', 'cb2', 'cb3', 'cb4', 'cb5', 'cb6', 'cb7', 'cb8', 'cb9']);
 				done();
@@ -27,7 +27,7 @@ describe('async-chainable.runWhile() - execution until function returns false', 
 				if (output.length >= 3) return next('STOP');
 				output.push('cb' + index);
 				next(null, true);
-			}, function(err) {
+			}, 1, function(err) {
 				expect(err).to.be.equal('STOP');
 				expect(output).to.be.deep.equal(['cb0', 'cb1', 'cb2']);
 				done();
