@@ -486,18 +486,6 @@ asyncChainable()
 This allows *late binding* of variables who's content will only be examined when the chain item is executed.
 
 
-.getOverload()
---------------
-Take an `arguments` compatible array and return a CSV string identifying each type of argument.
-This is an internal function used to identify the arity of passed arguments.
-
-```javascript
-asyncChainable().getOverload(['hello']) // 'string'
-
-asyncChainable().getOverload([function() {}, 123]) // 'function,number'
-```
-
-
 .getPath()
 ----------
 GetPath is the utility function used by `forEach()` to lookup deeply nested objects or arrays to iterate over.
