@@ -680,6 +680,28 @@ asyncChainable()
 ```
 
 
+.timeout()
+----------
+Set a delay and/or a callback to run if the Async chain goes over a specified timeout.
+
+	timeout(number) // Set the timeout delay
+	timeout(number, function) // Set the timeout delay + a callback
+	timeout(function) // Set the timeout callback
+	timeout(false) // Disable timeouts
+
+
+```javascript
+asyncChainable()
+	.timeout(100, function() {
+		console.log('Timer went over 100ms!');
+	})
+	.then(function(next) {
+		setTimeout(next, 2000); // Take 2 seconds
+	})
+	.end()
+```
+
+
 .then()
 -------
 Execute a function, wait for it to complete and continue down the asyncChainable chain.

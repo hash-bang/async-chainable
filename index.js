@@ -333,14 +333,23 @@ function timeout(newTimeout) {
 	var self = this;
 	argy(arguments)
 		.ifForm('', function() {
-			self._struct.push({ type: 'timeout', payload: false });
+			self._struct.push({ type: 'timeout', delay: false });
 		})
 		.ifForm('boolean', function(setTimeout) {
 			if (setTimeout) throw new Error('When calling .timeout(Boolean) only False is accepted to disable the timeout');
-			self._struct.push({ type: 'timeout', payload: false });
+			self._struct.push({ type: 'timeout', delay: false });
 		})
-		.ifForm(['function', 'number'], function(value) {
-			self._struct.push({ type: 'timeout', payload: newTimeout });
+		.ifForm('number', function(delay) {
+			self._struct.push({ type: 'timeout', delay: delay });
+		})
+		.ifForm('function', function(callback) {
+			self._struct.push({ type: 'timeout', callback: callback });
+		})
+		.ifForm('number function', function(delay, callback) {
+			self._struct.push({ type: 'timeout', delay: delay, callback: callback });
+		})
+		.ifForm('function number', function(delay, callback) {
+			self._struct.push({ type: 'timeout', delay: delay, callback: callback });
 		})
 		.ifFormElse(function(form) {
 			throw new Error('Unknown call style for .timeout():' + form);
@@ -735,13 +744,17 @@ function _execute(err) {
 				redo = true; // Move on to next action
 				break;
 			case 'timeout': // Set the timeout function or its timeout value
-				if (typeof currentExec.payload == 'function') { // Set the timeout handler
-					self._options.timeoutHandler = currentExec.payload;
-				} else if (! currentExec.payload) { // Clear the timeout
+
+				if (currentExec.delay === false) { // Disable
 					self._options.timeout = false;
 				} else {
-					self._options.timeout = currentExec.payload;
+					// Set the callback if one was passed
+					if (currentExec.callback) self._options.timeoutHandler = currentExec.callback;
+
+					// Set the delay if one was passed
+					if (currentExec.delay) self._options.timeout = currentExec.delay;
 				}
+
 				currentExec.completed = true;
 				redo = true; // Move to next action
 				break;

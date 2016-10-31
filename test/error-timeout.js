@@ -6,11 +6,11 @@ describe('async-chainable - error (timeouts)', function() {
 	it('should trigger a timeout if the tasks take too long', function(finish) {
 		var runOrder = [];
 		var self = asyncChainable()
+			.timeout(10)
 			.timeout(function() {
 				runOrder.push('timeout');
 				self._timeoutHandler(); // Run original timeout handler also
 			})
-			.timeout(10)
 			.then(function(next) {
 				setTimeout(function() {
 					runOrder.push('then-1');
@@ -21,8 +21,7 @@ describe('async-chainable - error (timeouts)', function() {
 				expect(err).to.be.not.ok;
 				expect(this._options).to.have.property('timeout', 10);
 				expect(runOrder).to.have.length(2);
-				expect(runOrder[0]).to.be.equal('timeout');
-				expect(runOrder[1]).to.be.equal('then-1');
+				expect(runOrder).to.be.deep.equal(['timeout', 'then-1']);
 				finish();
 			});
 	});
@@ -30,10 +29,9 @@ describe('async-chainable - error (timeouts)', function() {
 	it('should trigger a timeout for forEach items if they take too long', function(finish) {
 		var runOrder = [];
 		asyncChainable()
-			.timeout(function() {
+			.timeout(150, function() {
 				runOrder.push('timeout');
 			})
-			.timeout(150)
 			.limit(1) // Force series execution so we can predict what will fire and when
 			.forEach([400, 100, 250, 100, 300, 400, 200], function(next, item) {
 				setTimeout(function() {
