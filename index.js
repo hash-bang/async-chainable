@@ -173,6 +173,13 @@ function forEach() {
 
 // Defer functionality - Here be dragons! {{{
 /**
+* Timeout handler during an await() defer operation
+* @var {number}
+*/
+var _deferTimeoutHandle;
+
+
+/**
 * Collection of items that have been deferred
 * @type {array} {payload: function, id: null|String, prereq: [dep1, dep2...]}
 * @access private
@@ -219,6 +226,7 @@ function deferAdd(id, task, parentChain) {
 function _deferCheck() {
 	var self = this;
 	if (self._options.limit && self._deferredRunning >= self._options.limit) return; // Already over limit
+
 	self._deferred = self._deferred.filter(function(item) {
 		if (self._options.limit && self._deferredRunning >= self._options.limit) {
 			return true; // Already over limit - all subseqent items should be left in place
@@ -233,6 +241,12 @@ function _deferCheck() {
 			setTimeout(item.payload);
 			return false;
 		} else { // Can't do anything with self right now
+			// Timeout functionality {{{
+			if (_deferTimeoutHandle) clearTimeout(_deferTimeoutHandle);
+			if (self._options.timeout) {
+				_deferTimeoutHandle = setTimeout(self._options.timeoutHandler.bind(self), self._options.timeout);
+			}
+			// }}}
 			return true;
 		}
 	});
@@ -361,6 +375,7 @@ function timeout(newTimeout) {
 
 /**
 * The default timeout handler
+* This function displays a simple error message and also fires the 'timeout' hook
 */
 function _timeoutHandler() {
 	var currentTaskIndex = this._struct.findIndex(function(task) { return ! task.completed });
@@ -371,7 +386,11 @@ function _timeoutHandler() {
 	} else {
 		console.log('Async-Chainable timeout: Task #', currentTaskIndex + 1, '(' + this._struct[currentTaskIndex].type + ')', 'elapsed timeout of', this._options.timeout + 'ms');
 	}
+
+	this.fire('timeout');
 }
+
+
 
 
 /**
@@ -722,6 +741,7 @@ function _execute(err) {
 					if (self._struct.slice(0, self._structPointer - 1).every(function(stage) { // Examine all items UP TO self one and check they are complete
 						return stage.completed;
 					})) { // All tasks up to self point are marked as completed
+						if (_deferTimeoutHandle) clearTimeout(_deferTimeoutHandle);
 						currentExec.completed = true;
 						redo = true;
 					} else {
@@ -731,6 +751,7 @@ function _execute(err) {
 					if (currentExec.payload.every(function(dep) { // Examine all named dependencies
 						return !! self._context[dep];
 					})) { // All are present
+						if (_deferTimeoutHandle) clearTimeout(_deferTimeoutHandle);
 						currentExec.completed = true;
 						redo = true;
 					} else {
@@ -943,7 +964,7 @@ function hook() {
 * @return {Object} this chainable object
 */
 var fire = argy('string [function]', function fire(hook, callback) {
-	this.run(this._hooks[hook] || [], 1, callback);
+	this.run(this._hooks[hook] || [], 1, callback || function() {});
 
 	return this;
 });

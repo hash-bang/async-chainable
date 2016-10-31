@@ -7,7 +7,12 @@ describe('async-chainable.hooks() - start and end', function() {
 		var output = [];
 
 		asyncChainable()
+			.timeout(100)
 			.forEach(['foo', 'bar', 'baz'], function(next, item) { output.push(item); next(); })
+			.hook('timeout', function(next) {
+				output.push('on(timeout)');
+				next();
+			})
 			.hook('start', function(next) {
 				output.push('on(start)');
 				next();
@@ -24,6 +29,9 @@ describe('async-chainable.hooks() - start and end', function() {
 				output.push('on(start,end)');
 				next();
 			})
+			.then(function(next) {
+				setTimeout(next, 500); // Force a task to take 500ms so the timeout triggers
+			})
 			.end(function(err) {
 				expect(err).to.be.not.ok;
 
@@ -33,6 +41,7 @@ describe('async-chainable.hooks() - start and end', function() {
 					'foo',
 					'bar',
 					'baz',
+					'on(timeout)',
 					'on(end)',
 					'on(end2)',
 					'on(start,end)',

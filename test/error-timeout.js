@@ -49,6 +49,28 @@ describe('async-chainable - error (timeouts)', function() {
 			});
 	});
 
+	it('should trigger a timeout if a defer chain takes too long', function(finish) {
+		var runOrder = [];
+		var self = asyncChainable()
+			.timeout(100, function() {
+				expect(runOrder).to.be.deep.equal(['foo', 'flarp', 'quz']);
+				finish();
+			})
+
+			// Order should be: foo -> flarp -> quz -> bar -> baz
+			// NOTE: Bar can never resolve as it depends on the non-existant completion of 'XXX'
+
+			.defer('foo', [], function(next) { runOrder.push('foo'); next() })
+			.defer('bar', ['quz', 'XXX'], function(next) { runOrder.push('bar'); next() })
+			.defer('baz', ['bar'], function(next) { runOrder.push('baz'); next() })
+			.defer('quz', ['flarp'], function(next) { runOrder.push('quz'); next() })
+			.defer('flarp', ['foo'], function(next) { runOrder.push('flarp'); next() })
+			.await()
+			.end(function(err) {
+				expect.fail(); // Should never get here
+			});
+	});
+
 	// Skipped as it takes the default time (5s) to kick-in to test
 	it.skip('should automatically queue a timeout process.env.DEBUG=async-chainable', function(finish) {
 		this.timeout(10 * 1000);
