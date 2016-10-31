@@ -496,7 +496,7 @@ It is functionally similar to the Lodash `get()` function.
 -------
 Attach a callback hook to a named trigger. These callbacks can all fire errors themselves and can fire out of sequence, unlike normal chains.
 Hooks can be defined multiple times - if multiple callbacks are registered they are fired in allocation order in *series*. If any hook raises an error the chain is terminated as though a callback raised an error.
-Defined hooks can be `start`, `end` as well as any user-defined hooks.
+Defined hooks can be `start`, `end`, `timeout` as well as any user-defined hooks.
 Hooks can also be registered within a callback via `this.hook(hook, callback)` unless context is reset.
 
 	hook(string, function) // Register a callback against a hook
@@ -700,6 +700,8 @@ asyncChainable()
 	})
 	.end()
 ```
+
+NOTE: Timeouts will also fire the `timeout` hook if the timeout function is the default (i.e. the user hasn't changed the function to their own).
 
 
 .then()
