@@ -459,6 +459,9 @@ The `forEach()` function is a slight variation on the `parallel()` function but 
 	forEach(object, function) // Run each item in the object though `function(next, value, key)`
 	forEach(collection,function) // see 'array, function' definition (collections are just treated like an array of objects with 'forEach')
 	forEach(string, function) // Lookup `this[string]` then process according to its type (see above type styles) - This is used for late binding
+	forEach(string, array, function) // Perform a map operation on the array setting the `this[string]` to the ordered result return
+	forEach(string, object, function) // Perform a map operation on an object array setting the `this[string]` to the result return
+	forEach(string, string, function) // Lookup the first string and process it as a map operation according to its type (see above 2 examples) - This is used for late binding
 	forEach(null) // Gets skipped automatically (also empty arrays, objects)
 
 
@@ -546,6 +549,23 @@ asyncChainable()
 	.await()
 	.end(console.log)
 ```
+
+
+.map()
+------
+The `map()` function is really just an alias for `forEach()` aimed specifically at the following functions:
+
+	map(string, array, function) // Perform a map operation on the array setting the `this[string]` to the ordered result return
+	map(string, object, function) // Perform a map operation on an object array setting the `this[string]` to the result return
+	map(string, string, function) // Lookup the first string and process it as a map operation according to its type (see above 2 examples) - This is used for late binding
+
+**NOTES:**
+
+* Each function is expected to return a result which is used to compose the new object / array.
+* The object return type can also specify an alternate key as the third parameter to the callback (i.e. `callback(error, valueReturn, keyReturn)`). If unspecified the original key is used, if specified it is used instead of the original.
+* Late binding maps can accept the same input and output key name in order to overwrite the original.
+
+See the [test files](./test/map.js) for more examples.
 
 
 .promise()

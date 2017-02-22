@@ -44,7 +44,7 @@ function series() {
 		.ifForm('function', function(callback) {
 			self._struct.push({ type: 'seriesArray', payload: [callback] });
 		})
-		.ifForm('string function', function(id, callback) { 
+		.ifForm('string function', function(id, callback) {
 			var payload = {};
 			payload[id] = callback;
 			self._struct.push({ type: 'seriesObject', payload: payload});
@@ -163,6 +163,15 @@ function forEach() {
 		.ifForm('number number function', function(min, max, callback) {
 			self._struct.push({ type: 'forEachRange', min: min, max: max, callback: callback });
 		})
+		.ifForm('string array function', function(output, tasks, callback) {
+			self._struct.push({ type: 'mapArray', output: output, payload: tasks, callback: callback });
+		})
+		.ifForm('string object function', function(output, tasks, callback) {
+			self._struct.push({ type: 'mapObject', output: output, payload: tasks, callback: callback });
+		})
+		.ifForm('string string function', function(output, tasks, callback) {
+			self._struct.push({ type: 'mapLateBound', output: output, payload: tasks, callback: callback });
+		})
 		.ifFormElse(function(form) {
 			throw new Error('Unknown call style for .forEach(): ' + form);
 		});
@@ -236,7 +245,7 @@ function _deferCheck() {
 			item.prereq.every(function(dep) { // All pre-reqs are satisfied
 				return self._context.hasOwnProperty(dep);
 			})
-		) { 
+		) {
 			self._deferredRunning++;
 			setTimeout(item.payload);
 			return false;
@@ -670,6 +679,73 @@ function _execute(err) {
 				redo = true;
 				// }}}
 				break;
+
+			case 'mapArray':
+				var output = new Array(currentExec.payload.length);
+				self.run(currentExec.payload.map(function(item, iter) {
+					self._context._item = item;
+					self._context._key = iter;
+					return function(next) {
+						currentExec.callback.call(self._options.context, function(err, value) {
+							if (err) return next(err);
+							output[iter] = value;
+							next();
+						}, item, iter);
+					};
+				}), self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._set(currentExec.output, output);
+					self._execute(err);
+				});
+				break;
+			case 'mapObject':
+				var output = {};
+				var tasks = [];
+				Object.keys(currentExec.payload).forEach(function(key) {
+					tasks.push(function(next) {
+						self._context._item = currentExec.payload[key];
+						self._context._key = key;
+						currentExec.callback.call(self._options.context, function(err, value, outputKey) {
+							output[outputKey || key] = value;
+							next(err);
+						}, currentExec.payload[key], key);
+					});
+				});
+				self.run(tasks, self._options.limit, function(err) {
+					currentExec.completed = true;
+					self._set(currentExec.output, output);
+					self._execute(err);
+				});
+				break;
+			case 'mapLateBound':
+				if (!currentExec.payload || !currentExec.payload.length) { // Payload is blank
+					// Goto next chain
+					currentExec.completed = true;
+					redo = true;
+					break;
+				}
+
+				var resolvedPayload = self.getPath(self._context, currentExec.payload);
+				if (!resolvedPayload) { // Resolved payload is blank
+					// Goto next chain
+					currentExec.completed = true;
+					redo = true;
+					break;
+				}
+
+				// Replace own exec array with actual type of payload now we know what it is {{{
+				if (argy.isType(resolvedPayload, 'array')) {
+					currentExec.type = 'mapArray';
+				} else if (argy.isType(resolvedPayload, 'object')) {
+					currentExec.type = 'mapObject';
+				} else {
+					throw new Error('Cannot perform map over unknown object type: ' + argy.getType(resolvedPayload));
+				}
+				currentExec.payload = resolvedPayload;
+				self._structPointer--; // Force re-eval of this chain item now its been replace with its real (late-bound) type
+				redo = true;
+				// }}}
+				break;
 			case 'seriesArray':
 				self.run(currentExec.payload.map(function(task) {
 					return function(next) {
@@ -976,7 +1052,7 @@ var fire = argy('string [function]', function fire(hook, callback) {
 * @param {function} [final] Optional final function to run. This is passed the optional error state of the chain
 * @return {Object} This chainable object
 */
-var end = argy('[function]', function end(callback) { 
+var end = argy('[function]', function end(callback) {
 	if (!callback) {
 		this._struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
 	} else {
@@ -1041,6 +1117,7 @@ var objectInstance = function() {
 	this.end = end;
 	this.fire = fire;
 	this.forEach = forEach;
+	this.map = forEach;
 	this.getPath = getPath;
 	this.hook = hook;
 	this.limit = setLimit;
