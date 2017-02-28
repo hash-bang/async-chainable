@@ -482,7 +482,7 @@ asyncChainable()
 	.set({
 		items: ['foo', 'bar', 'baz'],
 	})
-	.forEach('items', function(next, item, key) { console.log(item) }) // Output: foo, bar and baz in whichever they evaluate
+	.forEach('items', function(next, item, key) { console.log(item); next() }) // Output: foo, bar and baz in whichever order they evaluate
 	.end();
 ```
 
