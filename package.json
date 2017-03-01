@@ -1,6 +1,6 @@
 {
   "name": "async-chainable",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Flow control functions for NodeJS",
   "main": "index.js",
   "repository": {

@@ -434,7 +434,7 @@ function set() {
 	var self = this;
 	argy(arguments)
 		.ifForm('', function() {})
-		.ifForm('string scalar|array|object|date|null', function(id, value) {
+		.ifForm('string scalar|array|object|date|regexp|null', function(id, value) {
 			var payload = {};
 			payload[id] = value;
 			self._struct.push({ type: 'set', payload: payload });
@@ -474,7 +474,7 @@ function _set() {
 	var self = this;
 	argy(arguments)
 		.ifForm('', function() {})
-		.ifForm('string scalar|array|object|date|null', function(id, value) {
+		.ifForm('string scalar|array|object|date|regexp|null', function(id, value) {
 			self._setRaw(id, value);
 		})
 		.ifForm('object', function(obj) {
