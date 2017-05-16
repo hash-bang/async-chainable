@@ -16,14 +16,13 @@ describe('async-chainable.forEach() - range style (0 => max)', function() {
 	});
 
 	it('should have the correct number of output elements', function() {
-		expect(output).to.have.length(3);
+		expect(output).to.have.length(2);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.be.deep.equal([
-			{v: 0, i: 0, m: 3},
-			{v: 1, i: 1, m: 3},
-			{v: 2, i: 2, m: 3},
+			{v: 1, i: 0, m: 2},
+			{v: 2, i: 1, m: 2},
 		]);
 	});
 });
@@ -45,7 +44,7 @@ describe('async-chainable.forEach() - range style (min => max)', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(5);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.be.deep.equal([
 			{v: 1, i: 0, m: 5},
@@ -75,7 +74,7 @@ describe('async-chainable.forEach() - array style', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(3);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.contain('foo');
 		expect(output).to.contain('bar');
@@ -106,7 +105,7 @@ describe('async-chainable.forEach() - bogosort array', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(5);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output[0]).to.equal(100);
 		expect(output[1]).to.equal(200);
@@ -144,7 +143,7 @@ describe('async-chainable.forEach() - array style, unlimited', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(6);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.contain('foo');
 		expect(output).to.contain('bar');
@@ -191,7 +190,7 @@ describe('async-chainable.forEach() - array style, limited', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(6);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.contain('foo');
 		expect(output).to.contain('bar');
@@ -231,7 +230,7 @@ describe('async-chainable.forEach() - object style', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(6);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.contain('fooKey');
 		expect(output).to.contain('fooValue');
@@ -276,7 +275,7 @@ describe('async-chainable.forEach() - collection style', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(3);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.contain({foo: 'Foo!', crash: 'Crash!'});
 		expect(output).to.contain({bar: 'Bar!', bang: 'Bang!'});
@@ -316,7 +315,7 @@ describe('async-chainable.forEach() - bogosort collection', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(5);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output[0]).to.equal('foo');
 		expect(output[1]).to.equal('bar');
@@ -348,7 +347,7 @@ describe('async-chainable.forEach() - this._key + this._item', function() {
 	it('should have the correct number of output elements', function() {
 		expect(output).to.have.length(6);
 	});
-	
+
 	it('contain the expected output', function() {
 		expect(output).to.contain('fooKey');
 		expect(output).to.contain('fooValue');
@@ -406,7 +405,7 @@ describe('async-chainable.forEach() - named set', function() {
 	it('array method should have the correct number of output elements', function() {
 		expect(outputArray).to.have.length(3);
 	});
-	
+
 	it('array method should contain the expected output', function() {
 		expect(outputArray).to.contain('foo');
 		expect(outputArray).to.contain('bar');
@@ -416,7 +415,7 @@ describe('async-chainable.forEach() - named set', function() {
 	it('object method should have the correct number of output elements', function() {
 		expect(outputObject).to.have.length(6);
 	});
-	
+
 	it('object method should contain the expected output', function() {
 		expect(outputObject).to.contain('arthur');
 		expect(outputObject).to.contain('british');
@@ -429,7 +428,7 @@ describe('async-chainable.forEach() - named set', function() {
 	it('collection method should have the correct number of output elements', function() {
 		expect(outputCollection).to.have.length(3);
 	});
-	
+
 	it('collection method should contain the expected output', function() {
 		expect(outputCollection).to.contain({one: 'Number 1'});
 		expect(outputCollection).to.contain({two: 'Number 2'});

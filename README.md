@@ -454,7 +454,7 @@ The `forEach()` function is a slight variation on the `parallel()` function but 
 
 
 	forEach(fromNumber, toNumber, function) // Call function toNumber-fromNumber times
-	forEach(toNumber, function) // Call function toNumber times
+	forEach(toNumber, function) // Call function toNumber times (same as `forEach(1, NUMBER, function)`)
 	forEach(array, function) // Run each item in the array though `function(next, value)`
 	forEach(object, function) // Run each item in the object though `function(next, value, key)`
 	forEach(collection,function) // see 'array, function' definition (collections are just treated like an array of objects with 'forEach')

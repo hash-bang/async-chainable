@@ -158,7 +158,7 @@ function forEach() {
 			self._struct.push({ type: 'forEachLateBound', payload: tasks, callback: callback });
 		})
 		.ifForm('number function', function(max, callback) {
-			self._struct.push({ type: 'forEachRange', min: 0, max: max, callback: callback });
+			self._struct.push({ type: 'forEachRange', min: 1, max: max, callback: callback });
 		})
 		.ifForm('number number function', function(min, max, callback) {
 			self._struct.push({ type: 'forEachRange', min: min, max: max, callback: callback });
