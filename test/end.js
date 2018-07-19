@@ -30,6 +30,18 @@ describe('async-chainable.end()', function() {
 			});
 	});
 
+	it.skip('should return an error when a callback is called twice', function(done) {
+		asyncChainable()
+			.then(function(next) {
+				next()
+				next();
+			})
+			.end(function(err) {
+				expect(err).to.be.ok;
+				done();
+			});
+	});
+
 	it('should exit with a context value when required', function(done) {
 		asyncChainable()
 			.then('value', function(next) {
