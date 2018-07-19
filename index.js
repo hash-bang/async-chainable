@@ -1049,14 +1049,28 @@ var fire = argy('string [function]', function fire(hook, callback) {
 /**
 * Queue up an optional single function for execution on completion
 * This function also starts the queue executing
+* @param {string} [extract] If supplied this context key will be supplied as the output to the callback (i.e. this is the same as `.end(err => callback(err, this[extract]))`))
 * @param {function} [final] Optional final function to run. This is passed the optional error state of the chain
 * @return {Object} This chainable object
 */
-var end = argy('[function]', function end(callback) {
+var end = argy('[string] [function]', function end(extract, callback) {
 	if (!callback) {
 		this._struct.push({ type: 'end', payload: function() {} }); // .end() called with no args - make a noop()
-	} else {
+	} else if (argy.isType(extract, 'string') && argy.isType(callback, 'function')) {
+		this._struct.push({
+			type: 'end',
+			payload: function(err) {
+				if (err) {
+					return callback(err);
+				} else {
+					callback(null, this[extract]);
+				}
+			},
+		});
+	} else if (!extract && argy.isType(callback, 'function')) {
 		this._struct.push({ type: 'end', payload: callback });
+	} else {
+		throw new Error('Unknown end type');
 	}
 
 	this._execute();

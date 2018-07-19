@@ -394,7 +394,11 @@ asyncChainable()
 ------
 The final stage in the chain, `.end()` must be called to execute the queue of actions.
 
+	end() // Run the chain but don't do anything when completed
 	end(function) // Final function to execute as `function(err)`
+	end(string, function) // Extract the context value specified by string and provide it to the callback 
+
+NOTE: The form `end(string, function)` is used  is the internal equivalent to `end(err => callback(err, this[string]))` - i.e. the context value is extracted for you.
 
 
 While similar to `series()` / `then()` this function will always be executed *last* and be given the error if any occurred in the form `function(err)`.
