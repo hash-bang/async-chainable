@@ -1068,19 +1068,18 @@ var end = argy('[function]', function end(callback) {
 * @return {Promise} A promise representing the async chain
 */
 function promise() {
-	var defer = Promise.defer();
+	var self = this;
+	return new Promise(function(resolve, reject) {
+		self._struct.push({type: 'end', payload: function(err) {
+			if (err) {
+				reject(err);
+			} else {
+				resolve();
+			}
+		}});
 
-	this._struct.push({type: 'end', payload: function(err) {
-		if (err) {
-			defer.reject(err);
-		} else {
-			defer.resolve();
-		}
-	}});
-
-	this._execute();
-
-	return defer.promise;
+		self._execute();
+	});
 };
 
 
