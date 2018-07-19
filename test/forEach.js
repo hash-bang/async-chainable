@@ -277,9 +277,9 @@ describe('async-chainable.forEach() - collection style', function() {
 	});
 
 	it('contain the expected output', function() {
-		expect(output).to.contain({foo: 'Foo!', crash: 'Crash!'});
-		expect(output).to.contain({bar: 'Bar!', bang: 'Bang!'});
-		expect(output).to.contain({baz: 'Baz!', wallop: 'Wallop!'});
+		expect(output).to.deep.contain({foo: 'Foo!', crash: 'Crash!'});
+		expect(output).to.deep.contain({bar: 'Bar!', bang: 'Bang!'});
+		expect(output).to.deep.contain({baz: 'Baz!', wallop: 'Wallop!'});
 	});
 });
 
@@ -430,9 +430,9 @@ describe('async-chainable.forEach() - named set', function() {
 	});
 
 	it('collection method should contain the expected output', function() {
-		expect(outputCollection).to.contain({one: 'Number 1'});
-		expect(outputCollection).to.contain({two: 'Number 2'});
-		expect(outputCollection).to.contain({three: 'Number 3'});
+		expect(outputCollection).to.deep.contain({one: 'Number 1'});
+		expect(outputCollection).to.deep.contain({two: 'Number 2'});
+		expect(outputCollection).to.deep.contain({three: 'Number 3'});
 	});
 });
 

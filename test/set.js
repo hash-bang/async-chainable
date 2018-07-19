@@ -82,12 +82,12 @@ describe('async-chainable.set() - simple setters', function() {
 
 	it('set regexp', function() {
 		expect(context).to.have.property('bazola');
-		expect(context.bazola).to.be.regexp;
+		expect(context.bazola).to.be.a('regexp');
 	});
 
 	it('set boolean', function() {
 		expect(context).to.have.property('blinga');
-		expect(context.blinga).to.be.a.boolean;
+		expect(context.blinga).to.be.a('boolean');
 	});
 });
 
