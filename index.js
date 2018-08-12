@@ -1097,6 +1097,43 @@ function promise() {
 };
 
 
+/**
+* Take a callback style function and return a hybrid (callback OR promise) wrapper
+* @param {function} fn The function to transform
+* @param {function} [finish] The callback to optionally call when done
+* @return {function} The hybrid function which runs as a callback but could accept promises
+*
+* @example Transform a callback-style function into a promise
+* async.hybrid((done, path) => fs.stat(path, done), '/').then(stats => console.log('Stats are', stats))
+*
+* @example Copy a callback-style function into another
+* asyncChainable.hybrid((done, path) => fs.stat(path, done), (err, stats) => console.log('Stats are', stats))
+*/
+function hybrid(fn, cb) {
+	if (typeof cb === 'function') { // Already in callback style - wrap the function so that cb gets called when it completes
+		return function() {
+			var args = Array.prototype.slice.call(arguments, 0);
+			fn.apply(this, [cb].concat(args));
+		};
+	} else { // Wrap the function in a promise
+		return function() {
+			var args = Array.prototype.slice.call(arguments, 0);
+			return new Promise(function(resolve, reject) {
+				fn.apply(this, [
+					function(err, res) {
+						if (err) {
+							reject(err);
+						} else {
+							resolve(res);
+						}
+					}
+				].concat(args));
+			});
+		};
+	}
+};
+
+
 var objectInstance = function() {
 	// Variables {{{
 	this._struct = [];
@@ -1149,6 +1186,7 @@ var objectInstance = function() {
 	this._timeoutHandler = _timeoutHandler;
 	this.timeout = timeout;
 	this.use = use;
+	this.hybrid = hybrid;
 	// }}}
 
 	// Detect and act on debug mode {{{
@@ -1166,3 +1204,6 @@ var objectInstance = function() {
 module.exports = function asyncChainable() {
 	return new objectInstance;
 };
+
+// Utility function we are also gluing onto the main prototype
+module.exports.hybrid = hybrid;
