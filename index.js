@@ -1188,6 +1188,7 @@ var objectInstance = function() {
 	this.reset = reset;
 	this.run = run;
 	this.runWhile = runWhile;
+	this.runAsCallback = runAsCallback;
 	this.series = series;
 	this._setRaw = _setRaw;
 	this._set = _set;
@@ -1215,5 +1216,7 @@ module.exports = function asyncChainable() {
 	return new objectInstance;
 };
 
-// Utility function we are also gluing onto the main prototype
+// Glue utility functions onto the main prototype
+module.exports.run = run;
+module.exports.runAsCallback = runAsCallback;
 module.exports.hybrid = hybrid;
