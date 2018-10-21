@@ -275,7 +275,7 @@ describe('async-chainable + async functions', ()=> {
 
 	it('parallel array', done => {
 		asyncChainable()
-			.map('output', [1, 2, 3], async (next, val) => { await sleep(10) ; return val * 10 })
+			.map('output', [1, 2, 3], async val => { await sleep(10) ; return val * 10 })
 			.end(function(err) {
 				expect(err).to.not.be.ok;
 				expect(this).to.have.property('output');
@@ -286,7 +286,7 @@ describe('async-chainable + async functions', ()=> {
 
 	it('parallel object', done => {
 		asyncChainable()
-			.map('output', {foo: 1, bar: 2, baz: 3}, async (next, val) => { await sleep(10); return val * 10 })
+			.map('output', {foo: 1, bar: 2, baz: 3}, async val => { await sleep(10); return val * 10 })
 			.end(function(err) {
 				expect(err).to.not.be.ok;
 				expect(this).to.have.property('output');
