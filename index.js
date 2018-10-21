@@ -55,7 +55,7 @@ function hasCallback(fn) {
 	if (/^async /.test(fnString)) {
 		// console.log('IS ASYNC');
 		return false; // Its an async function and should only ever return a promise
-	} else if (bits = /^function\s*?(?:.+?)?\s*\((.*?)\)/.exec(fnString)) {
+	} else if (bits = /^function\s*(?:.*?)\s*\((.*?)\)/.exec(fnString)) {
 		// console.log('> FUNC', bits[1]);
 		fnArgs = bits[1];
 	} else if (/^\(\s*\)\s*=>/.test(fnString)) {
