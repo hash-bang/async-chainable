@@ -1082,9 +1082,13 @@ function reset() {
 	if (reAttachContext) this._options.context = this._context;
 };
 
+
+// Hooks {{{
 /**
 * Set up a hook
 * @param {string} hook The hook name
+* @param {string} [name] The function ID
+* @param {array} [prereqs] Optional prerequisites to fired
 * @param {function} callback Callback to run when hook fires (each callback takes a next paramter which must be called)
 * @return {Object} This chainable object
 */
@@ -1092,14 +1096,26 @@ function hook() {
 	var self = this;
 	argy(arguments)
 		.ifForm('', function() {})
-		.ifForm('string function', function(id, callback) { // Attach to one hook
-			if (!self._hooks[id]) self._hooks[id] = [];
-			self._hooks[id].push(callback);
+		.ifForm('string function', function(hook, callback) { // Attach to one hook
+			if (!self._hooks[hook]) self._hooks[hook] = [];
+			self._hooks[hook].push({cb: callback});
 		})
-		.ifForm('array function', function(ids, callback) { // Attach to many hooks
-			ids.forEach(function(hook) {
+		.ifForm('string string function', function(hook, id, callback) { // Attach a named hook
+			if (!self._hooks[hook]) self._hooks[hook] = [];
+			self._hooks[hook].push({id: id, cb: callback});
+		})
+		.ifForm('string array function', function(hook, prereqs, callback) { // Attach to a hook with prerequisites
+			if (!self._hooks[hook]) self._hooks[hook] = [];
+			self._hooks[hook].push({prereqs: prereqs, cb: callback});
+		})
+		.ifForm('string string array function', function(hook, id, prereqs, callback) { // Attach a named hook with prerequisites
+			if (!self._hooks[hook]) self._hooks[hook] = [];
+			self._hooks[hook].push({id: id, prereqs: prereqs, cb: callback});
+		})
+		.ifForm('array function', function(hooks, callback) { // Attach to many hooks
+			hooks.forEach(function(hook) {
 				if (!self._hooks[hook]) self._hooks[hook] = [];
-				self._hooks[hook].push(callback);
+				self._hooks[hook].push({cb: callback});
 			});
 		})
 		.ifFormElse(function(form) {
@@ -1117,10 +1133,28 @@ function hook() {
 * @return {Object} this chainable object
 */
 var fire = argy('string [function]', function fire(hook, callback) {
-	this.runArray(this._hooks[hook] || [], 1, callback || function() {});
+	if (!this._hooks[hook] || !this._hooks[hook].length) { // Nothing to do anyway
+		if (callback) callback(); // Nothing to do anyway
+		return;
+	}
+
+	var hookRunner = new objectInstance();
+
+	this._hooks[hook].forEach(function(h) {
+		var args = [];
+		if (h.prereqs) args.push(h.prereqs);
+		if (h.id) args.push(h.id)
+		args.push(h.cb);
+		hookRunner.defer.apply(hookRunner, args);
+	});
+
+	hookRunner
+		.await()
+		.end(callback);
 
 	return this;
 });
+// }}}
 
 
 /**

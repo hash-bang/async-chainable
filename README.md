@@ -19,9 +19,9 @@ asyncChainable()
 	.defer('bar', barFunc)
 	.defer('baz', bazFunc)
 	.await('foo', 'bar') // Wait for 'foo' and 'bar' parallel functions to finish but we don't care about 'baz' yet
-	.then(console.log) // Output: null, {foo: 'foo value', bar: 'bar value'}
+	.then(function() { console.log(this.foo, this.bar) }) // Output: null, {foo: 'foo value', bar: 'bar value'}
 	.await() // Wait for everything else
-	.end(console.log) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
+	.end(function() { console.log(this) }) // Output: null, {foo: 'foo value', bar: 'bar value', baz: 'baz value'}
 
 
 asyncChainable()
@@ -506,9 +506,13 @@ Attach a callback hook to a named trigger. These callbacks can all fire errors t
 Hooks can be defined multiple times - if multiple callbacks are registered they are fired in allocation order in *series*. If any hook raises an error the chain is terminated as though a callback raised an error.
 Defined hooks can be `start`, `end`, `timeout` as well as any user-defined hooks.
 Hooks can also be registered within a callback via `this.hook(hook, callback)` unless context is reset.
+Hooks can also have an optional id and an array of prerequisites
 
 	hook(string, function) // Register a callback against a hook
 	hook(array, function) // Register a callback against a number of hooks, if any fire the callback is called
+	hook(string, string, function) // Register a named hook
+	hook(string, array, function) // Register a hook with prerequisites
+	hook(string, string, array, function) // Register a named hook with an array of prerequisite hooks
 	this.hook(...) // Same as above invocations but accessible within a chain
 
 

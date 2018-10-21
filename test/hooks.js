@@ -142,4 +142,22 @@ describe('async-chainable.hooks() - start and end', function() {
 			});
 	});
 
+	it('should solve hooks with pre-requisites', done => {
+		var output = [];
+		asyncChainable()
+			.hook('testHook', 'a', ()=> output.push('a'))
+			.hook('testHook', 'b', ['a'], ()=> output.push('b'))
+			.hook('testHook', 'c', ['a', 'b'], next => next(null, output.push('c')))
+			.hook('testHook', 'd', ['c'], ()=> output.push('d'))
+			.hook('testHook', 'e', ['a', 'b', 'c', 'd'], ()=> output.push('e'))
+			.then(function(next) {
+				this.fire('testHook', next);
+			})
+			.end(function(err) {
+				expect(err).to.not.be.ok;
+				expect(output).to.deep.equal(['a', 'b', 'c', 'd', 'e']);
+				done();
+			})
+	});
+
 });
