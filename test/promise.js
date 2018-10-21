@@ -36,32 +36,6 @@ describe('async-chainable.promise()', function() {
 
 describe('async-chainable + promises', ()=> {
 
-	it('callbacks + promises should only resolve once', ()=> {
-		var callCount = 0;
-		return Promise.resolve(
-			asyncChainable()
-				.then(next => new Promise(resolve => {
-					callCount++;
-					resolve();
-					next();
-				}))
-				.promise()
-		).then(()=> {
-			expect(callCount).to.equal(1);
-		})
-	});
-
-	it('series of promises', done => {
-		asyncChainable()
-			.then(()=> new Promise(resolve => setTimeout(resolve, 10)))
-			.then(()=> new Promise(resolve => setTimeout(resolve, 20)))
-			.then(()=> new Promise(resolve => setTimeout(resolve, 30)))
-			.end(function(err) {
-				expect(err).to.not.be.ok;
-				done();
-			})
-	});
-
 	it('series with returns', done => {
 		asyncChainable()
 			.then('foo', ()=> new Promise(resolve => setTimeout(()=> resolve('FooValue'), 10)))

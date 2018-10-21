@@ -223,7 +223,7 @@ function deferAdd(id, task, parentChain) {
 		payload: function(next) {
 			self._context._id = id;
 
-			runAsCallback(self._options.context, task, function(err, value) { // Glue callback function to first arg
+			run(self._options.context, task, function(err, value) { // Glue callback function to first arg
 				if (id) self._context[id] = value;
 
 				self._deferredRunning--;
@@ -595,12 +595,12 @@ function _execute(err) {
 		switch (currentExec.type) {
 			case 'forEachRange':
 				var iterArray = Array(currentExec.max - currentExec.min + 1).fill(false);
-				self.run(iterArray.map(function(v, i) {
+				self.runArray(iterArray.map(function(v, i) {
 					var val = self._context._item = currentExec.min + i;
 					var index = self._context._key = i;
 					return function(next) {
 						if (currentExec.translate) val = currentExec.translate(val, index, iterArray.length);
-						runAsCallback(self._options.context, currentExec.callback, next, [val, index, iterArray.length]);
+						run(self._options.context, currentExec.callback, next, [val, index, iterArray.length]);
 					};
 				}), self._options.limit, function(err) {
 					currentExec.completed = true;
@@ -608,11 +608,11 @@ function _execute(err) {
 				});
 				break;
 			case 'forEachArray':
-				self.run(currentExec.payload.map(function(item, iter) {
+				self.runArray(currentExec.payload.map(function(item, iter) {
 					self._context._item = item;
 					self._context._key = iter;
 					return function(next) {
-						runAsCallback(self._options.context, currentExec.callback, next, [item, iter]);
+						run(self._options.context, currentExec.callback, next, [item, iter]);
 					};
 				}), self._options.limit, function(err) {
 					currentExec.completed = true;
@@ -620,11 +620,11 @@ function _execute(err) {
 				});
 				break;
 			case 'forEachObject':
-				self.run(Object.keys(currentExec.payload).map(function(key) {
+				self.runArray(Object.keys(currentExec.payload).map(function(key) {
 					return function(next) {
 						self._context._item = currentExec.payload[key];
 						self._context._key = key;
-						runAsCallback(self._options.context, currentExec.callback, function(err, value) {
+						run(self._options.context, currentExec.callback, function(err, value) {
 							self._set(key, value); // Allocate returned value to context
 							next(err);
 						}, [currentExec.payload[key], key]);
@@ -666,11 +666,11 @@ function _execute(err) {
 
 			case 'mapArray':
 				var output = new Array(currentExec.payload.length);
-				self.run(currentExec.payload.map(function(item, iter) {
+				self.runArray(currentExec.payload.map(function(item, iter) {
 					self._context._item = item;
 					self._context._key = iter;
 					return function(next) {
-						runAsCallback(self._options.context, currentExec.callback, function(err, value) {
+						run(self._options.context, currentExec.callback, function(err, value) {
 							if (err) return next(err);
 							output[iter] = value;
 							next();
@@ -684,11 +684,11 @@ function _execute(err) {
 				break;
 			case 'mapObject':
 				var output = {};
-				self.run(Object.keys(currentExec.payload).map(function(key) {
+				self.runArray(Object.keys(currentExec.payload).map(function(key) {
 					return function(next) {
 						self._context._item = currentExec.payload[key];
 						self._context._key = key;
-						runAsCallback(self._options.context, currentExec.callback, function(err, value, outputKey) {
+						run(self._options.context, currentExec.callback, function(err, value, outputKey) {
 							output[outputKey || key] = value;
 							next(err);
 						}, [currentExec.payload[key], key]);
@@ -730,9 +730,9 @@ function _execute(err) {
 				break;
 			case 'parallelArray':
 			case 'seriesArray':
-				self.run(currentExec.payload.map(function(task) {
+				self.runArray(currentExec.payload.map(function(task) {
 					return function(next) {
-						runAsCallback(self._options.context, task, next);
+						run(self._options.context, task, next);
 					};
 				}), currentExec.type == 'parallelArray' ? self._options.limit : 1, function(err) {
 					currentExec.completed = true;
@@ -741,9 +741,9 @@ function _execute(err) {
 				break;
 			case 'seriesObject':
 			case 'parallelObject':
-				self.run(Object.keys(currentExec.payload).map(function(key) {
+				self.runArray(Object.keys(currentExec.payload).map(function(key) {
 					return function(next) {
-						runAsCallback(self._options.context, currentExec.payload[key], function(err, value) {
+						run(self._options.context, currentExec.payload[key], function(err, value) {
 							self._set(key, value); // Allocate returned value to context
 							next(err);
 						});
@@ -756,9 +756,9 @@ function _execute(err) {
 			case 'race':
 				var hasResult = false;
 				var hasError = false;
-				self.run(currentExec.payload.map(function(task) {
+				self.runArray(currentExec.payload.map(function(task) {
 					return function(next) {
-						runAsCallback(self._options.context, task, function(err, taskResult) {
+						run(self._options.context, task, function(err, taskResult) {
 							if (err) {
 								hasError = true
 								next(err, taskResult);
@@ -864,7 +864,7 @@ function _execute(err) {
 };
 
 
-// run() - central task runner {{{
+// runArray() - dispatch an array of callbacks (with a parallel run limit) and run a callback when complete {{{
 /**
 * Internal function to run an array of functions (usually in parallel)
 * Functions can be run in series by passing limit=1
@@ -875,7 +875,7 @@ function _execute(err) {
 * @param {function} callback(err) The callback to fire on finish
 * @return {Object} This chainable object
 */
-function run(tasks, limit, callback) {
+function runArray(tasks, limit, callback) {
 	var self = this;
 	var nextTaskOffset = 0;
 	var running = 0;
@@ -924,6 +924,61 @@ function run(tasks, limit, callback) {
 
 	return this;
 }
+
+
+/**
+* Run a single function, promise return, promise factory or any other combination - then a callback when finished
+* Take a function reference and treat it as a callback style function
+* If the function returns a promise this behaviour is transformed into a callback style function
+*
+* This function accepts all types of input functions:
+* - callback functions (e.g. `next => ...`)
+* - async functions (e.g. `async ()=> ...`)
+* - promise functions (e.g. `new Promise(resolve => ...)`)
+* - promise factories (e.g. `()=> new Promise(resolve => ...)`)
+*
+* @param {Object} context The context object to pass to the function
+* @param {function|Promise} fn The function to run or the promise to resolve
+* @param {function} finish The function to call when finished
+* @param {array} [args] Additional arguments to pass when calling the function
+*
+* @example Run a regular callback function - if func is callback its just passed through, if its a promise its mapped normally
+* run(func, thenFunc)
+*/
+function run(context, fn, finish, args) {
+	// Argument mangling {{{
+	if (typeof context == 'function') { // called as run(fn, finish, args);
+		args = finish;
+		finish = fn;
+		fn = context;
+		context = this;
+	}
+	// }}}
+
+	if (isPromise(fn)) { // Given a promise that has already resolved?
+		fn.then(function(value) {
+			finish.apply(context, [null, value]);
+		});
+	} else if (hasCallback(fn)) { // Callback w/ (err, result) pattern
+		var result = fn.apply(context, args ? [finish].concat(args) : [finish]);
+		if (isPromise(result)) {
+			result.then(function(value) { // Remap result from (val) => (err, val)
+				finish.apply(context, [null, value]);
+			});
+		}
+	} else { // Maybe either a promise or sync function?
+		var result = fn.apply(context, args || []); // Run the function and see what it gives us
+		if (isPromise(result)) { // Got back a promise - attach to the .then() function
+			result.then(function(value) { // Remap result from (val) => (err, val)
+				finish.apply(context, [null, value]);
+			});
+		} else { // Didn't provide back a promise - assume it was a sync function
+			finish.apply(context, [null, result]);
+		}
+	}
+};
+
+
 
 
 /**
@@ -1022,7 +1077,7 @@ function hook() {
 * @return {Object} this chainable object
 */
 var fire = argy('string [function]', function fire(hook, callback) {
-	this.run(this._hooks[hook] || [], 1, callback || function() {});
+	this.runArray(this._hooks[hook] || [], 1, callback || function() {});
 
 	return this;
 });
@@ -1076,33 +1131,6 @@ function promise() {
 
 		self._execute();
 	});
-};
-
-
-/**
-* Take a function reference and treat it as a callback style function
-* If the function returns a promise this behaviour is transformed into a callback style function
-* @param {Object} context The context object to pass to the function
-* @param {function|Promise} fn The function to run or the promise to resolve
-* @param {function} finish The function to call when finished
-* @param {array} [args] Additional arguments to pass when calling the function
-*
-* @example Run a regular callback function - if func is callback its just passed through, if its a promise its mapped normally
-* runAsCallback(func, thenFunc)
-*/
-function runAsCallback(context, fn, finish, args) {
-	if (isPromise(fn)) { // Given a promise?
-		fn.then(function(value) {
-			finish.apply(context, [null, value]);
-		});
-	} else {
-		var result = fn.apply(context, args ? [finish].concat(args) : [finish]);
-		if (isPromise(result)) { // Got back a promise - forget the callback and map to the .then function instead
-			result.then(function(value) { // Remap result from (val) => (err, val)
-				finish.apply(context, [null, value]);
-			});
-		}
-	}
 };
 
 
@@ -1176,6 +1204,7 @@ var objectInstance = function() {
 	this.end = end;
 	this.fire = fire;
 	this.forEach = forEach;
+	this.hasCallback = hasCallback;
 	this.isPromise = isPromise;
 	this.map = forEach;
 	this.getPath = getPath;
@@ -1187,8 +1216,8 @@ var objectInstance = function() {
 	this.race = race;
 	this.reset = reset;
 	this.run = run;
+	this.runArray = runArray;
 	this.runWhile = runWhile;
-	this.runAsCallback = runAsCallback;
 	this.series = series;
 	this._setRaw = _setRaw;
 	this._set = _set;
@@ -1218,5 +1247,6 @@ module.exports = function asyncChainable() {
 
 // Glue utility functions onto the main prototype
 module.exports.run = run;
-module.exports.runAsCallback = runAsCallback;
+module.exports.runArray = runArray;
+module.exports.hasCallback = hasCallback;
 module.exports.hybrid = hybrid;

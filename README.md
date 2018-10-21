@@ -624,15 +624,22 @@ asyncChainable()
 
 .run()
 ------
+Internal function to resolve a function, async function, promise etc. etc. and then run a callback.
+
+	run([context], fn, cb, [args])
+
+
+.runArray()
+------
 Internal callback resolver. Run is used to execute an array of callbacks then run a final callback. This function is NOT chainable, will execute immediately and is documented here as it is useful when writing plugins.
 
-	run(array, limit, callback)
+	runArray(array, limit, callback)
 
 
 .runWhile()
 ------
 Internal callback resolver until a function returns falsy. This function is NOT chainable, will execute immediately and is documented here as it is useful when writing plugins.
-Unlike `run()` this function does not require a precomputed array of items to iterate over which makes it a kind of generator function useful for potencially large data set iterations.
+Unlike `runArray()` this function does not require a precomputed array of items to iterate over which makes it a kind of generator function useful for potencially large data set iterations.
 
 	runWhile(function(next, index) {}, limit, callback)
 
