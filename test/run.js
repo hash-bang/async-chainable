@@ -8,7 +8,7 @@ describe('async-chainable.run() - parallel execution with arrays', function() {
 		var output = [];
 
 		asyncChainable()
-			.run([
+			.runArray([
 				function(next) { output.push('cb1'); next() },
 				function(next) { output.push('cb2'); next() },
 				function(next) { output.push('cb3'); next() },
@@ -21,7 +21,7 @@ describe('async-chainable.run() - parallel execution with arrays', function() {
 
 	it('should exit on errors', function(done) {
 		asyncChainable()
-			.run([
+			.runArray([
 				function(next) { next() },
 				function(next) { next('NOPE') },
 				function(next) { next() },
