@@ -38,6 +38,46 @@ function isPromise(item) {
 		|| (item.then && typeof item.then == 'function')
 	);
 };
+
+
+/**
+* Figure out if a function declaration looks like it takes a callback
+* Really this just checks the setup of a function for an argument - it cannot check if that argument is a function
+* @param {function} fn The function to examine
+* @returns {boolean} Whether the function LOOKS like it takes a callback
+*/
+function hasCallback(fn) {
+	var fnString = fn.toString();
+	// console.log('---');
+	// console.log('GIVEN', '>>> ' + fnString + ' <<<');
+
+	var bits, fnArgs;
+	if (/^async /.test(fnString)) {
+		// console.log('IS ASYNC');
+		return false; // Its an async function and should only ever return a promise
+	} else if (bits = /^function\s*?(?:.+?)?\s*\((.*?)\)/.exec(fnString)) {
+		// console.log('> FUNC', bits[1]);
+		fnArgs = bits[1];
+	} else if (/^\(\s*\)\s*=>/.test(fnString)) {
+		// console.log('ARROW (no args)');
+		return false;
+	} else if (bits = /^\s\((.*?)\)\s*?=>/.exec(fnString)) {
+		// console.log('> ARROW (braces)', bits[1]);
+		fnArgs = bits[1];
+	} else if (bits = /^(.*?)\s*=>/.exec(fnString)) {
+		// console.log('> ARROW (no braces)', bits[1]);
+		fnArgs = bits[1];
+	} else {
+		// console.log('> EMPTY');
+		return false;
+	}
+
+	fnArgs = fnArgs.replace(/^\s+/, '').replace(/\s+$/, ''); // Clean up args by trimming whitespace
+	// console.log('ARGS:', fnArgs);
+
+	return !! fnArgs;
+
+};
 // }}}
 
 // Plugin functionality - via `use()`
