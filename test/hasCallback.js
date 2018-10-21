@@ -79,37 +79,21 @@ describe('async-chainable - no callback functions', ()=> {
 		var output = [];
 
 		asyncChainable()
-			.then(()=> output.push(1))
-			.then(function(next) {
-				console.log('TAP 0');
-				next();
-			})
+			.then(()=> output.push('a'))
 			.parallel([
-				function() { output.push(2) },
-				()=> output.push(3),
-				()=> { output.push(4) },
+				function() { output.push('b') },
+				()=> output.push('c'),
+				()=> { output.push('d') },
 			])
-			.then(function(next) {
-				console.log('TAP 1');
-				next();
-			})
 			.parallel({
-				foo: function() { output.push(5) },
-				bar: ()=> output.push(6),
-				baz: ()=> { output.push(7) },
+				foo: function() { output.push('e') },
+				bar: ()=> output.push('f'),
+				baz: ()=> { output.push('g') },
 			})
-			.then(function(next) {
-				console.log('TAP 2');
-				next();
-			})
-			.forEach([8, 9, 10], async val => output.push(val))
-			.then(function(next) {
-				console.log('TAP 3');
-				next();
-			})
+			.forEach(['h', 'i', 'j'], async val => output.push(val))
 			.end(err => {
 				expect(err).to.not.be.ok;
-				expect(output.sort()).to.be.deep.equal([1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+				expect(output.sort()).to.be.deep.equal(['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j']);
 				done();
 			})
 	});
