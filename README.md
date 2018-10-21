@@ -129,6 +129,7 @@ This project has the following goals:
 * Provide a readable and dependable model for asynchronous tasks
 * Have a 'sane' ([YMMV](http://tvtropes.org/pmwiki/pmwiki.php/Main/YMMV)) syntax that will fit most use cases
 * Have an extendible plugin system to allow [additional components](#plugins) to be easily brought into the project
+* Work with any async paradigm - callbacks, async functions, promises etc.
 
 
 Plugins
