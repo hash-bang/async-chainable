@@ -35,7 +35,7 @@ function isPromise(item) {
 	return (
 		(util.types && util.types.isPromise && util.types.isPromise(item))
 		|| (item.constructor && item.constructor.name == 'Promise')
-		|| (item.then && typeof item.then == 'function')
+		|| (!item instanceof objectInstance && item.then && typeof item.then == 'function')
 	);
 };
 
