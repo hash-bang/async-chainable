@@ -4,7 +4,43 @@ var asyncChainable = require('../index');
 describe('async-chainable.promise()', function() {
 	var output;
 
-	beforeEach(function(done) {
+	it('should execute a simple promise return', done => {
+		asyncChainable()
+			.then(()=> new Promise(resolve => resolve()))
+			.end(err => {
+				expect(err).to.not.be.ok;
+				done();
+			});
+	})
+
+	it('should return an error if a promise rejects (reject error given)', done => {
+		asyncChainable()
+			.then(()=> new Promise((resolve, reject) => reject('Nope')))
+			.end(err => {
+				expect(err).to.be.ok;
+				done();
+			});
+	});
+
+	it('should return an error if a promise rejects (reject error omitted)', done => {
+		asyncChainable()
+			.then(()=> new Promise((resolve, reject) => reject()))
+			.end(err => {
+				expect(err).to.be.ok;
+				done();
+			});
+	});
+
+	it('should return an error if a promise throws', done => {
+		asyncChainable()
+			.then(()=> new Promise(()=> { throw new Error('Fake error') }))
+			.end(function(err) {
+				expect(err).to.be.ok;
+				done();
+			})
+	});
+
+	it('should run a complex promise chain', done => {
 		output = [];
 
 		asyncChainable()
@@ -15,22 +51,17 @@ describe('async-chainable.promise()', function() {
 			})
 			.promise()
 			.then(function() { // <- NOTE: This is a Promise.then() not an asyncChainable.then()
+				expect(output).to.have.length(3);
+
+				expect(output).to.contain('foo');
+				expect(output).to.contain('bar');
+				expect(output).to.contain('baz');
 				done();
 			})
 			.catch(function(err) {
 				expect(err).to.be.not.ok;
 				done();
 			});
-	});
-
-	it('should have the correct number of output elements', function() {
-		expect(output).to.have.length(3);
-	});
-
-	it('contain the expected output', function() {
-		expect(output).to.contain('foo');
-		expect(output).to.contain('bar');
-		expect(output).to.contain('baz');
 	});
 });
 

@@ -996,22 +996,34 @@ function run(context, fn, finish, args) {
 	// }}}
 
 	if (isPromise(fn)) { // Given a promise that has already resolved?
-		fn.then(function(value) {
-			finish.apply(context, [null, value]);
-		});
+		fn
+			.then(function(value) {
+				finish.apply(context, [null, value]);
+			})
+			.catch(function(err) {
+				finish.call(context, err || 'An error occured');
+			});
 	} else if (hasCallback(fn)) { // Callback w/ (err, result) pattern
 		var result = fn.apply(context, args ? [finish].concat(args) : [finish]);
 		if (isPromise(result)) {
-			result.then(function(value) { // Remap result from (val) => (err, val)
-				finish.apply(context, [null, value]);
-			});
+			result
+				.then(function(value) { // Remap result from (val) => (err, val)
+					finish.apply(context, [null, value]);
+				})
+				.catch(function(err) {
+					finish.call(context, err || 'An error occured');
+				});
 		}
 	} else { // Maybe either a promise or sync function?
 		var result = fn.apply(context, args || []); // Run the function and see what it gives us
 		if (isPromise(result)) { // Got back a promise - attach to the .then() function
-			result.then(function(value) { // Remap result from (val) => (err, val)
-				finish.apply(context, [null, value]);
-			});
+			result
+				.then(function(value) { // Remap result from (val) => (err, val)
+					finish.apply(context, [null, value]);
+				})
+				.catch(function(err) {
+					finish.call(context, err || 'An error occured');
+				});
 		} else { // Didn't provide back a promise - assume it was a sync function
 			finish.apply(context, [null, result]);
 		}
