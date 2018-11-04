@@ -581,6 +581,12 @@ See the [test files](./test/map.js) for more examples.
 ----------
 Alternative to `end()` which returns a JS standard promise instead of using the `.end(callback)` system.
 
+	promise() // Return a promise which will resolve with no value
+	promise(string) // Return a promise which will return with the extracted context value
+	promise(function) // Return a promise but also run a callback
+	promise(string, function) // Extract the context value specified by string and provide it to the callback 
+
+
 ```javascript
 asyncChainable()
 	.then(doSomethingOne)

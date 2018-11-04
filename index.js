@@ -1202,22 +1202,27 @@ var end = argy('[string] [function]', function end(extract, callback) {
 
 /**
 * Alternative to end() which returns a JS standard Promise
+* @param {string} [key] The context key to resolve the promise with
+* @param {function} [callback] Optional callback (to call the same as .end()), this is called before the promise resolves / rejects
 * @return {Promise} A promise representing the async chain
 */
-function promise() {
+var promise = argy('[string] [function]', function(key, callback) {
 	var self = this;
+
 	return new Promise(function(resolve, reject) {
 		self._struct.push({type: 'end', payload: function(err) {
 			if (err) {
+				if (callback) callback(err);
 				reject(err);
 			} else {
-				resolve();
+				if (callback) callback(null, key ? self._context[key] : null);
+				resolve(key ? self._context[key] : null);
 			}
 		}});
 
 		self._execute();
 	});
-};
+});
 
 
 /**

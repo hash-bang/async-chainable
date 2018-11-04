@@ -409,3 +409,90 @@ describe('async-chainable - callbacks, promises + async functions', ()=> {
 	});
 
 });
+
+describe('async-chainable - callbacks + promises (hybrid returns)', ()=> {
+
+	it('should be able to return in a plain callback', done => {
+		asyncChainable()
+			.then(next => next())
+			.end(err => {
+				expect(err).to.not.be.ok;
+				done();
+			});
+	});
+
+	it('should be able to return a plain promise', done => {
+		asyncChainable()
+			.then(next => next())
+			.promise()
+			.catch(e => done(e))
+			.then(()=> done())
+	});
+
+	it('should be able to use a callback + a promise', done => {
+		var calledEnd = false;
+
+		asyncChainable()
+			.then(next => next())
+			.promise(err => {
+				expect(err).to.not.be.ok;
+				calledEnd = true;
+			})
+			.catch(e => done(e))
+			.then(()=> {
+				expect(calledEnd).to.be.true;
+				done();
+			})
+	});
+
+	it('should be able to use a callback + a promise with a value', done => {
+		var calledEnd = false;
+
+		asyncChainable()
+			.then('foo', next => next(null, 'Foo!'))
+			.promise('foo', (err, val) => {
+				expect(err).to.not.be.ok;
+				expect(val).to.be.equal('Foo!');
+				calledEnd = true;
+			})
+			.catch(e => done(e))
+			.then(val => {
+				expect(calledEnd).to.be.true;
+				expect(val).to.be.equal('Foo!');
+				done();
+			})
+	});
+
+	it('should reject correctly when using a callback + a promise', done => {
+		var calledEnd = false;
+
+		asyncChainable()
+			.then(next => next('This is an error'))
+			.promise(err => {
+				expect(err).to.be.ok;
+				calledEnd = true;
+			})
+			.then(()=> e('Incorrect resolve'))
+			.catch(e => {
+				expect(calledEnd).to.be.true;
+				done();
+			})
+	});
+
+	it('should reject correctly when using a callback + a promise with a value', done => {
+		var calledEnd = false;
+
+		asyncChainable()
+			.then('foo', next => next('This is an error', 'Foo!'))
+			.promise('foo', err => {
+				expect(err).to.be.ok;
+				calledEnd = true;
+			})
+			.then(()=> e('Incorrect resolve'))
+			.catch(e => {
+				expect(calledEnd).to.be.true;
+				done();
+			})
+	});
+
+});
