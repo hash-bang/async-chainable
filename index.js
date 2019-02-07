@@ -1015,7 +1015,12 @@ function run(context, fn, finish, args) {
 				});
 		}
 	} else { // Maybe either a promise or sync function?
-		var result = fn.apply(context, args || []); // Run the function and see what it gives us
+		var result;
+		try {
+			result = fn.apply(context, args || []); // Run the function and see what it gives us
+		} catch (e) {
+			finish.call(context, e);
+		}
 		if (isPromise(result)) { // Got back a promise - attach to the .then() function
 			result
 				.then(function(value) { // Remap result from (val) => (err, val)
