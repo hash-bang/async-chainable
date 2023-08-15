@@ -238,7 +238,7 @@ function forEach() {
 
 // Defer functionality - Here be dragons! {{{
 /**
-* Timeout handler during an await() defer operation
+* Timeout handler during a wait() defer operation
 * @var {number}
 */
 var _deferTimeoutHandle;
@@ -271,7 +271,7 @@ function deferAdd(id, task, parentChain) {
 				if (--parentChain.waitingOn == 0) {
 					parentChain.completed = true;
 
-					if (self._struct.length && self._struct[self._structPointer].type == 'await') self._execute(err);
+					if (self._struct.length && self._struct[self._structPointer].type == 'wait') self._execute(err);
 				}
 
 				self._execute(err);
@@ -364,12 +364,12 @@ function defer() {
 
 
 /**
-* Queue up an await point
+* Queue up an wait point
 * This stops the execution queue until its satisfied that dependencies have been resolved
 * @param {array,...} The dependencies to check resolution of. If omitted all are checked
 * @return {Object} This chainable object
 */
-function await() {
+function wait() {
 	var payload = [];
 
 	// Slurp all args into payload
@@ -388,11 +388,11 @@ function await() {
 					payload.concat(args[offset]);
 					break;
 				default:
-					throw new Error('Unknown argument type passed to .await(): ' + type);
+					throw new Error('Unknown argument type passed to .wait(): ' + type);
 			}
 		});
 
-	this._struct.push({ type: 'await', payload: payload });
+	this._struct.push({ type: 'wait', payload: payload });
 
 	return this;
 };
@@ -570,7 +570,7 @@ function _setRaw(key, value) {
 */
 function _finalize(err) {
 	// Sanity checks {{{
-	if (this._struct.length == 0) return; // Finalize called on dead object - probably a defer() fired without an await()
+	if (this._struct.length == 0) return; // Finalize called on dead object - probably a defer() fired without an wait()
 	if (this._struct[this._struct.length - 1].type != 'end') {
 		throw new Error('While trying to find an end point in the async-chainable structure the last item in the this._struct does not have type==end!');
 		return;
@@ -834,7 +834,7 @@ function _execute(err) {
 
 				redo = true;
 				break;
-			case 'await': // Await can operate in two modes, either payload=[] (examine all) else (examine specific keys)
+			case 'wait': // Wait can operate in two modes, either payload=[] (examine all) else (examine specific keys)
 				if (!currentExec.payload.length) { // Check all tasks are complete
 					if (self._struct.slice(0, self._structPointer - 1).every(function(stage) { // Examine all items UP TO self one and check they are complete
 						return stage.completed;
@@ -1166,7 +1166,7 @@ var fire = argy('string [function]', function fire(hook, callback) {
 	});
 
 	hookRunner
-		.await()
+		.wait()
 		.end(callback);
 
 	return this;
@@ -1294,7 +1294,7 @@ var objectInstance = function() {
 	this._plugins = _plugins;
 	// }}}
 
-	this.await = await;
+	this.await = this.wait = wait;
 	this.context = setContext;
 	this.defer = defer;
 	this.end = end;
